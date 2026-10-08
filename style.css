@@ -179,6 +179,11 @@ input{font-family:inherit}
 .hud-btn:hover{border-color:var(--gold);color:var(--bone)}
 .wslot{position:relative;overflow:hidden}
 .wslot .wcd{position:absolute;left:0;bottom:0;height:2px;width:0;background:var(--gold2);opacity:.8}
+.cls-chip{display:inline-flex;align-items:center;gap:3px;font-family:var(--mono);font-size:10px;line-height:1;padding:3px 6px;border:1px solid;border-radius:10px;background:rgba(10,8,6,.75);white-space:nowrap;vertical-align:middle}
+.cls-row{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin:-2px 0 8px}
+#clsBar{position:absolute;bottom:54px;left:0;right:0;display:flex;gap:6px;justify-content:center;pointer-events:none}
+.stat-cls{margin-top:8px;line-height:2}
+.stat-cls span{color:var(--bone-dim)}
 .key-hint{font-family:var(--mono);font-size:11px;color:#6e675a;margin-top:10px;letter-spacing:.04em}
 .rcard[data-key]::before{content:attr(data-key);position:absolute;top:7px;left:9px;width:18px;height:18px;border:1px solid var(--line);border-radius:4px;font-family:var(--mono);font-size:10px;line-height:16px;color:var(--bone-dim)}
 body.touch .rcard[data-key]::before, body.touch .key-hint, body.touch #menu .hint{display:none}
@@ -286,7 +291,7 @@ body.touch #hud.show ~ #touchUI{display:block}
 @media (max-height:520px){
   .hud-top{padding:6px 8px;gap:8px} #headCanvas{width:38px;height:38px} .hp-bar{width:150px;height:14px} .hp-text{font-size:10px}
   .hud-tags{font-size:10px;gap:8px} .station-label{font-size:11px} .region-label{font-size:9px} #minimap{width:110px;height:71px}
-  .dock-items{top:54px;left:8px} .wslot{padding:4px 6px} .wslot .wn{display:none} .dock-weapons{bottom:14px} .boss-bar-wrap{top:72px;width:42%} .boss-name{font-size:10px}
+  #clsBar{bottom:44px} .dock-items{top:54px;left:8px} .wslot{padding:4px 6px} .wslot .wn{display:none} .dock-weapons{bottom:14px} .boss-bar-wrap{top:72px;width:42%} .boss-name{font-size:10px}
   #menu .hint{display:none}
   .overlay{padding:10px} .title{font-size:48px} .sect-title{font-size:1.05rem} .sect-sub{margin-bottom:10px}
   .menu-btns{margin-top:14px;gap:7px} .mbtn{padding:8px 14px;font-size:.82rem}

@@ -265,8 +265,63 @@ const WEAPONS=[
  {id:'bw_cross',name:'Kreuzsalve',rk:'epic',evo:true,ic:'trinity',dmg:16,fr:520,spd:760,count:4,spread:0.5,pierce:1,size:5,kb:90,pattern:'even',color:C.gold2},
 ];
 const weaponById=id=>WEAPONS.find(w=>w.id===id);
+
+/* ---------- WAFFENKLASSEN ----------
+   Jede Waffe hat 1–2 Klassen. Ab 2/3/4/5 Waffen derselben Klasse greift Stufe 1/2/3/4 des Klassenbonus
+   (gilt für alle Angriffe des Spielers). Werte sind Startwerte zum Testen. */
+const CLASSES={
+ pulver:   {name:'Pulver',   name_en:'Powder',    color:'#e0b25a', ic:'bullet'},
+ eisen:    {name:'Eisen',    name_en:'Iron',      color:'#a8b0bc', ic:'pierce'},
+ feuer:    {name:'Feuer',    name_en:'Fire',      color:'#e08a2f', ic:'flame'},
+ seuche:   {name:'Seuche',   name_en:'Plague',    color:'#9bbf3a', ic:'plague'},
+ frost:    {name:'Frost',    name_en:'Frost',     color:'#7fd0e6', ic:'snow'},
+ blitz:    {name:'Blitz',    name_en:'Lightning', color:'#bcd6ff', ic:'lightning'},
+ heilig:   {name:'Heilig',   name_en:'Holy',      color:'#ffe9a0', ic:'crown'},
+ konstrukt:{name:'Konstrukt',name_en:'Construct', color:'#c89bff', ic:'gatling'},
+};
+const WEAPON_CLS={
+ revolver:['pulver'], scatter:['pulver'], witchfire:['seuche'], nailgun:['pulver','eisen'], handcannon:['pulver'], bolt:['eisen'],
+ flame:['feuer'], plague:['seuche'], trinity:['heilig'], wrath:['blitz','heilig'], gatling:['pulver'], lance:['heilig','eisen'],
+ shardstorm:['frost'], frostlance:['frost','eisen'], reaper:['eisen'], seraph:['heilig'], judgement:['heilig'], tempest:['blitz'],
+ apocalypse:['feuer'], voidmaw:['eisen'], godhand:['heilig','blitz'], sentry:['konstrukt','pulver'], totem:['konstrukt','feuer'],
+ minelayer:['konstrukt','pulver'], familiar:['konstrukt'], laser:['feuer'], railspike:['eisen'], stormcaller:['blitz'],
+ pestburst:['seuche','feuer'], reckoning:['blitz','eisen'], hellwitch:['feuer','seuche'], naildriver:['eisen','frost'], godsedge:['heilig','blitz'],
+ bw_preach:['heilig'], bw_plague:['seuche'], bw_surgeon:['frost','eisen'], bw_lamb:['eisen'], bw_cross:['heilig'],
+};
+WEAPONS.forEach(w=>{ w.cls=WEAPON_CLS[w.id]||[]; });
+/* Bonus je Stufe [0..4] */
+const CLS_BONUS={
+ pulver:   {fr:[0,.05,.10,.15,.25], spread:[0,.10,.20,.30,.40]},
+ eisen:    {pierce:[0,1,1,2,3], kb:[0,.10,.20,.30,.40]},
+ feuer:    {dur:[0,.5,1,1.5,2.5], dmg:[0,0,.10,.20,.40]},
+ seuche:   {life:[0,.25,.50,.75,1.2], rad:[0,0,0,.30,.30]},
+ frost:    {slow:[.45,.40,.35,.30,.25], dur:[0,.3,.6,.9,1.4]},
+ blitz:    {jumps:[2,3,3,4,5], range:[0,0,20,40,60]},
+ heilig:   {boss:[0,.10,.20,.30,.45], normal:[0,.05,.10,.15,.20]},
+ konstrukt:{life:[0,.15,.30,.45,.70], max:[0,0,1,1,2]},
+};
+const clsName=c=>LANG==='en'?CLASSES[c].name_en:CLASSES[c].name;
+const clsStage=(p,c)=>(p&&p.clsSt&&p.clsSt[c])||0;
+const clsB=(p,c,k)=>CLS_BONUS[c][k][clsStage(p,c)];
+function recalcClasses(p){ p.clsN={}; p.clsSt={};
+  for(const id of p.weapons){ const w=weaponById(id); if(w) for(const c of w.cls) p.clsN[c]=(p.clsN[c]||0)+1; }
+  for(const c in p.clsN){ const n=p.clsN[c]; p.clsSt[c]=n>=5?4:n>=4?3:n>=3?2:n>=2?1:0; } }
+function clsDesc(c,st){ const B=CLS_BONUS[c], en=LANG==='en', pc=v=>Math.round(v*100)+'%';
+  switch(c){
+   case 'pulver': return (en?'Fire rate +':'Feuerrate +')+pc(B.fr[st])+(en?', spread +':', Streuung +')+pc(B.spread[st]);
+   case 'eisen': return (en?'Pierce +':'Durchschlag +')+B.pierce[st]+(en?', knockback +':', Rückstoß +')+pc(B.kb[st]);
+   case 'feuer': return (en?'Burn +':'Brand +')+B.dur[st]+' s'+(B.dmg[st]?(en?', burn dmg +':', Brandschaden +')+pc(B.dmg[st]):'');
+   case 'seuche': return (en?'Puddles last +':'Pfützen-Dauer +')+pc(B.life[st])+(B.rad[st]?(en?', radius +':', Radius +')+pc(B.rad[st]):'');
+   case 'frost': return (en?'Slow ':'Verlangsamung ')+pc(1-B.slow[st])+(en?', duration +':', Dauer +')+B.dur[st]+' s';
+   case 'blitz': return (en?'Chain jumps ':'Kettensprünge ')+B.jumps[st]+(B.range[st]?(en?', range +':', Reichweite +')+B.range[st]+' px':'');
+   case 'heilig': return (en?'vs. bosses/elites +':'gegen Bosse/Elite +')+pc(B.boss[st])+(en?', vs. others −':', gegen andere −')+pc(B.normal[st]);
+   case 'konstrukt': return (en?'Lifetime +':'Lebensdauer +')+pc(B.life[st])+(B.max[st]?(en?', max +':', Maximum +')+B.max[st]:'');
+  } return ''; }
+const ROMAN=['','I','II','III','IV'];
+function clsChip(c,txt){ const k=CLASSES[c]; return '<span class="cls-chip" style="color:'+k.color+';border-color:'+k.color+'55">'+svgIcon(k.ic,k.color,11)+' '+txt+'</span>'; }
 const RARITY_PRICE=[28,52,90,150,240,400,650,1100];
 const WEAPON_CAP=5, WEAPON_MAX_LEVEL=10, EVO_LEVEL_REQ=5;
+let SHOP_CLS_BIAS=0.25;   // Chance je Shop-Angebot, eine Waffe passend zu getragenen Klassen zu ziehen
 const WEAPON_EVOS=[
  {a:'scatter',b:'plague',result:'pestburst'},
  {a:'revolver',b:'bolt',result:'reckoning'},
@@ -614,7 +669,7 @@ function initAudio(){Audio2.init();}
 function xpForLevel(l){return Math.floor(6 + (l-1)*5 + (l-1)*(l-1)*0.8);}
 function makePlayer(charId,ctrl){
   const ch=charById(charId);
-  return {x:WORLD.w/2,y:WORLD.h/2,r:13,charId:charId,ctrl:ctrl||'solo',dead:false,pendingUp:0,pendingAb:0,
+  const p={x:WORLD.w/2,y:WORLD.h/2,r:13,charId:charId,ctrl:ctrl||'solo',dead:false,pendingUp:0,pendingAb:0,
     maxHP:ch.hp,hp:ch.hp,speed:215*(ch.speed||1),
     dmgMult:(ch.dmg||1),frMult:(ch.fr||1),projSpeed:1,projSize:1,
     pierce:0,multishot:0,lifesteal:0,thorns:(ch.thorns||0),crit:0.04,critMult:2.0,
@@ -630,11 +685,12 @@ function makePlayer(charId,ctrl){
     execPct:0,frenzy:false,frenzyPow:0,frenzyActive:false,
     revive:0,auraDps:0,auraR:0,
     statuses:{poison:{t:0,dps:0},burn:{t:0,dps:0},chill:{t:0,mult:1}}};
+  recalcClasses(p); return p;
 }
 function giveWeapon(id){ if(!player)return;
   if(!player.weapons.includes(id)){player.weapons.push(id);player.wCd.push(0);}
   else {player.wLevel[id]=Math.min(WEAPON_MAX_LEVEL-1,(player.wLevel[id]||0)+1);}
-  updateWeaponBar(); }
+  recalcClasses(player); updateWeaponBar(); }
 function giveUpgradeDef(def,rk){ if(!player)return; const r=rarRank(rk); def.apply(player,r); player.hp=clamp(player.hp,0,player.maxHP);
   player.items.push({ic:def.ic,color:rarColor(rk)}); updateItemPills(); updateHP(); }
 function giveAbility(def,rk){ if(!player)return; const r=rarRank(rk);
@@ -720,7 +776,7 @@ function updatePlayer(dt){
       if(w.deploy) deployFromWeapon(w);
       else fireWeapon(w,Math.atan2(tgt.y-p.y,tgt.x-p.x));
       let fr=w.fr; if(w.ramp)fr=lerp(w.fr,w.frMin,clamp(p.heldTime/1.4,0,1));
-      p.wCd[i]=(fr*frMul)/1000; (p.wCdMax||(p.wCdMax=[]))[i]=p.wCd[i];
+      p.wCd[i]=(fr*frMul*(1-clsB(p,'pulver','fr')))/1000; (p.wCdMax||(p.wCdMax=[]))[i]=p.wCd[i];
     }
   }
   if(p.ctrl!=='p2') $('#dashPip').classList.toggle('ready',p.dashCd<=0||Admin.dash);
@@ -728,7 +784,7 @@ function updatePlayer(dt){
 function weaponDamage(w){ const lvl=player.wLevel[w.id]||0; return w.dmg*(1+lvl*0.22); }
 function fireWeapon(w,base){
   if(w.beam){ fireBeam(w,base); return; }
-  const p=player, n=w.count+p.multishot, total=w.spread*(n-1);
+  const p=player, n=w.count+p.multishot, spr=w.spread*(1+clsB(p,'pulver','spread')), total=spr*(n-1);
   Audio2.shoot();
   const baseDmg=weaponDamage(w);
   const frenzyDmg=p.frenzyActive?(1+p.frenzyPow):1;
@@ -736,13 +792,13 @@ function fireWeapon(w,base){
   for(let i=0;i<n;i++){
     let ang;
     if(w.pattern==='even'&&n>1) ang=base-total/2+total*(i/(n-1));
-    else ang=base+rand(-w.spread,w.spread);
+    else ang=base+rand(-spr,spr);
     let dmg=baseDmg*p.dmgMult*frenzyDmg*martyrDmg*Admin.dmg, crit=false;
     if(Math.random()<p.crit){dmg*=p.critMult;crit=true;}
     const spd=w.spd*p.projSpeed, sz=w.size*p.projSize;
     bullets.push({id:uid++,x:p.x+Math.cos(ang)*16,y:p.y+Math.sin(ang)*16,
       vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,dmg,r:sz,
-      pierce:w.pierce+p.pierce,life:w.life||1.8,kb:w.kb*p.kbMult,color:w.color,crit,
+      pierce:w.pierce+p.pierce+clsB(p,'eisen','pierce'),life:w.life||1.8,kb:w.kb*p.kbMult*(1+clsB(p,'eisen','kb')),color:w.color,crit,
       fx:bulletFx(w,p),owner:p,depth:0,wid:w.id,hitIds:new Set()});
   }
   if(w.kb>250)G.shake=Math.max(G.shake,2.5);
@@ -760,14 +816,14 @@ function fireBeam(w,base){
   for(const e of enemies){ if(distToSeg(e.x,e.y,p.x,p.y,ex,ey)<e.r+rad){
     damageEnemy(e,dmg,base,w.kb||40,true,w.id,p);
     spawnFloater(e.x,e.y-e.r,Math.round(dmg),crit);
-    if(w.burn||p.burn){e.burnT=2.0;e.burnDmg=Math.max(e.burnDmg,dmg*0.4+2);e.burnSrc=w.id;e.burnOwner=p;}
-    if(w.slow||p.slow){e.slowT=1.4;} } }
+    if(w.burn||p.burn) applyBurn(e,dmg*0.4+2,w.id,p);
+    if(w.slow||p.slow) applySlow(e,p); } }
   beams.push({x1:p.x,y1:p.y,x2:ex,y2:ey,t:0.09,color:w.color,width:rad*1.6});
 }
 
 /* ---------- PHASE 6: DEPLOYABLES (Geschütz/Totem/Mine/Begleiter) ---------- */
 function deployFromWeapon(w){
-  const p=player, max=w.deployMax||3;
+  const p=player, max=(w.deployMax||3)+clsB(p,'konstrukt','max');
   const mineList=deployables.filter(d=>d.wid===w.id);
   while(mineList.length>=max){ const old=mineList.shift(); const k=deployables.indexOf(old); if(k>=0)deployables.splice(k,1); }
   let x=p.x,y=p.y;
@@ -775,8 +831,8 @@ function deployFromWeapon(w){
   const frenzyDmg=p.frenzyActive?(1+p.frenzyPow):1;
   deployables.push({kind:w.deploy,wid:w.id,x,y,r:w.deploy==='mine'?8:13,
     dmg:weaponDamage(w)*p.dmgMult*frenzyDmg*Admin.dmg, fireCd:(w.deployFire||600)/1000, fireT:0.3,
-    life:w.deployLife||10, color:w.color, spd:(w.spd||640)*p.projSpeed, count:w.count||1, spread:w.spread||0,
-    pierce:(w.pierce||0)+p.pierce, size:(w.size||5)*p.projSize, novaR:w.novaR||90,
+    life:(w.deployLife||10)*(1+clsB(p,'konstrukt','life')), color:w.color, spd:(w.spd||640)*p.projSpeed, count:w.count||1, spread:w.spread||0,
+    pierce:(w.pierce||0)+p.pierce+clsB(p,'eisen','pierce'), size:(w.size||5)*p.projSize, novaR:w.novaR||90,
     burn:w.burn||p.burn, fx:bulletFx(w,p), owner:p, phase:rand(0,TAU)});
   for(let i=0;i<6;i++)spawnParticle(x,y,w.color,1.6,50);
 }
@@ -799,7 +855,7 @@ function deployShoot(d,base){ const n=d.count, total=d.spread*(n-1);
 }
 function doDeployNova(d){ novaRings.push({x:d.x,y:d.y,r:10,max:d.novaR,t:0.4,color:d.color});
   for(const e of enemies){ if(dist2(d.x,d.y,e.x,e.y)<d.novaR*d.novaR){ damageEnemy(e,d.dmg,Math.atan2(e.y-d.y,e.x-d.x),50,false,d.wid,d.owner);
-    if(d.burn){e.burnT=2.0;e.burnDmg=Math.max(e.burnDmg,d.dmg*0.4+2);e.burnSrc=d.wid;e.burnOwner=d.owner;} } }
+    if(d.burn) applyBurn(e,d.dmg*0.4+2,d.wid,d.owner); } }
   for(let k=0;k<6;k++){const a=rand(0,TAU);spawnParticle(d.x+Math.cos(a)*d.novaR*0.4,d.y+Math.sin(a)*d.novaR*0.4,d.color,1.6,80);}
 }
 function deployMineExplode(d){ G.shake=Math.max(G.shake,4); Audio2.boss();
@@ -895,7 +951,7 @@ function updateEnemy(e,dt){
   if(e.slowT>0)e.slowT-=dt;
   if(e.hitFlash>0)e.hitFlash-=dt;
   if(e.burnT>0){ e.burnT-=dt; const bh=e.hp; e.hp-=e.burnDmg*dt; trackDmg(e,bh,e.burnSrc||'burn'); if(Math.random()<0.3)spawnParticle(e.x,e.y,C.candle,1.5,30); if(e.hp<=0){killEnemy(e,e.burnOwner,e.burnSrc);return;} }
-  const sp=e.speed*(e.slowT>0?0.45:1)*(G.modEnemySpeed||1);
+  const sp=e.speed*(e.slowT>0?(e.slowF||0.45):1)*(G.modEnemySpeed||1);
   const ang=Math.atan2(p.y-e.y,p.x-e.x), d=Math.hypot(p.x-e.x,p.y-e.y);
   if(e.isBoss){ updateBoss(e,dt,p); }
   else if(e.ranged){
@@ -948,6 +1004,7 @@ function makeElite(e){ e.elite=true; e.maxHp*=2.6; e.hp=e.maxHp; e.dmg*=1.4; e.b
 function damageEnemy(e,dmg,ang,kb,fromBullet,src,owner){
   if(Admin.one&&fromBullet)dmg=e.maxHp*99;
   const o=owner||player, credit=src; let before=e.hp;
+  const hs=clsStage(o,'heilig'); if(hs) dmg*=(e.isBoss||e.elite)?1+CLS_BONUS.heilig.boss[hs]:1-CLS_BONUS.heilig.normal[hs];
   e.hp-=dmg; e.hitFlash=0.08;
   if(kb){ e.x+=Math.cos(ang)*kb*0.04; e.y+=Math.sin(ang)*kb*0.04;
     e.x=clamp(e.x,ROOM.x+e.r,ROOM.x+ROOM.w-e.r); e.y=clamp(e.y,ROOM.y+e.r,ROOM.y+ROOM.h-e.r); }
@@ -1093,14 +1150,16 @@ function renderDbg(){ if(!dbgOn)return; const d=(G.run&&G.run.dmg)||{}; const ro
    wall(b), obstacle(b,ob), expire(b). hit 'die' beendet das Geschoss, wall/obstacle 'keep' hält es am Leben.
    depth = Auslöse-Tiefe (0 = Waffe); Auslöser-Effekte sollen ab depth 1 gedrosselt, ab 2 gar nicht mehr feuern. */
 const BULLET_FX={
-  burn:   { hit(b,e){ e.burnT=2.0; e.burnDmg=Math.max(e.burnDmg,b.dmg*0.5+2); e.burnSrc=b.wid; e.burnOwner=b.owner; } },
-  slow:   { hit(b,e){ e.slowT=1.4; } },
-  puddle: { hit(b,e){ spawnPuddle(b.x,b.y,b.dmg*0.4,{hostile:false,src:b.wid,owner:b.owner}); } },
+  burn:   { hit(b,e){ applyBurn(e,b.dmg*0.5+2,b.wid,b.owner); } },
+  slow:   { hit(b,e){ applySlow(e,b.owner); } },
+  puddle: { hit(b,e){ spawnPuddle(b.x,b.y,b.dmg*0.4,{hostile:false,src:b.wid,owner:b.owner,life:2.2*(1+clsB(b.owner,'seuche','life')),rMul:1+clsB(b.owner,'seuche','rad')}); } },
   chain:  { hit(b,e){ chainLightning(b,e); } },
   explode:{ hit(b,e){ explodeBullet(b); return 'die'; } },
 };
 /* Explosion zuletzt: früher beendete sie das Geschoss, bevor Kettenblitz und Pfütze auslösen konnten */
 const FX_ORDER=['burn','slow','puddle','chain','explode'];
+function applyBurn(e,dmg,src,owner){ e.burnT=2.0+clsB(owner,'feuer','dur'); e.burnDmg=Math.max(e.burnDmg,dmg*(1+clsB(owner,'feuer','dmg'))); e.burnSrc=src; e.burnOwner=owner; }
+function applySlow(e,owner){ e.slowT=1.4+clsB(owner,'frost','dur'); e.slowF=clsB(owner,'frost','slow'); }
 function bulletFx(w,p){ const on={burn:w.burn||p.burn,slow:w.slow||p.slow,puddle:w.puddle,chain:w.chain,explode:w.explosive||p.explosive};
   return FX_ORDER.filter(k=>on[k]); }
 function runFx(b,hook,a1,a2){ let res; for(const id of b.fx){ const h=BULLET_FX[id]&&BULLET_FX[id][hook]; if(h){ const r=h(b,a1,a2); if(r)res=r; } } return res; }
@@ -1150,16 +1209,16 @@ function explodeBullet(b){
   for(const e of enemies){ if(dist2(b.x,b.y,e.x,e.y)<60*60){ damageEnemy(e,b.dmg*0.7,Math.atan2(e.y-b.y,e.x-b.x),40,true,b.wid,b.owner); } }
 }
 function chainLightning(b,from){
-  let last=from,jumps=2; const hitS=new Set([from.id]);
+  let last=from,jumps=clsB(b.owner,'blitz','jumps'); const hitS=new Set([from.id]), rng=140+clsB(b.owner,'blitz','range');
   while(jumps-->0){
-    let best=null,bd=140*140;
+    let best=null,bd=rng*rng;
     for(const e of enemies){if(hitS.has(e.id))continue;const d=dist2(last.x,last.y,e.x,e.y);if(d<bd){bd=d;best=e;}}
     if(!best)break;
     damageEnemy(best,b.dmg*0.6,0,20,true,b.wid,b.owner); hitS.add(best.id);
     bolts.push({x1:last.x,y1:last.y,x2:best.x,y2:best.y,t:0.12}); last=best;
   }
 }
-function spawnPuddle(x,y,dps,opts){ opts=opts||{}; puddles.push({x,y,r:opts.big?42:26,dps,life:opts.life||2.2,hostile:!!opts.hostile,effect:opts.effect||'poison',src:opts.src,owner:opts.owner}); for(let i=0;i<6;i++)spawnParticle(x,y, opts.effect==='fire'?C.candle:C.sick,1.5,40); }
+function spawnPuddle(x,y,dps,opts){ opts=opts||{}; puddles.push({x,y,r:(opts.big?42:26)*(opts.rMul||1),dps,life:opts.life||2.2,hostile:!!opts.hostile,effect:opts.effect||'poison',src:opts.src,owner:opts.owner}); for(let i=0;i<6;i++)spawnParticle(x,y, opts.effect==='fire'?C.candle:C.sick,1.5,40); }
 function updatePuddles(dt){
   for(let i=puddles.length-1;i>=0;i--){const pu=puddles[i];pu.life-=dt;
     if(pu.hostile){
@@ -1382,6 +1441,9 @@ function rollShop(){
       const rk=rollRarity(currentLuck());
       let pool=WEAPONS.filter(x=>!x.evo && x.rk===rk && !used.has(x.id) && !player.weapons.includes(x.id));
       if(!pool.length){ for(let r=rarRank(rk);r>=0 && !pool.length;r--){ pool=WEAPONS.filter(x=>!x.evo && rarRank(x.rk)===r && !used.has(x.id) && !player.weapons.includes(x.id)); } }
+      if(Math.random()<SHOP_CLS_BIAS){   // Neigung: Waffe, die eine Klasse mit einer getragenen teilt — gleiche oder niedrigere Seltenheit
+        const own=new Set(player.weapons.flatMap(id=>weaponById(id).cls));
+        for(let r=rarRank(rk);r>=0;r--){ const f=WEAPONS.filter(x=>!x.evo && rarRank(x.rk)===r && !used.has(x.id) && !player.weapons.includes(x.id) && x.cls.some(c=>own.has(c))); if(f.length){pool=f;break;} } }
       if(pool.length){ const w=pick(pool); used.add(w.id); offer.push({weapon:w}); } else break;
     }
     /* nicht genug neue Waffen? mit Veredelungen auffüllen */
@@ -1420,6 +1482,7 @@ function renderShop(){
       el.innerHTML='<div class="ic">'+svgIcon(w.ic,w.color,32)+'</div>'+
         '<div class="rk '+w.rk+'">'+rarName(w.rk)+(o.upgrade?' · '+t('shop_refine'):'')+'</div>'+
         '<div class="rn">'+w.name+(o.upgrade?' <span style="color:var(--gold2)">'+t('lvl_short')+lvl+'→'+(lvl+1)+'</span>':'')+'</div>'+
+        '<div class="cls-row">'+w.cls.map(c=>{ const n=(player.clsN&&player.clsN[c])||0; return clsChip(c,clsName(c)+' '+(o.upgrade?n:n+'→'+(n+1))+'/5'); }).join('')+'</div>'+
         '<div class="rd">'+weaponMeta(w,Math.round(weaponDamage(w))+(o.upgrade?' → '+Math.round(w.dmg*(1+lvl*0.22)):''))+'</div>'+
         (maxed?'<div class="owned">'+t('shop_max')+'</div>':'<div class="price'+(can?'':' cant')+'">'+price+' '+t('hud_gold')+'</div>');
       if(can) el.onclick=()=>buyWeapon(w,price);
@@ -1540,9 +1603,10 @@ function fillStats(){
     [t('s_items'),p.items.length],
   ];
   $('#statGrid').innerHTML=rows.map(r=>'<div class="stat-row"><span class="l">'+r[0]+'</span><span class="v">'+r[1]+'</span></div>').join('');
-  const wlist=p.weapons.map(id=>{const w=weaponById(id);const l=weaponLevel(id);return '<b>'+w.name+'</b> <span style="color:var(--gold2)">St.'+l+'</span>';}).join(' · ');
-  $('#statWeapons').innerHTML=t('weapons_label')+': '+wlist;
-  $('#statAbilities').innerHTML=p.abilities.length?(t('abilities_label')+': '+p.abilities.map(a=>'<b style="color:'+rarColor(a.rk)+'">'+a.name+'</b>'+(a.level>1?' St.'+a.level:'')).join(' · ')):'';
+  const wlist=p.weapons.map(id=>{const w=weaponById(id);const l=weaponLevel(id);return '<b>'+w.name+'</b> <span style="color:var(--gold2)">'+t('lvl_short')+l+'</span>';}).join(' · ');
+  const act=Object.keys(p.clsSt||{}).filter(c=>p.clsSt[c]>0);
+  $('#statWeapons').innerHTML=t('weapons_label')+': '+wlist+(act.length?'<div class="stat-cls">'+act.map(c=>clsChip(c,clsName(c)+' '+ROMAN[p.clsSt[c]])+' <span>'+clsDesc(c,p.clsSt[c])+'</span>').join('<br>')+'</div>':'');
+  $('#statAbilities').innerHTML=p.abilities.length?(t('abilities_label')+': '+p.abilities.map(a=>'<b style="color:'+rarColor(a.rk)+'">'+a.name+'</b>'+(a.level>1?' '+t('lvl_short')+a.level:'')).join(' · ')):'';
 }
 $('#statsClose').onclick=closeStats;
 
@@ -1883,7 +1947,8 @@ function updateXPBar(){ const p1=players[0]; if(!p1)return; $('#xpFill').style.w
 function updateWeaponBar(){ const p=players[0]||player; if(!p)return;const bar=$('#weaponbar');bar.innerHTML='';
   p.weapons.forEach(id=>{const w=weaponById(id);const l=p.wLevel[id]||0;const el=document.createElement('div');el.className='wslot';
     el.innerHTML='<span>'+svgIcon(w.ic,w.color,16)+'</span><span class="wn">'+w.name+'</span>'+(l?'<span class="wl">+'+l+'</span>':'')+'<i class="wcd"></i>';bar.appendChild(el);});
-  autoCollapse('weaponDock',p.weapons.length,5); }
+  autoCollapse('weaponDock',p.weapons.length,5);
+  const cb=$('#clsBar'); if(cb) cb.innerHTML=Object.keys(p.clsSt||{}).filter(c=>p.clsSt[c]>0).map(c=>clsChip(c,clsName(c)+' '+ROMAN[p.clsSt[c]])).join(''); }
 /* pro Frame: Abklingzeiten (Ausweichen, Waffen ab 0,3 s) und verbleibende Gegner */
 function updateHudLive(){ const p=players[0]; if(!p)return;
   const dr=Admin.dash?1:clamp(1-p.dashCd/DASH_CD,0,1); $('#dashFill').style.width=dr*100+'%'; $('#dashBtn').style.setProperty('--cd',dr);
