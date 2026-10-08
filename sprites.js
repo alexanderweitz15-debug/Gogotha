@@ -309,3 +309,95 @@ const BOSS_ART={
     spCirc(g,0,-s*0.68,s*0.26,'#c8a890'); g.strokeStyle='#4a3018'; g.lineWidth=Math.max(1,s*0.07); g.beginPath(); g.ellipse(0,-s*0.88,s*0.28,s*0.08,0,0,TAU); g.stroke();
     spCirc(g,-s*0.09,-s*0.68,s*0.04,'#1a0a0a'); spCirc(g,s*0.09,-s*0.68,s*0.04,'#1a0a0a'); },
 };
+
+/* ---------- GESCHOSSE: eine Form je Waffe, Blick nach +x (Flugrichtung), r = Geschossradius ---------- */
+const PROJ_ART={
+  /* Kugel: Hülse mit heller Spitze und Spur */
+  bullet(g,r,c){ g.globalAlpha=0.35; spLine(g,-r*3,0,-r*0.6,0,c,r*0.8); g.globalAlpha=1;
+    g.fillStyle=shade(c,-0.25); g.beginPath(); g.ellipse(0,0,r*1.4,r*0.62,0,0,TAU); g.fill(); spCirc(g,r*0.7,0,r*0.5,'#fff8e8'); },
+  /* Schrotkorn */
+  pellet(g,r,c){ spCirc(g,0,0,r,c); spCirc(g,-r*0.25,-r*0.25,r*0.4,'rgba(255,255,255,.55)'); },
+  /* Nagel: dünner Stahlstift mit Kopf */
+  nail(g,r,c){ spLine(g,-r*2.2,0,r*2.2,0,'#c8ccd2',r*0.6); g.fillStyle='#e8ecf0'; g.beginPath(); g.moveTo(r*2.2,-r*0.3); g.lineTo(r*3,0); g.lineTo(r*2.2,r*0.3); g.fill();
+    g.fillStyle=shade(c,-0.2); g.fillRect(-r*2.4,-r*0.85,r*0.5,r*1.7); },
+  /* Kanonenkugel */
+  cannon(g,r,c){ g.globalAlpha=0.3; spCirc(g,-r*1.2,0,r*0.7,c); g.globalAlpha=1; spCirc(g,0,0,r,'#2a2620'); g.strokeStyle=c; g.lineWidth=Math.max(1,r*0.18); g.beginPath(); g.arc(0,0,r*0.92,0,TAU); g.stroke(); spCirc(g,-r*0.3,-r*0.3,r*0.3,'rgba(255,255,255,.5)'); },
+  /* Bolzen mit Spitze und Federn */
+  bolt(g,r,c){ spLine(g,-r*2.6,0,r*1.8,0,'#6a4a2a',r*0.45); g.fillStyle=c; g.beginPath(); g.moveTo(r*1.6,-r*0.7); g.lineTo(r*3,0); g.lineTo(r*1.6,r*0.7); g.closePath(); g.fill();
+    g.fillStyle='#d8cdb8'; for(const sd of [-1,1]){ g.beginPath(); g.moveTo(-r*2.6,0); g.lineTo(-r*1.9,sd*r*0.8); g.lineTo(-r*1.5,0); g.fill(); } },
+  /* Brandpfeil: Bolzen mit Flamme an der Spitze */
+  firebolt(g,r,c){ PROJ_ART.bolt(g,r,'#8a6a3a'); g.globalAlpha=0.85; spCirc(g,r*2.6,0,r*1.1,c); g.globalAlpha=1; spCirc(g,r*2.7,0,r*0.5,'#fff0c0'); },
+  /* Flamme: Tropfen mit Schweif nach hinten, heller Kern */
+  flame(g,r,c){ g.fillStyle=c; g.beginPath(); g.moveTo(r*1.1,0); g.quadraticCurveTo(r*0.6,-r*1.1,-r*0.4,-r*0.6); g.quadraticCurveTo(-r*2.6,0,-r*0.4,r*0.6); g.quadraticCurveTo(r*0.6,r*1.1,r*1.1,0); g.fill();
+    g.fillStyle='rgba(255,240,190,.85)'; g.beginPath(); g.ellipse(r*0.3,0,r*0.55,r*0.35,0,0,TAU); g.fill(); },
+  /* Seuchenbrocken: unförmiger Klumpen mit Tropfen */
+  blob(g,r,c){ g.fillStyle=c; g.beginPath(); for(let i=0;i<=10;i++){ const a=i/10*TAU, rr=r*(0.85+((i*7)%3)*0.12); g.lineTo(Math.cos(a)*rr,Math.sin(a)*rr); } g.fill();
+    spCirc(g,-r*1.2,r*0.3,r*0.28,c); spCirc(g,-r*1.6,-r*0.2,r*0.18,c); spCirc(g,r*0.25,-r*0.3,r*0.28,shade(c,0.4)); },
+  /* Heiliges Kreuz (rotiert) */
+  cross(g,r,c){ g.fillStyle=c; g.fillRect(-r*0.3,-r*1.3,r*0.6,r*2.6); g.fillRect(-r*1.0,-r*0.65,r*2.0,r*0.55); g.fillStyle='rgba(255,255,255,.6)'; g.fillRect(-r*0.12,-r*1.1,r*0.24,r*1.0); },
+  /* Blitzfunke: Zickzack */
+  spark(g,r,c){ g.globalAlpha=0.18; spCirc(g,0,0,r*1.1,c); g.globalAlpha=1; g.strokeStyle=c; g.lineWidth=Math.max(1.2,r*0.4); g.lineJoin='round'; g.beginPath();
+    g.moveTo(-r*2.2,-r*0.3); g.lineTo(-r*0.9,r*0.6); g.lineTo(-r*0.2,-r*0.6); g.lineTo(r*0.8,r*0.5); g.lineTo(r*2,0); g.stroke(); g.strokeStyle='#fff'; g.lineWidth=Math.max(1,r*0.15); g.stroke(); },
+  /* Lanze: langer Schaft mit Blattspitze */
+  spear(g,r,c){ spLine(g,-r*3.5,0,r*1.6,0,'#8a6a3a',r*0.4); g.fillStyle=c; g.beginPath(); g.moveTo(r*1.2,0); g.quadraticCurveTo(r*2,-r*0.75,r*3.4,0); g.quadraticCurveTo(r*2,r*0.75,r*1.2,0); g.fill(); },
+  /* Eissplitter: länglicher Kristall */
+  shard(g,r,c){ g.fillStyle=c; g.beginPath(); g.moveTo(r*2.2,0); g.lineTo(0,-r*0.75); g.lineTo(-r*1.8,0); g.lineTo(0,r*0.75); g.closePath(); g.fill();
+    g.fillStyle='rgba(255,255,255,.7)'; g.beginPath(); g.moveTo(r*1.6,0); g.lineTo(0,-r*0.3); g.lineTo(-r*0.6,0); g.closePath(); g.fill(); },
+  /* Sensenblatt (rotiert) */
+  scythe(g,r,c){ g.fillStyle=c; g.beginPath(); g.arc(0,0,r*1.3,-Math.PI*0.9,Math.PI*0.35); g.arc(r*0.35,-r*0.2,r*0.95,Math.PI*0.35,-Math.PI*0.9,true); g.closePath(); g.fill();
+    spLine(g,-r*0.2,0,-r*1.2,r*1.0,'#5a3a20',r*0.3); },
+  /* Seraphsfeder */
+  feather(g,r,c){ spLine(g,-r*2,0,r*1.8,0,'#fff8e0',r*0.2); g.fillStyle=c; g.beginPath(); g.moveTo(r*1.8,0); g.quadraticCurveTo(r*0.4,-r*1.1,-r*1.8,-r*0.15); g.lineTo(-r*1.8,r*0.15); g.quadraticCurveTo(r*0.4,r*1.1,r*1.8,0); g.fill();
+    g.strokeStyle='rgba(255,255,255,.5)'; g.lineWidth=1; for(let i=-1;i<=1;i++){ g.beginPath(); g.moveTo(i*r*0.6,0); g.lineTo(i*r*0.6-r*0.5,-r*0.6); g.moveTo(i*r*0.6,0); g.lineTo(i*r*0.6-r*0.5,r*0.6); g.stroke(); } },
+  /* Schienennagel / Gericht: langer heller Strahl */
+  rail(g,r,c){ g.globalAlpha=0.35; spLine(g,-r*5,0,r*1.5,0,c,r*1.6); g.globalAlpha=1; spLine(g,-r*4,0,r*1.8,0,c,r*0.8); spLine(g,-r*3,0,r*1.8,0,'#fff',r*0.3); },
+  /* Feuerball mit Flammenschweif */
+  fireball(g,r,c){ g.globalAlpha=0.5; g.fillStyle=c; g.beginPath(); g.moveTo(r*0.3,-r); g.quadraticCurveTo(-r*3,0,r*0.3,r); g.fill(); g.globalAlpha=1;
+    spCirc(g,0,0,r,c); spCirc(g,r*0.2,-r*0.1,r*0.55,'#ffe0a0'); },
+  /* Leere: dunkler Kern, heller violetter Rand */
+  void(g,r,c){ g.globalAlpha=0.35; spCirc(g,0,0,r*1.35,c); g.globalAlpha=1; spCirc(g,0,0,r,c); spCirc(g,0,0,r*0.72,'#0a0410'); spCirc(g,r*0.2,-r*0.2,r*0.15,'#fff'); },
+  /* Hand Gottes: goldene Kugel mit Kreuz */
+  holyorb(g,r,c){ g.globalAlpha=0.35; spCirc(g,0,0,r*1.4,c); g.globalAlpha=1; spCirc(g,0,0,r,c); g.fillStyle='#fff'; g.fillRect(-r*0.12,-r*0.6,r*0.24,r*1.2); g.fillRect(-r*0.45,-r*0.25,r*0.9,r*0.22); },
+  /* Irrlicht (Höllenbrut, Predigtkreis): Kugel mit Schweif */
+  wisp(g,r,c){ g.globalAlpha=0.45; g.fillStyle=c; g.beginPath(); g.moveTo(0,-r*0.8); g.quadraticCurveTo(-r*3,0,0,r*0.8); g.fill(); g.globalAlpha=1; spCirc(g,0,0,r,c); spCirc(g,r*0.2,-r*0.15,r*0.4,'#fff'); },
+  /* Wurfflasche (rotiert) */
+  flask(g,r,c){ g.fillStyle=c; g.beginPath(); g.arc(0,r*0.25,r,0,TAU); g.fill(); g.fillStyle='#c8bca8'; g.fillRect(-r*0.3,-r*1.35,r*0.6,r*0.75); g.fillStyle='#6a4a2a'; g.fillRect(-r*0.38,-r*1.55,r*0.76,r*0.3);
+    spCirc(g,-r*0.35,0,r*0.25,'rgba(255,255,255,.5)'); },
+  /* Frosttropfen */
+  tear(g,r,c){ g.fillStyle=c; g.beginPath(); g.moveTo(r*1.1,0); g.quadraticCurveTo(r*0.6,-r*1.0,-r*1.8,0); g.quadraticCurveTo(r*0.6,r*1.0,r*1.1,0); g.fill(); spCirc(g,r*0.3,-r*0.2,r*0.3,'#fff'); },
+  /* Schädel (rotiert) */
+  skull(g,r,c){ spCirc(g,0,-r*0.15,r,c); g.fillStyle=c; g.fillRect(-r*0.55,r*0.4,r*1.1,r*0.6); g.fillStyle='#1a1410';
+    g.beginPath(); g.ellipse(-r*0.38,-r*0.15,r*0.25,r*0.3,0,0,TAU); g.ellipse(r*0.38,-r*0.15,r*0.25,r*0.3,0,0,TAU); g.fill(); g.fillRect(-r*0.3,r*0.55,r*0.12,r*0.35); g.fillRect(r*0.18,r*0.55,r*0.12,r*0.35); },
+  /* Skalpell */
+  scalpel(g,r,c){ spLine(g,-r*2.4,0,-r*0.4,0,'#5a6a76',r*0.55); g.fillStyle=c; g.beginPath(); g.moveTo(-r*0.4,-r*0.35); g.lineTo(r*2.4,-r*0.1); g.quadraticCurveTo(r*1.4,r*0.6,-r*0.4,r*0.35); g.closePath(); g.fill(); },
+};
+/* rotierende Formen drehen sich unabhängig von der Flugrichtung */
+const PROJ_SPIN={cross:9,scythe:16,flask:10,skull:11};
+const PROJ_SHAPE={
+  revolver:'bullet', scatter:'pellet', witchfire:'flame', nailgun:'nail', handcannon:'cannon', bolt:'bolt', flame:'flame', plague:'blob',
+  trinity:'cross', wrath:'spark', gatling:'bullet', lance:'spear', shardstorm:'shard', frostlance:'spear', reaper:'scythe', seraph:'feather',
+  judgement:'rail', tempest:'spark', apocalypse:'fireball', voidmaw:'void', godhand:'holyorb', sentry:'bullet', familiar:'wisp', railspike:'rail',
+  stormcaller:'spark', pestflask:'flask', litany:'shard', tears:'tear', firearrow:'firebolt', skullsling:'skull',
+  pestburst:'blob', reckoning:'bolt', hellwitch:'flame', naildriver:'nail', godsedge:'cross', blackdeath:'flask', bonehail:'skull', pyresalvo:'firebolt',
+  bw_preach:'wisp', bw_plague:'blob', bw_surgeon:'scalpel', bw_lamb:'pellet', bw_cross:'cross',
+};
+/* Ausdehnung je Form in Vielfachen von r: [hinten, vorn, halbe Höhe] — passgenaue Bilder sind beim Drehen deutlich billiger */
+const PROJ_EXT={bullet:[3.1,1.5,0.8],pellet:[1.1,1.1,1.1],nail:[2.5,3.1,0.9],cannon:[1.9,1.1,1.1],bolt:[2.7,3.1,0.9],firebolt:[2.7,3.9,1.2],
+  flame:[2.6,1.2,1.15],blob:[1.8,1.1,1.1],cross:[1.4,1.4,1.4],spark:[2.3,2.1,1.2],spear:[3.6,3.5,0.8],shard:[1.9,2.3,0.8],scythe:[1.5,1.5,1.5],
+  feather:[2.1,1.9,1.1],rail:[5.1,1.9,0.9],fireball:[3.0,1.1,1.1],void:[1.4,1.4,1.4],holyorb:[1.45,1.45,1.45],wisp:[3.0,1.1,1.0],
+  flask:[1.6,1.6,1.6],tear:[1.9,1.2,1.0],skull:[1.2,1.2,1.2],scalpel:[2.5,2.5,0.7]};
+const PROJ_ROUND={pellet:1,void:1,holyorb:1,blob:1};   // ohne Drehung zeichnen
+const PROJ_CACHE=new Map();
+function projSprite(shape,r,col){ const key=shape+'|'+r+'|'+col; let c=PROJ_CACHE.get(key); if(c)return c;
+  const [bk,fr,hh]=PROJ_EXT[shape]||[2.6,2.6,2.6], m=3;
+  c=document.createElement('canvas'); c.width=Math.ceil((bk+fr)*r)+m*2; c.height=Math.ceil(hh*2*r)+m*2;
+  const g=c.getContext('2d'); c._ox=Math.ceil(bk*r)+m; c._oy=Math.ceil(hh*r)+m; g.translate(c._ox,c._oy);
+  PROJ_ART[shape](g,r,col); PROJ_CACHE.set(key,c); return c; }
+/* Zeichnet ein Spieler-Geschoss; unbekannte Waffen bleiben ein leuchtender Punkt */
+function drawProjectile(g,b,time){ const shp=PROJ_SHAPE[b.wid];
+  if(b.crit){ g.globalAlpha=0.35; spCirc(g,b.x,b.y,b.r*2.1,'#fff'); g.globalAlpha=1; }
+  if(!shp){ g.globalAlpha=0.18; spCirc(g,b.x,b.y,b.r*1.6,b.color); g.globalAlpha=1; spCirc(g,b.x,b.y,b.r,b.crit?'#fff':b.color); return; }
+  const spr=projSprite(shp,Math.max(2,Math.round(b.r)),b.color);
+  if(PROJ_ROUND[shp]){ g.drawImage(spr,b.x-spr._ox,b.y-spr._oy); return; }
+  const sp=PROJ_SPIN[shp], a=sp?time*sp+b.id:Math.atan2(b.vy,b.vx);
+  g.translate(b.x,b.y); g.rotate(a); g.drawImage(spr,-spr._ox,-spr._oy); g.rotate(-a); g.translate(-b.x,-b.y); }
