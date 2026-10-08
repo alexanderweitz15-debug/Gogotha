@@ -59,6 +59,8 @@ input{font-family:inherit}
 .char-stats .row{display:flex;align-items:center;gap:8px;color:var(--bone-dim)}
 .char-stats .bar{flex:1;height:5px;background:#000;border-radius:3px;overflow:hidden}
 .char-stats .fill{height:100%;background:linear-gradient(90deg,var(--blood),var(--gold2))}
+.char-aff{margin-top:8px;display:flex;flex-wrap:wrap;gap:4px;justify-content:center;align-items:center}
+.char-mal{font-family:var(--mono);font-size:10px;color:#e0405f}
 .char-weapon{margin-top:10px;font-size:11px;color:var(--gold2);display:flex;align-items:center;gap:6px;justify-content:center}
 
 /* REWARD / SHOP / UPGRADE / ABILITY CARDS */

@@ -319,7 +319,7 @@ Jeder Pool enthält mindestens ein Paar für eine Fähigkeits-Verschmelzung (orb
 | 7 ✓ | Gegner-Gift + 6 Waffen (6) – erledigt. Shop-Neigung Feuer jetzt 11→27 % (vorher 3→7 %) | M | Jede Klasse im Shop bis Stufe 4 erreichbar |
 | 8 ✓ | Tausch-Gaben (7) – erledigt: 8 Karten, in 25 % der Aufstiege ersetzt eine davon eine normale Karte, je 1× pro Lauf | M | – |
 | 9 ✓ | Boss-Reliquien + 3 Rezepte (8) – erledigt: Auswahl nach jeder Boss-Station (vor dem Shop), Ketten-Bremse für Auslöser, Admin-Panel kann Reliquien geben | M | – |
-| 10 | Fluch-Wahl, Pakte (9), Schreine (10), Charakter-Profile (11) | S / M / M | – |
+| 10 ✓ | Fluch-Wahl, Pakte (9), Schreine (10), Charakter-Profile (11) – erledigt; nebenbei behoben: Wellenende-Heilung bekam im Koop nur Spieler 1 | S / M / M | – |
 
 Nach den Schritten 5, 6, 7 und 9 jeweils 20 Läufe mit dem Overlay, dann nachjustieren.
 Das Admin-Panel braucht ab Schritt 5 eine Auswahl für Gaben und Reliquien, sonst ist das Testen mühsam.
