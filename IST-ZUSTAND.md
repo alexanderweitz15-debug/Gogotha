@@ -15,7 +15,9 @@ Im Test traten keine JavaScript-Fehler auf.
 | 8. Leere Charakterbilder | **Behoben**, auch nach „Erneut bereuen“ (getestet). |
 | 10. Übersetzung halb fertig | **Teilweise behoben.** Shop, Endbildschirme, Toasts, Seltenheiten und Charakterwerte sind übersetzt. Upgrade-/Fähigkeitstexte, Lore und Eigennamen bleiben deutsch, so steht es als Absicht im Code (`game.js:23`). Das Admin-Panel bleibt deutsch. |
 | Mobil nicht spielbar | **Behoben, nur emuliert getestet.** Touch-Stick links, Ausweich-Knopf rechts, Pause-Knopf, Hinweis „quer halten“ im Hochformat, verdichtetes HUD bei niedriger Höhe. Auf einem echten Gerät nicht getestet. |
-| 3, 4, 7, 9, 11, 12 | Offen |
+| 9. Koop: Effekte beim falschen Spieler | **Behoben.** Lebensraub, Hinrichtung und Goldbonus gehören dem Spieler, dessen Geschoss/Fähigkeit getroffen hat; Begleiter folgen ihrem Besitzer; Bosse und Bogenschützen zielen auf den nächsten Spieler (getestet). Gold bleibt eine gemeinsame Kasse. |
+| Neu gefunden: Explosion blockierte Kettenblitz und Pfützen | **Behoben.** Mit explosiven Schüssen (Upgrade „Höllenfeuer“, Fähigkeit „Inferno“, Hand Gottes) lösten Kettenblitz und Seuchenpfützen nie aus, weil die Explosion das Geschoss vorher beendete. Die Explosion kommt jetzt zuletzt (getestet). |
+| 3, 4, 7, 11, 12 | Offen |
 
 ## 1. Was das Spiel ist
 

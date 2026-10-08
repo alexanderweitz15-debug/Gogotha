@@ -730,8 +730,7 @@ function fireWeapon(w,base){
     bullets.push({id:uid++,x:p.x+Math.cos(ang)*16,y:p.y+Math.sin(ang)*16,
       vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,dmg,r:sz,
       pierce:w.pierce+p.pierce,life:w.life||1.8,kb:w.kb*p.kbMult,color:w.color,crit,
-      burn:w.burn||p.burn,slow:w.slow||p.slow,explosive:w.explosive||p.explosive,chain:w.chain,puddle:w.puddle,
-      wid:w.id,hitIds:new Set()});
+      fx:bulletFx(w,p),owner:p,depth:0,wid:w.id,hitIds:new Set()});
   }
   if(w.kb>250)G.shake=Math.max(G.shake,2.5);
   spawnParticle(p.x+Math.cos(base)*16,p.y+Math.sin(base)*16,'rgba(255,220,150,.7)',2,30);
@@ -746,9 +745,9 @@ function fireBeam(w,base){
   if(Math.random()<p.crit){dmg*=p.critMult;crit=true;}
   const rad=(w.size||6)*p.projSize;
   for(const e of enemies){ if(distToSeg(e.x,e.y,p.x,p.y,ex,ey)<e.r+rad){
-    G._wid=w.id; damageEnemy(e,dmg,base,w.kb||40,true); G._wid=null;
+    damageEnemy(e,dmg,base,w.kb||40,true,w.id,p);
     spawnFloater(e.x,e.y-e.r,Math.round(dmg),crit);
-    if(w.burn||p.burn){e.burnT=2.0;e.burnDmg=Math.max(e.burnDmg,dmg*0.4+2);e.burnSrc=w.id;}
+    if(w.burn||p.burn){e.burnT=2.0;e.burnDmg=Math.max(e.burnDmg,dmg*0.4+2);e.burnSrc=w.id;e.burnOwner=p;}
     if(w.slow||p.slow){e.slowT=1.4;} } }
   beams.push({x1:p.x,y1:p.y,x2:ex,y2:ey,t:0.09,color:w.color,width:rad*1.6});
 }
@@ -765,12 +764,12 @@ function deployFromWeapon(w){
     dmg:weaponDamage(w)*p.dmgMult*frenzyDmg*Admin.dmg, fireCd:(w.deployFire||600)/1000, fireT:0.3,
     life:w.deployLife||10, color:w.color, spd:(w.spd||640)*p.projSpeed, count:w.count||1, spread:w.spread||0,
     pierce:(w.pierce||0)+p.pierce, size:(w.size||5)*p.projSize, novaR:w.novaR||90,
-    burn:w.burn||p.burn, slow:w.slow||p.slow, explosive:w.explosive||p.explosive, puddle:w.puddle, phase:rand(0,TAU)});
+    burn:w.burn||p.burn, fx:bulletFx(w,p), owner:p, phase:rand(0,TAU)});
   for(let i=0;i<6;i++)spawnParticle(x,y,w.color,1.6,50);
 }
 function updateDeployables(dt){
   for(let i=deployables.length-1;i>=0;i--){ const d=deployables[i]; d.life-=dt;
-    if(d.kind==='companion'){ const tx=player.x+Math.cos(G.uiTime*1.3+d.phase)*54, ty=player.y+Math.sin(G.uiTime*1.3+d.phase)*54;
+    if(d.kind==='companion'){ const o=d.owner.dead?anchorPlayer():d.owner, tx=o.x+Math.cos(G.uiTime*1.3+d.phase)*54, ty=o.y+Math.sin(G.uiTime*1.3+d.phase)*54;
       d.x+=(tx-d.x)*7*dt; d.y+=(ty-d.y)*7*dt; }
     if(d.kind==='turret'||d.kind==='companion'){ d.fireT-=dt; const tg=nearestEnemy(d.x,d.y);
       if(tg && d.fireT<=0){ deployShoot(d,Math.atan2(tg.y-d.y,tg.x-d.x)); d.fireT=d.fireCd; } }
@@ -782,18 +781,18 @@ function updateDeployables(dt){
 function deployShoot(d,base){ const n=d.count, total=d.spread*(n-1);
   for(let i=0;i<n;i++){ const ang=(n>1)?base-total/2+total*(i/(n-1)):base+rand(-d.spread,d.spread);
     bullets.push({id:uid++,x:d.x,y:d.y,vx:Math.cos(ang)*d.spd,vy:Math.sin(ang)*d.spd,dmg:d.dmg,r:d.size,
-      pierce:d.pierce,life:1.6,kb:60,color:d.color,crit:false,burn:d.burn,slow:d.slow,explosive:d.explosive,puddle:d.puddle,wid:d.wid,hitIds:new Set()}); }
+      pierce:d.pierce,life:1.6,kb:60,color:d.color,crit:false,fx:d.fx,owner:d.owner,depth:0,wid:d.wid,hitIds:new Set()}); }
   Audio2.shoot();
 }
 function doDeployNova(d){ novaRings.push({x:d.x,y:d.y,r:10,max:d.novaR,t:0.4,color:d.color});
-  for(const e of enemies){ if(dist2(d.x,d.y,e.x,e.y)<d.novaR*d.novaR){ G._wid=d.wid; damageEnemy(e,d.dmg,Math.atan2(e.y-d.y,e.x-d.x),50,false); G._wid=null;
-    if(d.burn){e.burnT=2.0;e.burnDmg=Math.max(e.burnDmg,d.dmg*0.4+2);e.burnSrc=d.wid;} } }
+  for(const e of enemies){ if(dist2(d.x,d.y,e.x,e.y)<d.novaR*d.novaR){ damageEnemy(e,d.dmg,Math.atan2(e.y-d.y,e.x-d.x),50,false,d.wid,d.owner);
+    if(d.burn){e.burnT=2.0;e.burnDmg=Math.max(e.burnDmg,d.dmg*0.4+2);e.burnSrc=d.wid;e.burnOwner=d.owner;} } }
   for(let k=0;k<6;k++){const a=rand(0,TAU);spawnParticle(d.x+Math.cos(a)*d.novaR*0.4,d.y+Math.sin(a)*d.novaR*0.4,d.color,1.6,80);}
 }
 function deployMineExplode(d){ G.shake=Math.max(G.shake,4); Audio2.boss();
   for(let i=0;i<14;i++)spawnParticle(d.x,d.y,d.color,rand(2,4),rand(100,220));
   novaRings.push({x:d.x,y:d.y,r:8,max:78,t:0.35,color:C.candle});
-  for(const e of enemies){ if(dist2(d.x,d.y,e.x,e.y)<78*78){ G._wid=d.wid; damageEnemy(e,d.dmg*1.6,Math.atan2(e.y-d.y,e.x-d.x),120,false); G._wid=null; } }
+  for(const e of enemies){ if(dist2(d.x,d.y,e.x,e.y)<78*78){ damageEnemy(e,d.dmg*1.6,Math.atan2(e.y-d.y,e.x-d.x),120,false,d.wid,d.owner); } }
 }
 function updateStatuses(dt){
   const p=player, s=p.statuses;
@@ -809,17 +808,17 @@ function updateAbilities(dt){
   p.frenzyActive = p.frenzy && p.hp < p.maxHP*0.35;
   if(p.orbitN>0){ p.orbitAng+=dt*2.6;
     for(let i=0;i<p.orbitN;i++){ const a=p.orbitAng+i*TAU/p.orbitN; const ox=p.x+Math.cos(a)*p.orbitR, oy=p.y+Math.sin(a)*p.orbitR;
-      for(const e of enemies){ if(e._orbCd&&e._orbCd>0)continue; if(dist2(ox,oy,e.x,e.y)<(e.r+9)*(e.r+9)){ damageEnemy(e,p.orbitDmg,a,40,false,'orbit'); e._orbCd=0.22; spawnFloater(e.x,e.y-e.r,Math.round(p.orbitDmg),false);} } }
+      for(const e of enemies){ if(e._orbCd&&e._orbCd>0)continue; if(dist2(ox,oy,e.x,e.y)<(e.r+9)*(e.r+9)){ damageEnemy(e,p.orbitDmg,a,40,false,'orbit',p); e._orbCd=0.22; spawnFloater(e.x,e.y-e.r,Math.round(p.orbitDmg),false);} } }
   }
   for(const e of enemies){ if(e._orbCd>0)e._orbCd-=dt; }
   if(p.novaDmg>0){ p.novaT-=dt; if(p.novaT<=0){ p.novaT=p.novaCd; doNova(); } }
   if(p.shieldMax>0){ p.shieldRegT-=dt; if(p.shieldRegT<=0 && p.shield<p.shieldMax){ p.shield=clamp(p.shield+p.shieldMax*0.30,0,p.shieldMax); p.shieldRegT=1.1; updateHP(); } }
-  if(p.auraDps>0){ for(const e of enemies){ if(!e.isBoss && dist2(p.x,p.y,e.x,e.y)<p.auraR*p.auraR){ hurtEnemyRaw(e,p.auraDps*dt,'aura');} }
+  if(p.auraDps>0){ for(const e of enemies){ if(!e.isBoss && dist2(p.x,p.y,e.x,e.y)<p.auraR*p.auraR){ hurtEnemyRaw(e,p.auraDps*dt,'aura',p);} }
     if(Math.random()<0.4)spawnParticle(p.x+rand(-p.auraR,p.auraR),p.y+rand(-p.auraR,p.auraR),C.sick,1.2,20); }
 }
 function doNova(){ const p=player; G.shake=Math.max(G.shake,3);
   novaRings.push({x:p.x,y:p.y,r:14,max:p.novaR,t:0.45,color:p.novaColor});
-  for(const e of enemies){ if(dist2(p.x,p.y,e.x,e.y)<p.novaR*p.novaR){ damageEnemy(e,p.novaDmg,Math.atan2(e.y-p.y,e.x-p.x),90,false,'nova');} }
+  for(const e of enemies){ if(dist2(p.x,p.y,e.x,e.y)<p.novaR*p.novaR){ damageEnemy(e,p.novaDmg,Math.atan2(e.y-p.y,e.x-p.x),90,false,'nova',p);} }
   for(let i=0;i<10;i++){const a=rand(0,TAU);spawnParticle(p.x+Math.cos(a)*p.novaR*0.5,p.y+Math.sin(a)*p.novaR*0.5,p.novaColor,2,120);}
 }
 function doRevive(who){ const p=who||player; p.revive--; p.hp=p.maxHP*0.55; p.invuln=2.2; p.shield=p.shieldMax; clearStatuses(p);
@@ -882,16 +881,16 @@ function updateEnemy(e,dt){
   const p=nearestPlayer(e.x,e.y)||player;   // Gegner zielen auf nächsten lebenden Spieler
   if(e.slowT>0)e.slowT-=dt;
   if(e.hitFlash>0)e.hitFlash-=dt;
-  if(e.burnT>0){ e.burnT-=dt; const bh=e.hp; e.hp-=e.burnDmg*dt; trackDmg(e,bh,e.burnSrc||'burn'); if(Math.random()<0.3)spawnParticle(e.x,e.y,C.candle,1.5,30); if(e.hp<=0){killEnemy(e);return;} }
+  if(e.burnT>0){ e.burnT-=dt; const bh=e.hp; e.hp-=e.burnDmg*dt; trackDmg(e,bh,e.burnSrc||'burn'); if(Math.random()<0.3)spawnParticle(e.x,e.y,C.candle,1.5,30); if(e.hp<=0){killEnemy(e,e.burnOwner,e.burnSrc);return;} }
   const sp=e.speed*(e.slowT>0?0.45:1)*(G.modEnemySpeed||1);
   const ang=Math.atan2(p.y-e.y,p.x-e.x), d=Math.hypot(p.x-e.x,p.y-e.y);
-  if(e.isBoss){ updateBoss(e,dt); }
+  if(e.isBoss){ updateBoss(e,dt,p); }
   else if(e.ranged){
     const want=220;
     if(d<want-30){ e.x-=Math.cos(ang)*sp*dt; e.y-=Math.sin(ang)*sp*dt; }
     else if(d>want+30){ e.x+=Math.cos(ang)*sp*0.6*dt; e.y+=Math.sin(ang)*sp*0.6*dt; }
     e.fireCd-=dt;
-    if(e.fireCd<=0 && !Admin.noFire){ e.fireCd=ETYPES[e.type].fireCd*rand(.8,1.2)/(diffMul('fireRate')*G.curseFire); enemyShoot(e,ang); }
+    if(e.fireCd<=0 && !Admin.noFire){ e.fireCd=ETYPES[e.type].fireCd*rand(.8,1.2)/(diffMul('fireRate')*G.curseFire); enemyShoot(e,ang,p); }
   } else if(e.explode){
     e.x+=Math.cos(ang)*sp*dt; e.y+=Math.sin(ang)*sp*dt;
     if(d<e.r+p.r+4){ explodeEnemy(e); return; }
@@ -908,12 +907,12 @@ function updateEnemy(e,dt){
   if((e.touch||e.isBoss)&&e.touchCd<=0&&d<e.r+p.r){
     hurtPlayer(e.isBoss?(e.dmg||14):e.dmg, p); e.touchCd=0.6;
     e.x-=Math.cos(ang)*10; e.y-=Math.sin(ang)*10;
-    if(p.thorns>0) damageEnemy(e,p.thorns,ang,40,false,'thorns');
+    if(p.thorns>0) damageEnemy(e,p.thorns,ang,40,false,'thorns',p);
   }
   if(e.touchCd>0)e.touchCd-=dt;
 }
-function enemyShoot(e,ang){
-  if(e.lob){ ebullets.push({x:e.x,y:e.y,vx:Math.cos(ang)*e.bspd,vy:Math.sin(ang)*e.bspd,r:6,dmg:e.bdmg,life:3,lob:true,color:C.sick,startD:0,maxD:Math.hypot(player.x-e.x,player.y-e.y)}); }
+function enemyShoot(e,ang,tg){
+  if(e.lob){ ebullets.push({x:e.x,y:e.y,vx:Math.cos(ang)*e.bspd,vy:Math.sin(ang)*e.bspd,r:6,dmg:e.bdmg,life:3,lob:true,color:C.sick,startD:0,maxD:Math.hypot(tg.x-e.x,tg.y-e.y)}); }
   else { ebullets.push({x:e.x,y:e.y,vx:Math.cos(ang)*e.bspd,vy:Math.sin(ang)*e.bspd,r:6,dmg:e.bdmg,life:3,color:'#d6c060'}); }
 }
 function explodeEnemy(e){
@@ -933,28 +932,30 @@ function summonAdds(e){ const n=1+Math.floor(G.level/14);
   for(let i=0;i<6;i++)spawnParticle(e.x,e.y,'#9a6abf',1.6,50);
 }
 function makeElite(e){ e.elite=true; e.maxHp*=2.6; e.hp=e.maxHp; e.dmg*=1.4; e.bdmg*=1.3; e.r=Math.round(e.r*1.3); e.xpValue=(e.xpValue||1)*3; e.speed*=0.92; }
-function damageEnemy(e,dmg,ang,kb,fromBullet,src){
+function damageEnemy(e,dmg,ang,kb,fromBullet,src,owner){
   if(Admin.one&&fromBullet)dmg=e.maxHp*99;
-  src=src||G._wid; let before=e.hp;
+  const o=owner||player, credit=src; let before=e.hp;
   e.hp-=dmg; e.hitFlash=0.08;
   if(kb){ e.x+=Math.cos(ang)*kb*0.04; e.y+=Math.sin(ang)*kb*0.04;
     e.x=clamp(e.x,ROOM.x+e.r,ROOM.x+ROOM.w-e.r); e.y=clamp(e.y,ROOM.y+e.r,ROOM.y+ROOM.h-e.r); }
-  if(!e.isBoss && player.execPct>0 && e.hp>0 && e.hp<e.maxHp*player.execPct){ trackDmg(e,before,src); before=e.hp; src='exec'; e.hp=0; spawnFloater(e.x,e.y-e.r-8,'✝',true); }
+  if(!e.isBoss && o.execPct>0 && e.hp>0 && e.hp<e.maxHp*o.execPct){ trackDmg(e,before,src); before=e.hp; src='exec'; e.hp=0; spawnFloater(e.x,e.y-e.r-8,'✝',true); }
   trackDmg(e,before,src);
-  if(e.hp<=0) killEnemy(e);
+  if(e.hp<=0) killEnemy(e,o,credit);
 }
 /* Schaden ohne Treffer-Effekte (Brand-, Aura-, Pfützen-Ticks) — läuft trotzdem durch die Messung */
-function hurtEnemyRaw(e,amt,src){ const before=e.hp; e.hp-=amt; trackDmg(e,before,src); if(e.hp<=0)killEnemy(e); }
-function killEnemy(e){
+function hurtEnemyRaw(e,amt,src,owner){ const before=e.hp; e.hp-=amt; trackDmg(e,before,src); if(e.hp<=0)killEnemy(e,owner,src); }
+/* owner = Spieler, dem der Kill gehört (Lebensraub, Goldbonus); src = Quelle — Waffen-Kills zählen für Freischaltungen */
+function killEnemy(e,owner,src){
   if(e.isBoss){ bossDefeated(e); return; }
-  G.kills++; if(G.run){G.run.kills++; if(G._wid){G.run.weaponKills[G._wid]=(G.run.weaponKills[G._wid]||0)+1;}} $('#killTag').textContent=G.kills; Audio2.kill();
+  const o=owner||player;
+  G.kills++; if(G.run){G.run.kills++; if(src&&weaponById(src)){G.run.weaponKills[src]=(G.run.weaponKills[src]||0)+1;}} $('#killTag').textContent=G.kills; Audio2.kill();
   for(let i=0;i<10;i++)spawnParticle(e.x,e.y,e.color,rand(1.5,3),rand(60,160));
   const rm=G.rewardMul||1;
   spawnPickup(e.x,e.y,'xp',Math.max(1,Math.round((e.xpValue||1)*rm)));
-  const gm=player?player.goldMult:1;
+  const gm=o?o.goldMult:1;
   if(Math.random()<0.8) spawnPickup(e.x,e.y,'coin',Math.max(1,Math.round(randInt(1,3)*gm*rm)));
   if(Math.random()<0.07) spawnPickup(e.x,e.y,'health',randInt(8,14));
-  if(player.lifesteal>0){ player.hp=clamp(player.hp+player.lifesteal,0,player.maxHP); updateHP(); }
+  if(o&&!o.dead&&o.lifesteal>0){ o.hp=clamp(o.hp+o.lifesteal,0,o.maxHP); updateHP(); }
   removeEnemy(e);
 }
 function removeEnemy(e){ const i=enemies.indexOf(e); if(i>=0)enemies.splice(i,1); }
@@ -976,9 +977,9 @@ function spawnBoss(lvl){
   Audio2.boss(); G.shake=8; return e;
 }
 function bshoot(e,a,spd,dmg,r,color){ ebullets.push({x:e.x,y:e.y,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd,r:r||6,dmg:dmg,life:4,color:color||C.blood2}); }
-function updateBoss(e,dt){
+function updateBoss(e,dt,tg){
   e.atkCd-=dt; e.moveT+=dt; e.spin+=dt;
-  const ang=Math.atan2(player.y-e.y,player.x-e.x);
+  const ang=Math.atan2(tg.y-e.y,tg.x-e.x);
   const cx0=WORLD.w/2, cy0=ROOM.y+140, ax=ROOM.w*0.30, ay=Math.min(ROOM.h*0.22,160);
   const k=e.bossKind;
 
@@ -1074,34 +1075,47 @@ function renderDbg(){ if(!dbgOn)return; const d=(G.run&&G.run.dmg)||{}; const ro
 /* =========================================================================
    BULLETS / PICKUPS / PARTICLES / PUDDLES
    ========================================================================= */
+/* ---------- GESCHOSS-EFFEKTE ----------
+   Jedes Geschoss trägt Besitzer (owner) und eine Effektliste (fx). Hooks: fly(b,dt), dmg(b,dmg,e)→dmg, hit(b,e),
+   wall(b), obstacle(b,ob), expire(b). hit 'die' beendet das Geschoss, wall/obstacle 'keep' hält es am Leben.
+   depth = Auslöse-Tiefe (0 = Waffe); Auslöser-Effekte sollen ab depth 1 gedrosselt, ab 2 gar nicht mehr feuern. */
+const BULLET_FX={
+  burn:   { hit(b,e){ e.burnT=2.0; e.burnDmg=Math.max(e.burnDmg,b.dmg*0.5+2); e.burnSrc=b.wid; e.burnOwner=b.owner; } },
+  slow:   { hit(b,e){ e.slowT=1.4; } },
+  puddle: { hit(b,e){ spawnPuddle(b.x,b.y,b.dmg*0.4,{hostile:false,src:b.wid,owner:b.owner}); } },
+  chain:  { hit(b,e){ chainLightning(b,e); } },
+  explode:{ hit(b,e){ explodeBullet(b); return 'die'; } },
+};
+/* Explosion zuletzt: früher beendete sie das Geschoss, bevor Kettenblitz und Pfütze auslösen konnten */
+const FX_ORDER=['burn','slow','puddle','chain','explode'];
+function bulletFx(w,p){ const on={burn:w.burn||p.burn,slow:w.slow||p.slow,puddle:w.puddle,chain:w.chain,explode:w.explosive||p.explosive};
+  return FX_ORDER.filter(k=>on[k]); }
+function runFx(b,hook,a1,a2){ let res; for(const id of b.fx){ const h=BULLET_FX[id]&&BULLET_FX[id][hook]; if(h){ const r=h(b,a1,a2); if(r)res=r; } } return res; }
+function fxDmg(b,e){ let d=b.dmg; for(const id of b.fx){ const h=BULLET_FX[id]&&BULLET_FX[id].dmg; if(h)d=h(b,d,e); } return d; }
+
 function nearestEnemy(x,y){let best=null,bd=1e9;for(const e of enemies){const d=dist2(x,y,e.x,e.y);if(d<bd){bd=d;best=e;}}return best;}
 function updateBullets(dt){
   for(let i=bullets.length-1;i>=0;i--){
     const b=bullets[i]; b.life-=dt;
     /* ponytail: keine Zielsuche mehr — Schüsse fliegen geradeaus, ändern nie die Richtung */
-    b.x+=b.vx*dt; b.y+=b.vy*dt;
-    let dead=b.life<=0;
-    if(b.x<ROOM.x||b.x>ROOM.x+ROOM.w||b.y<ROOM.y||b.y>ROOM.y+ROOM.h) dead=true;
-    if(!dead && bulletHitsObstacle(b)){ for(let k=0;k<3;k++)spawnParticle(b.x,b.y,b.color,1.2,40); dead=true; }
+    b.x+=b.vx*dt; b.y+=b.vy*dt; runFx(b,'fly',dt);
+    let dead=false;
+    if(b.life<=0){ runFx(b,'expire'); dead=true; }
+    else if(b.x<ROOM.x||b.x>ROOM.x+ROOM.w||b.y<ROOM.y||b.y>ROOM.y+ROOM.h) dead=runFx(b,'wall')!=='keep';
+    if(!dead){ const ob=bulletHitsObstacle(b); if(ob && runFx(b,'obstacle',ob)!=='keep'){ for(let k=0;k<3;k++)spawnParticle(b.x,b.y,b.color,1.2,40); dead=true; } }
     if(!dead){
       for(const e of enemies){
         if(b.hitIds.has(e.id))continue;
         if(dist2(b.x,b.y,e.x,e.y)<(b.r+e.r)*(b.r+e.r)){
-          const ang=Math.atan2(b.vy,b.vx);
-          G._wid=b.wid;                 // Kill dieser Waffe zuschreiben
-          damageEnemy(e,b.dmg,ang,b.kb,true);
-          spawnFloater(e.x,e.y-e.r,Math.round(b.dmg),b.crit); Audio2.hit();
-          if(b.burn){e.burnT=2.0;e.burnDmg=Math.max(e.burnDmg,b.dmg*0.5+2);e.burnSrc=b.wid;}
-          if(b.slow){e.slowT=1.4;}
-          if(b.explosive){ explodeBullet(b); dead=true; break; }
-          if(b.puddle){ spawnPuddle(b.x,b.y,b.dmg*0.4,{hostile:false}); }
-          if(b.chain){ chainLightning(b,e); }
+          const dmg=fxDmg(b,e);
+          damageEnemy(e,dmg,Math.atan2(b.vy,b.vx),b.kb,true,b.wid,b.owner);
+          spawnFloater(e.x,e.y-e.r,Math.round(dmg),b.crit); Audio2.hit();
           b.hitIds.add(e.id); b.pierce--;
+          if(runFx(b,'hit',e)==='die'){ dead=true; break; }
           for(let k=0;k<3;k++)spawnParticle(b.x,b.y,b.color,1.2,40);
           if(b.pierce<0){dead=true;break;}
         }
       }
-      G._wid=null;                       // nur während Geschoss-Treffern aktiv
     }
     if(dead) bullets.splice(i,1);
   }
@@ -1120,7 +1134,7 @@ function updateBullets(dt){
 function explodeBullet(b){
   G.shake=Math.max(G.shake,3);
   for(let i=0;i<10;i++)spawnParticle(b.x,b.y,C.candle,rand(1.5,3),rand(80,180));
-  for(const e of enemies){ if(dist2(b.x,b.y,e.x,e.y)<60*60){ damageEnemy(e,b.dmg*0.7,Math.atan2(e.y-b.y,e.x-b.x),40,true); } }
+  for(const e of enemies){ if(dist2(b.x,b.y,e.x,e.y)<60*60){ damageEnemy(e,b.dmg*0.7,Math.atan2(e.y-b.y,e.x-b.x),40,true,b.wid,b.owner); } }
 }
 function chainLightning(b,from){
   let last=from,jumps=2; const hitS=new Set([from.id]);
@@ -1128,11 +1142,11 @@ function chainLightning(b,from){
     let best=null,bd=140*140;
     for(const e of enemies){if(hitS.has(e.id))continue;const d=dist2(last.x,last.y,e.x,e.y);if(d<bd){bd=d;best=e;}}
     if(!best)break;
-    damageEnemy(best,b.dmg*0.6,0,20,true); hitS.add(best.id);
+    damageEnemy(best,b.dmg*0.6,0,20,true,b.wid,b.owner); hitS.add(best.id);
     bolts.push({x1:last.x,y1:last.y,x2:best.x,y2:best.y,t:0.12}); last=best;
   }
 }
-function spawnPuddle(x,y,dps,opts){ opts=opts||{}; puddles.push({x,y,r:opts.big?42:26,dps,life:opts.life||2.2,hostile:!!opts.hostile,effect:opts.effect||'poison',src:opts.src||G._wid}); for(let i=0;i<6;i++)spawnParticle(x,y, opts.effect==='fire'?C.candle:C.sick,1.5,40); }
+function spawnPuddle(x,y,dps,opts){ opts=opts||{}; puddles.push({x,y,r:opts.big?42:26,dps,life:opts.life||2.2,hostile:!!opts.hostile,effect:opts.effect||'poison',src:opts.src,owner:opts.owner}); for(let i=0;i<6;i++)spawnParticle(x,y, opts.effect==='fire'?C.candle:C.sick,1.5,40); }
 function updatePuddles(dt){
   for(let i=puddles.length-1;i>=0;i--){const pu=puddles[i];pu.life-=dt;
     if(pu.hostile){
@@ -1140,7 +1154,7 @@ function updatePuddles(dt){
         if(pu.effect==='fire') applyStatus('burn',1.6,pu.dps,pl); else applyStatus('poison',2.4,pu.dps,pl);
       } }
     } else {
-      for(const e of enemies){ if(!e.isBoss && dist2(pu.x,pu.y,e.x,e.y)<pu.r*pu.r){ hurtEnemyRaw(e,pu.dps*dt,pu.src||'puddle');} }
+      for(const e of enemies){ if(!e.isBoss && dist2(pu.x,pu.y,e.x,e.y)<pu.r*pu.r){ hurtEnemyRaw(e,pu.dps*dt,pu.src||'puddle',pu.owner);} }
     }
     if(pu.life<=0)puddles.splice(i,1);
   }
