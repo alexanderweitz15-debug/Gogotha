@@ -130,6 +130,7 @@ Object.assign(I18N.de,{
   char_unlocked:'✦ Charakter frei', m_dmg:'Schaden', m_hp:'Leben', m_speed:'Tempo', m_fr:'Feuerrate', m_gold:'Goldgewinn', m_xp:'Erfahrung',
   custom_hint:'Frei einstellbar — zählt NICHT.', custom_note:'<b style="color:#7fd0e6">Eigener Grad</b> — frei per Regler, zählt NICHT in Fortschritt, Erfolge oder Freischaltungen.',
   coop_down:'Gefallen', coop_revive:'belebt nächste Runde wieder', coop_player:'Spieler', coop_dead:'✝ Tot',
+  run_unranked:'<span style="color:#7fd0e6">Lauf nicht gewertet (Admin/Eigener Grad)</span>',
   coop_off:'Koop: AUS', coop_on:'Koop: AN', coop_p1pick:'Spieler 1 wählt …', coop_p2:'Spieler 2 wählt … (Pfeiltasten + Rechte Umschalt)',
 });
 Object.assign(I18N.en,{
@@ -142,6 +143,7 @@ Object.assign(I18N.en,{
   char_unlocked:'✦ Character unlocked', m_dmg:'Damage', m_hp:'Health', m_speed:'Speed', m_fr:'Fire rate', m_gold:'Gold gain', m_xp:'XP gain',
   custom_hint:'Freely adjustable — does NOT count.', custom_note:'<b style="color:#7fd0e6">Custom</b> — set freely via sliders, does NOT count toward progress, achievements or unlocks.',
   coop_down:'Down', coop_revive:'revives next round', coop_player:'Player', coop_dead:'✝ Dead',
+  run_unranked:'<span style="color:#7fd0e6">Run not counted (admin/custom)</span>',
   coop_off:'Co-op: OFF', coop_on:'Co-op: ON', coop_p1pick:'Player 1, choose …', coop_p2:'Player 2, choose … (Arrows + Right Shift)',
 });
 
@@ -398,7 +400,7 @@ function applyMeta(p){
   p.xpMult=(p.xpMult||1)*(1+0.05*metaLevel('xp'));
 }
 function awardSouls(snap){ if(!DB.current)return 0;
-  const s=Math.floor((snap.kills||0)/20)+(snap.level||0)*2+(snap.bossKills||0)*15+(snap.won?50:0);
+  const s=Math.floor((snap.kills||0)/20)+(snap.levelGain!=null?snap.levelGain:(snap.level||0))*2+(snap.bossKills||0)*15+(snap.won?50:0);
   DB.current.meta=DB.current.meta||{currency:0,levels:{}}; DB.current.meta.currency=(DB.current.meta.currency||0)+s; return s; }
 
 /* ---------- PHASE 5: CHARAKTER-FREISCHALTUNGEN ---------- */
@@ -439,11 +441,23 @@ function checkAchievements(){ if(!DB.current)return; const s=DB.current.stats||{
     showToast(t('ach_unlocked'),'<b style="color:var(--gold2)">'+achName(a)+'</b> &nbsp;·&nbsp; +25 '+t('souls')); } }
   if(any) DB.save();
 }
-/* Lauf-Ende zentral: Statistik committen, Seelen vergeben, Erfolge prüfen */
-function finishRun(died,won){ if(G.noSave) return 0;   // Custom-Grad zählt nicht
-  const snap=buildRunSnapshot(died,won); DB.commit(snap);
-  const souls=awardSouls(snap); checkAchievements(); DB.save(); return souls; }
+/* Lauf-Ende zentral: Statistik committen, Seelen vergeben, Erfolge prüfen.
+   Custom-Grad und Admin-Läufe zählen nicht. Station 50 wertet den Lauf bereits; spätere Wertungen
+   (Tod/Aufgeben im Endlos-Modus) buchen nur noch den Zuwachs seit der letzten Wertung. */
+function finishRun(died,won){ if(!runCounts()) return 0;
+  const snap=buildRunSnapshot(died,won), prev=G.runCommitted; G.runCommitted=snap;
+  const rec=prev?runDelta(snap,prev):snap;
+  DB.commit(rec); const souls=awardSouls(rec); checkAchievements(); DB.save(); return souls; }
+function runCounts(){ return !G.noSave && !(G.run&&G.run.cheated); }
+function runDelta(snap,prev){ const wk={};
+  for(const k in snap.weaponKills){ const d=snap.weaponKills[k]-(prev.weaponKills[k]||0); if(d>0)wk[k]=d; }
+  return Object.assign({},snap,{continued:true,kills:snap.kills-prev.kills,gold:snap.gold-prev.gold,bossKills:snap.bossKills-prev.bossKills,
+    time:snap.time-prev.time,levelGain:snap.level-prev.level,won:false,heresyWin:false,weaponKills:wk}); }
+function soulsLine(souls){ return runCounts()?t('souls_earned',{n:souls}):t('run_unranked'); }
 
+/* Admin-Läufe zählen nicht: aktiver Cheat beim Laufstart oder irgendein Admin-Eingriff während des Laufs */
+function adminActive(){ return Admin.god||Admin.one||Admin.dash||Admin.noFire||Admin.noSpawn||Admin.noObs||Admin.dmg!==1||Admin.luck!==1||Admin.startLevel!==1||Admin.startCoins!==0; }
+function markCheated(){ if(G.run&&['playing','paused','stats'].includes(G.state))G.run.cheated=true; }   // Admin-Panel ist im Lauf nur über die Pause erreichbar
 const Admin={god:false,one:false,dash:false,noFire:false,noSpawn:false,noObs:false,dmg:1,luck:1,startLevel:1,startCoins:0,unlocked:false};
 
 const G={state:'login',level:1,coins:0,kills:0,time:0,uiTime:0,cleared:false,clearTimer:0,shake:0,bossMode:false,boss:null,charId:'penitent',
@@ -497,7 +511,7 @@ const DB=(()=>{
     get online(){return online;},
     save(){ persist(); },
     commit(run){ if(!current)return; const s=current.stats;
-      s.runs++; s.kills+=run.kills||0; s.gold+=run.gold||0; s.bossKills+=run.bossKills||0; s.playTime+=run.time||0;
+      if(!run.continued)s.runs++; s.kills+=run.kills||0; s.gold+=run.gold||0; s.bossKills+=run.bossKills||0; s.playTime+=run.time||0;
       s.bestLevel=Math.max(s.bestLevel,run.level||0); s.bestCharLevel=Math.max(s.bestCharLevel,run.charLevel||0);
       if(run.died)s.deaths++; if(run.won)s.wins++;
       if(run.weaponKills){ s.weaponKills=s.weaponKills||{}; for(const k in run.weaponKills) s.weaponKills[k]=(s.weaponKills[k]||0)+run.weaponKills[k]; }
@@ -971,7 +985,7 @@ function bossDefeated(e){
   G.bossMode=false; G.boss=null; $('#bossBarWrap').classList.remove('show');
   if(G.run){G.run.bossKills=(G.run.bossKills||0)+1; G.run.bossKinds=G.run.bossKinds||{}; G.run.bossKinds[e.bossKind]=true;}
   /* Phase 5: Boss-Charakter sofort freischalten + persistieren */
-  if(DB.current && !G.noSave){ DB.current.stats=DB.current.stats||{}; const bk=DB.current.stats.bossKinds=DB.current.stats.bossKinds||{};
+  if(DB.current && runCounts()){ DB.current.stats=DB.current.stats||{}; const bk=DB.current.stats.bossKinds=DB.current.stats.bossKinds||{};
     const wasNew=!bk[e.bossKind]; bk[e.bossKind]=true; DB.save();
     if(wasNew){ const ch=CHARS.find(c=>c.unlock&&c.unlock.boss===e.bossKind); if(ch) showToast(t('char_unlocked'),'<b style="color:var(--gold2)">'+ch.name+'</b>'); } }
   G.shake=12; Audio2.win();
@@ -1143,7 +1157,8 @@ function startRun(charId){
   $('#diffTag').textContent=diffName(G.diff);
   G.level=clamp(Admin.startLevel,1,50); G.coins=Admin.startCoins; G.kills=0; G.time=0; G.endless=false;
   postQueue=[];
-  G.run={kills:0,gold:0,bossKills:0,time:0,level:G.level,charLevel:1,died:false,won:false,weaponKills:{},bossKinds:{}};
+  G.run={kills:0,gold:0,bossKills:0,time:0,level:G.level,charLevel:1,died:false,won:false,weaponKills:{},bossKinds:{},cheated:adminActive()};
+  G.runCommitted=null;
   enemies=[];bullets=[];ebullets=[];pickups=[];particles=[];puddles=[];floaters=[];bolts=[];obstacles=[];novaRings=[];deployables=[];beams=[];
   charPreviews=[];
   hideAllOverlays(); $('#hud').classList.add('show'); G.state='playing';
@@ -1374,7 +1389,7 @@ function renderAbility(cards){
 function openEndless(){
   G.state='endless'; $('#hud').classList.remove('show'); $('#bossBarWrap').classList.remove('show');
   if(G.run){G.run.won=true;} const souls=finishRun(false,true);
-  $('#endlessStats').innerHTML='Du hast alle 50 Stationen überstanden.<br>Charakterstufe: <b>'+player.level+'</b> · Tötungen: <b>'+G.kills+'</b><br>'+t('souls_earned',{n:souls})+'<br>Wie weit reicht die Gnade?';
+  $('#endlessStats').innerHTML='Du hast alle 50 Stationen überstanden.<br>Charakterstufe: <b>'+player.level+'</b> · Tötungen: <b>'+G.kills+'</b><br>'+soulsLine(souls)+'<br>Wie weit reicht die Gnade?';
   Audio2.win(); $('#endless').classList.add('show');
 }
 $('#endlessGo').onclick=()=>{ G.endless=true; hideAllOverlays(); $('#hud').classList.add('show'); G.state='playing'; nextLevel(); };
@@ -1419,7 +1434,7 @@ $('#statsClose').onclick=closeStats;
 const EPITAPHS=['Der Weg endet hier','Nicht alle Sünden lassen sich abtragen','Das Kreuz blieb leer','Asche zu Asche'];
 function buildRunSnapshot(died,won){ return {kills:G.kills,gold:G.run?G.run.gold:G.coins,bossKills:G.run?G.run.bossKills:0,
   time:G.time,level:G.level,charLevel:players.length?Math.max.apply(null,players.map(p=>p.level)):1,died:!!died,won:!!won,
-  weaponKills:G.run?G.run.weaponKills:null,bossKinds:G.run?G.run.bossKinds:null,heresyWin:!!won&&G.diff&&G.diff.id==='heresy'}; }
+  weaponKills:G.run?Object.assign({},G.run.weaponKills):{},bossKinds:G.run?G.run.bossKinds:null,heresyWin:!!won&&G.diff&&G.diff.id==='heresy'}; }
 function onPlayerDead(who){ const p=who||player; p.dead=true; p.hp=0;
   for(let i=0;i<26;i++)spawnParticle(p.x,p.y,C.blood2,rand(2,4),rand(80,200)); G.shake=Math.max(G.shake,7);
   if(alivePlayers().length===0){ gameOver(); }
@@ -1430,13 +1445,13 @@ function gameOver(){
   G.state='gameover'; $('#hud').classList.remove('show'); $('#bossBarWrap').classList.remove('show');
   const souls=finishRun(true,false);
   $('#goEpitaph').textContent=pick(EPITAPHS);
-  $('#goStats').innerHTML='Erreichte Station: <b>'+G.level+(G.level>50?' (Endlos)':' / 50')+'</b><br>Charakterstufe: <b>'+player.level+'</b><br>Tötungen: <b>'+G.kills+'</b><br>Gold: <b>'+G.coins+'</b><br>Klasse: <b>'+charById(G.charId).name+'</b><br>'+t('souls_earned',{n:souls});
+  $('#goStats').innerHTML='Erreichte Station: <b>'+G.level+(G.level>50?' (Endlos)':' / 50')+'</b><br>Charakterstufe: <b>'+player.level+'</b><br>Tötungen: <b>'+G.kills+'</b><br>Gold: <b>'+G.coins+'</b><br>Klasse: <b>'+charById(G.charId).name+'</b><br>'+soulsLine(souls);
   $('#gameover').classList.add('show');
 }
 function victory(){
   G.state='victory'; $('#hud').classList.remove('show'); $('#bossBarWrap').classList.remove('show');
   const souls=finishRun(false,true);
-  $('#winStats').innerHTML='Du hast alle 50 Stationen überstanden.<br>Charakterstufe: <b>'+player.level+'</b> · Tötungen: <b>'+G.kills+'</b><br>Gaben gesammelt: <b>'+player.items.length+'</b><br>'+t('souls_earned',{n:souls});
+  $('#winStats').innerHTML='Du hast alle 50 Stationen überstanden.<br>Charakterstufe: <b>'+player.level+'</b> · Tötungen: <b>'+G.kills+'</b><br>Gaben gesammelt: <b>'+player.items.length+'</b><br>'+soulsLine(souls);
   Audio2.win(); $('#victory').classList.add('show');
 }
 
@@ -1811,7 +1826,7 @@ $('#registerBtn').onclick=async ()=>{ initAudio(); $('#loginErr').textContent='�
 $('#loginPass').addEventListener('keydown',e=>{if(e.code==='Enter')$('#loginBtn').click();});
 $('#btnLogout').onclick=()=>{ DB.logout(); G.state='login'; hideAllOverlays(); $('#loginUser').value='';$('#loginPass').value=''; show('login'); };
 
-$('#btnStart').onclick=()=>{initAudio();G.coopPick=0;hideAllOverlays();renderCharCards();show('charselect');};
+$('#btnStart').onclick=()=>{initAudio();G.coopPick=0;G.state='charselect';hideAllOverlays();renderCharCards();show('charselect');};
 $('#btnHow').onclick=()=>{hideAllOverlays();show('how');};
 $('#howBack').onclick=()=>{hideAllOverlays();show('menu');};
 $('#btnProfile').onclick=()=>{fillProfile();hideAllOverlays();show('profile');};
@@ -1954,7 +1969,7 @@ $('#pauseStats').onclick=()=>{ $('#pause').classList.remove('show'); G.state='pl
 $('#pauseAdmin').onclick=()=>openAdminGate();
 $('#quitBtn').onclick=()=>{ if(player&&G.run){finishRun(true,false);} G.state='menu';hideAllOverlays();$('#hud').classList.remove('show');$('#bossBarWrap').classList.remove('show');refreshProfile();show('menu');};
 
-$('#retryBtn').onclick=()=>{hideAllOverlays();renderCharCards();show('charselect');};
+$('#retryBtn').onclick=()=>{G.coopPick=0;G.state='charselect';hideAllOverlays();renderCharCards();show('charselect');};
 $('#goMenu').onclick=()=>{G.state='menu';hideAllOverlays();refreshProfile();show('menu');};
 $('#winMenu').onclick=()=>{G.state='menu';hideAllOverlays();refreshProfile();show('menu');};
 
@@ -1995,6 +2010,10 @@ $('#aNext').onclick=()=>{if(G.state==='playing'||G.state==='paused'){G.boss=null
 $('#aBoss').onclick=()=>{if(G.state==='playing'){enemies.length=0;spawnBoss(Math.max(5,G.level));}};
 (function(){const ws=$('#aWeaponSel');WEAPONS.forEach(w=>{const o=document.createElement('option');o.value=w.id;o.textContent=w.name+' ('+rar(w.rk).name+')';ws.appendChild(o);});
   const is=$('#aItemSel');UPGRADE_DEFS.forEach(it=>{const o=document.createElement('option');o.value=it.id;o.textContent=it.name;is.appendChild(o);});})();
+
+[['cGod','change'],['cOne','change'],['cDash','change'],['cNoFire','change'],['cNoSpawn','change'],['cNoObs','change'],['cDmg','input'],['cLuck','input'],
+ ['aHeal','click'],['aHP','click'],['aMoney','click'],['aXP','click'],['aCure','click'],['aWeaponGive','click'],['aAllWeapons','click'],['aItemGive','click'],
+ ['aClear','click'],['aNext','click'],['aBoss','click']].forEach(([id,ev])=>$('#'+id).addEventListener(ev,markCheated));
 
 $('#langBtn').onclick=toggleLang;
 applyLang();

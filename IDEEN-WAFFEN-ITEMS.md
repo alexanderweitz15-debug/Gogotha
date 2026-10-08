@@ -9,9 +9,9 @@ Jede verbleibende Idee ist an Funktionen im Code gebunden und hat eine Aufwandss
 
 ---
 
-## 0. Vier Entscheidungen, die du treffen musst
+## 0. Vier Entscheidungen
 
-Diese Punkte kann ich nicht aus dem Code ableiten. Sie ändern, was gebaut wird.
+**Entschieden am 08.10.2026: Die Empfehlung wird in allen vier Punkten übernommen.**
 
 | # | Frage | Meine Empfehlung | Warum |
 |---|---|---|---|
@@ -310,10 +310,10 @@ Jeder Pool enthält mindestens ein Paar für eine Fähigkeits-Verschmelzung (orb
 
 | Schritt | Inhalt | Aufwand | Fertig, wenn |
 |---|---|---|---|
-| 1 | Bugs aus `IST-ZUSTAND.md` (1, 2, 5, 6, 8) | S × 5 | Endlos-Tod zählt 1 Lauf, Cheat-Lauf zählt 0, DB nicht abrufbar |
+| 1 ✓ | Bugs aus `IST-ZUSTAND.md` (1, 2, 5, 6, 8) – erledigt | S × 5 | Endlos-Tod zählt 1 Lauf, Cheat-Lauf zählt 0, DB nicht abrufbar |
 | 2 | Debug-Overlay (3.2) | M | Jede Schadensquelle erscheint, Summe = Schaden gesamt |
 | 3 | Besitzer + Effektliste (3.3) | M | Verteilung im Overlay wie vor dem Umbau; Koop-Lebensraub geht an den richtigen Spieler |
-| 4 | Entscheidungen E1–E4 | – | – |
+| 4 ✓ | Entscheidungen E1–E4: Empfehlung übernommen; E1 (Deckel) und E4 (Fluch-Wahl) sind eigene kleine Umbauten | S × 2 | – |
 | 5 | Waffenklassen (4) | M | Shop zeigt Klassen, Boni im Werte-Panel sichtbar |
 | 6 | Geschoss-Modifikatoren (5) | S × 5 | Jeder einzeln per Admin-Panel testbar |
 | 7 | Gegner-Gift + 6 Waffen (6) | M | Jede Klasse im Shop bis Stufe 4 erreichbar |
