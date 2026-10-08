@@ -356,6 +356,12 @@ const UPGRADE_DEFS=[
  {id:'burn',name:'Pestodem',ic:'flame',minRank:2,desc:r=>'Schüsse entzünden Gegner',apply:(p,r)=>{p.burn=true;p.dmgMult+=0.05*r;}},
  {id:'slow',name:'Eiserne Gnade',ic:'snow',minRank:1,desc:r=>'Schüsse verlangsamen',apply:(p,r)=>{p.slow=true;}},
  {id:'explosive',name:'Höllenfeuer',ic:'explosion',minRank:4,desc:r=>'Schüsse explodieren',apply:(p,r)=>{p.explosive=true;}},
+ /* --- Geschoss-Modifikatoren (Schritt 6): ändern das Geschoss statt einer Zahl, höchstens 1× pro Lauf --- */
+ {id:'m_pitch',name:'Pechfass',ic:'flame',minRank:1,max:1,mod:'pitch',desc:r=>'Einschläge hinterlassen 1,5 s eine Brandpfütze (25% Schaden/s)',apply:p=>p.fxMods.push('pitch')},
+ {id:'m_rico',name:'Querschläger',ic:'arrow',minRank:2,max:1,mod:'ricochet',desc:r=>'Geschosse prallen 1× von Wänden und Hindernissen ab',apply:p=>p.fxMods.push('ricochet')},
+ {id:'m_ghost',name:'Geisterhand',ic:'ghost',minRank:2,max:1,mod:'ghost',desc:r=>'Geschosse fliegen durch Hindernisse · −15% Schaden',apply:p=>p.fxMods.push('ghost')},
+ {id:'m_heavy',name:'Schwere Kugeln',ic:'weight',minRank:2,max:1,mod:'heavy',desc:r=>'Größer & langsamer · nah +60% Schaden, ab 600 px −30%',apply:p=>p.fxMods.push('heavy')},
+ {id:'m_split',name:'Splitterknochen',ic:'spread',minRank:4,max:1,mod:'split',desc:r=>'Treffer zersplittern in 3 Splitter (je 30% Schaden, erben Brand & Frost)',apply:p=>p.fxMods.push('split')},
 ];
 const upDefById=id=>UPGRADE_DEFS.find(u=>u.id===id);
 
@@ -677,7 +683,7 @@ function makePlayer(charId,ctrl){
     luck:0,goldMult:1,xpMult:1,
     weapons:[ch.weapon],wLevel:{},wCd:[0],heldTime:0,
     invuln:0,dashCd:0,dashTime:0,dashDir:{x:1,y:0},aim:0,
-    level:1,xp:0,xpNext:xpForLevel(1),items:[],abilities:[],
+    level:1,xp:0,xpNext:xpForLevel(1),items:[],abilities:[],taken:{},fxMods:[],
     /* ability state */
     orbitN:0,orbitDmg:0,orbitR:46,orbitAng:0,
     novaDmg:0,novaCd:3,novaR:120,novaT:3,novaColor:C.gold2,
@@ -691,7 +697,7 @@ function giveWeapon(id){ if(!player)return;
   if(!player.weapons.includes(id)){player.weapons.push(id);player.wCd.push(0);}
   else {player.wLevel[id]=Math.min(WEAPON_MAX_LEVEL-1,(player.wLevel[id]||0)+1);}
   recalcClasses(player); updateWeaponBar(); }
-function giveUpgradeDef(def,rk){ if(!player)return; const r=rarRank(rk); def.apply(player,r); player.hp=clamp(player.hp,0,player.maxHP);
+function giveUpgradeDef(def,rk){ if(!player||!upAvail(def))return; const r=rarRank(rk); def.apply(player,r); player.taken[def.id]=(player.taken[def.id]||0)+1; player.hp=clamp(player.hp,0,player.maxHP);
   player.items.push({ic:def.ic,color:rarColor(rk)}); updateItemPills(); updateHP(); }
 function giveAbility(def,rk){ if(!player)return; const r=rarRank(rk);
   const existing=player.abilities.find(a=>a.id===def.id);
@@ -796,10 +802,11 @@ function fireWeapon(w,base){
     let dmg=baseDmg*p.dmgMult*frenzyDmg*martyrDmg*Admin.dmg, crit=false;
     if(Math.random()<p.crit){dmg*=p.critMult;crit=true;}
     const spd=w.spd*p.projSpeed, sz=w.size*p.projSize;
-    bullets.push({id:uid++,x:p.x+Math.cos(ang)*16,y:p.y+Math.sin(ang)*16,
+    const nb={id:uid++,x:p.x+Math.cos(ang)*16,y:p.y+Math.sin(ang)*16,
       vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,dmg,r:sz,
       pierce:w.pierce+p.pierce+clsB(p,'eisen','pierce'),life:w.life||1.8,kb:w.kb*p.kbMult*(1+clsB(p,'eisen','kb')),color:w.color,crit,
-      fx:bulletFx(w,p),owner:p,depth:0,wid:w.id,hitIds:new Set()});
+      fx:bulletFx(w,p),owner:p,depth:0,wid:w.id,hitIds:new Set()};
+    bullets.push(nb); runFx(nb,'spawn');
   }
   if(w.kb>250)G.shake=Math.max(G.shake,2.5);
   spawnParticle(p.x+Math.cos(base)*16,p.y+Math.sin(base)*16,'rgba(255,220,150,.7)',2,30);
@@ -849,8 +856,9 @@ function updateDeployables(dt){
 }
 function deployShoot(d,base){ const n=d.count, total=d.spread*(n-1);
   for(let i=0;i<n;i++){ const ang=(n>1)?base-total/2+total*(i/(n-1)):base+rand(-d.spread,d.spread);
-    bullets.push({id:uid++,x:d.x,y:d.y,vx:Math.cos(ang)*d.spd,vy:Math.sin(ang)*d.spd,dmg:d.dmg,r:d.size,
-      pierce:d.pierce,life:1.6,kb:60,color:d.color,crit:false,fx:d.fx,owner:d.owner,depth:0,wid:d.wid,hitIds:new Set()}); }
+    const nb={id:uid++,x:d.x,y:d.y,vx:Math.cos(ang)*d.spd,vy:Math.sin(ang)*d.spd,dmg:d.dmg,r:d.size,
+      pierce:d.pierce,life:1.6,kb:60,color:d.color,crit:false,fx:d.fx,owner:d.owner,depth:0,wid:d.wid,hitIds:new Set()};
+    bullets.push(nb); runFx(nb,'spawn'); }
   Audio2.shoot();
 }
 function doDeployNova(d){ novaRings.push({x:d.x,y:d.y,r:10,max:d.novaR,t:0.4,color:d.color});
@@ -1155,13 +1163,33 @@ const BULLET_FX={
   puddle: { hit(b,e){ spawnPuddle(b.x,b.y,b.dmg*0.4,{hostile:false,src:b.wid,owner:b.owner,life:2.2*(1+clsB(b.owner,'seuche','life')),rMul:1+clsB(b.owner,'seuche','rad')}); } },
   chain:  { hit(b,e){ chainLightning(b,e); } },
   explode:{ hit(b,e){ explodeBullet(b); return 'die'; } },
+  /* Geschoss-Modifikatoren (Gaben, je 1× pro Lauf) */
+  pitch:  { hit(b){ pitchPuddle(b); }, expire(b){ pitchPuddle(b); } },
+  ricochet:{ wall(b){ if(b.rico)return; b.rico=1;
+      if(b.x<ROOM.x){b.x=ROOM.x;b.vx=Math.abs(b.vx);} else if(b.x>ROOM.x+ROOM.w){b.x=ROOM.x+ROOM.w;b.vx=-Math.abs(b.vx);}
+      if(b.y<ROOM.y){b.y=ROOM.y;b.vy=Math.abs(b.vy);} else if(b.y>ROOM.y+ROOM.h){b.y=ROOM.y+ROOM.h;b.vy=-Math.abs(b.vy);}
+      return 'keep'; },
+    obstacle(b,ob){ if(b.rico||b.fx.includes('ghost'))return; b.rico=1;   // Spiegelung an der Normalen des Hindernisses
+      const dx=b.x-ob.x, dy=b.y-ob.y, d=Math.hypot(dx,dy)||1, nx=dx/d, ny=dy/d, dot=b.vx*nx+b.vy*ny;
+      b.vx-=2*dot*nx; b.vy-=2*dot*ny; b.x=ob.x+nx*(ob.r+b.r+1); b.y=ob.y+ny*(ob.r+b.r+1); return 'keep'; } },
+  ghost:  { obstacle(){ return 'keep'; }, dmg(b,d){ return d*0.85; } },
+  heavy:  { spawn(b){ b.r*=1.4; b.vx*=0.75; b.vy*=0.75; b.dist=0; }, fly(b,dt){ b.dist+=Math.hypot(b.vx,b.vy)*dt; },
+            dmg(b,d){ return d*lerp(1.6,0.7,clamp(b.dist/600,0,1)); } },
+  split:  { hit(b,e){ if(b.depth>0)return; const base=Math.atan2(b.vy,b.vx), spd=Math.hypot(b.vx,b.vy)*0.8;
+      for(const off of [-0.61,0,0.61]){ const a=base+off;
+        bullets.push({id:uid++,x:b.x,y:b.y,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd,dmg:b.dmg*0.3,r:Math.max(2,b.r*0.6),pierce:0,life:0.35,kb:20,color:b.color,crit:false,
+          fx:b.fx.filter(f=>f==='burn'||f==='slow'),owner:b.owner,depth:b.depth+1,wid:b.wid,hitIds:new Set([e.id])}); } } },
 };
+/* Pechfass: höchstens eine Pfütze pro Waffe alle 0,2 s, nur aus Waffen-Geschossen (nicht aus Splittern) */
+function pitchPuddle(b){ if(b.depth>0||!b.owner)return; const tt=b.owner._pitchT||(b.owner._pitchT={});
+  if(G.time-(tt[b.wid]!=null?tt[b.wid]:-9)<0.2)return; tt[b.wid]=G.time;
+  spawnPuddle(b.x,b.y,b.dmg*0.25,{hostile:false,effect:'fire',life:1.5,src:b.wid,owner:b.owner}); }
 /* Explosion zuletzt: früher beendete sie das Geschoss, bevor Kettenblitz und Pfütze auslösen konnten */
 const FX_ORDER=['burn','slow','puddle','chain','explode'];
 function applyBurn(e,dmg,src,owner){ e.burnT=2.0+clsB(owner,'feuer','dur'); e.burnDmg=Math.max(e.burnDmg,dmg*(1+clsB(owner,'feuer','dmg'))); e.burnSrc=src; e.burnOwner=owner; }
 function applySlow(e,owner){ e.slowT=1.4+clsB(owner,'frost','dur'); e.slowF=clsB(owner,'frost','slow'); }
 function bulletFx(w,p){ const on={burn:w.burn||p.burn,slow:w.slow||p.slow,puddle:w.puddle,chain:w.chain,explode:w.explosive||p.explosive};
-  return FX_ORDER.filter(k=>on[k]); }
+  return FX_ORDER.filter(k=>on[k]).concat(p.fxMods||[]); }
 function runFx(b,hook,a1,a2){ let res; for(const id of b.fx){ const h=BULLET_FX[id]&&BULLET_FX[id][hook]; if(h){ const r=h(b,a1,a2); if(r)res=r; } } return res; }
 function fxDmg(b,e){ let d=b.dmg; for(const id of b.fx){ const h=BULLET_FX[id]&&BULLET_FX[id].dmg; if(h)d=h(b,d,e); } return d; }
 
@@ -1503,16 +1531,17 @@ $('#shopReroll').onclick=()=>{ const cost=15+G.level*2; if(G.coins<cost)return; 
 $('#shopSkip').onclick=()=>advancePost();
 
 /* ---------- UPGRADE (Stufenaufstieg) ---------- */
+const upAvail=u=>!(u.max && (player.taken[u.id]||0)>=u.max);   // Karten mit Limit nur bis zum Limit anbieten
 function rollUpgrades(){
   const cards=[]; const usedIds=new Set();
   for(let n=0;n<3;n++){
     let def=null,rk='common',tries=0;
     while(tries++<30){
       rk=rollRarity(currentLuck()); const r=rarRank(rk);
-      const pool=UPGRADE_DEFS.filter(u=>(u.minRank||0)<=r && !usedIds.has(u.id));
+      const pool=UPGRADE_DEFS.filter(u=>(u.minRank||0)<=r && !usedIds.has(u.id) && upAvail(u));
       if(pool.length){ def=pick(pool); break; }
     }
-    if(!def){ const pool=UPGRADE_DEFS.filter(u=>!usedIds.has(u.id)); def=pool.length?pick(pool):pick(UPGRADE_DEFS); rk='common'; }
+    if(!def){ const pool=UPGRADE_DEFS.filter(u=>!usedIds.has(u.id) && !u.minRank && upAvail(u)); def=pool.length?pick(pool):pick(UPGRADE_DEFS.filter(u=>!u.minRank)); rk='common'; }
     usedIds.add(def.id); cards.push({def,rk});
   }
   return cards;
@@ -1585,6 +1614,7 @@ function fillStats(){
   $('#statsClass').textContent=ch.name+' · '+t('hud_level')+' '+p.level;
   const pct=v=>Math.round(v*100)+'%';
   const ammo=[]; if(p.burn)ammo.push(t('ammo_burn')); if(p.slow)ammo.push(t('ammo_slow')); if(p.explosive)ammo.push(t('ammo_explosive'));
+  for(const m of p.fxMods||[]){ const d=UPGRADE_DEFS.find(u=>u.mod===m); if(d)ammo.push(d.name); }
   const rows=[
     [t('s_hp'),Math.ceil(p.hp)+' / '+p.maxHP],
     [t('s_shield'),p.shieldMax>0?Math.ceil(p.shield)+' / '+p.shieldMax:t('val_none')],
