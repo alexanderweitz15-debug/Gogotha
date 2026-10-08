@@ -237,6 +237,11 @@ body.touch #hud.show ~ #touchUI{display:block}
 .dock-items .dock-toggle{transform:rotate(0)}
 .dock-items.collapsed .dock-toggle{transform:rotate(-90deg)}
 .ipill{width:24px;height:24px;border-radius:5px;display:grid;place-items:center;background:rgba(10,8,6,.65);border:1px solid var(--line)}
+.ipill.rl{border-color:var(--gold2);box-shadow:0 0 8px rgba(224,178,90,.4)}
+.rcard.relic{border-color:var(--gold);background:linear-gradient(180deg,#1c160d,#0c0906);box-shadow:0 0 0 1px rgba(224,178,90,.15),0 0 18px rgba(224,178,90,.08) inset}
+.rcard.hidden-offer{border-style:dashed;border-color:var(--gold)}
+#shopCards.four{grid-template-columns:repeat(4,1fr);max-width:920px}
+@media (max-width:760px){ #shopCards.four{grid-template-columns:repeat(2,1fr)} }
 .ipill.ab{border-color:var(--epic);box-shadow:0 0 8px rgba(177,95,224,.4)}
 
 .boss-bar-wrap{position:absolute;top:60px;left:50%;transform:translateX(-50%);width:min(560px,80%);display:none}

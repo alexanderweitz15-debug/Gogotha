@@ -137,8 +137,11 @@ Object.assign(I18N.de,{
   curse_reward:'×1,35 Gold & XP', curse_accept:'Annehmen', curse_decline:'Ablehnen', curse_decline_d:'Normaler Lauf ohne Fluch und ohne Bonus.',
   meta_refund:'Deckel bei Schaden/Leben: <b>{n}</b> Seelen erstattet',
   trade_label:'Tausch', s_magnet:'Sammelradius',
+  relic_title:'Reliquie', relic_sub:'Der Boss ist gefallen. Wähle eine Reliquie — sie bleibt für den ganzen Lauf.', relic_label:'Reliquie', relics_label:'Reliquien',
+  relic_recipe:'Verschmilzt mit {w} (St. 10) zu {r}', key_label:'Verdeckt', key_hidden:'Unbekannte Ware zum halben Preis',
+  src_r_hammer:'Hammer (Reliquie)', src_r_bell:'Totenglocke (Reliquie)', src_r_urn:'Aschenurne (Reliquie)',
   hud_foes:'Gegner: {n}', gate_err:'Falsche Losung', rotate_hint:'Bitte Gerät quer halten',
-  hint_shop:'1–3 kaufen · R neu würfeln · Enter weiter', hint_pick:'1–3 wählen', endless_sub:'Der Gipfel ist erreicht',
+  hint_shop:'1–{n} kaufen · R neu würfeln · Enter weiter', hint_pick:'1–3 wählen', endless_sub:'Der Gipfel ist erreicht',
   shop_evo:'Verschmelzung', shop_evo_free:'Verschmelzen (gratis)', shop_refine:'Veredeln', shop_max:'✦ MAX · Stufe 10', lvl_short:'St.',
   w_proj:'{n} Projektile', w_single:'Einzelschuss', w_pierce:'durchbohrt', w_chain:'Blitz', w_explosive:'explosiv', w_deploy:'platzierbar',
   evo_done:'ist entstanden!', ab_evo:'Erwachte Verschmelzung', ab_evo_done:'entfesselt!', ab_card:'Fähigkeit', ab_owned:'Verstärkt deine Fähigkeit',
@@ -163,8 +166,11 @@ Object.assign(I18N.en,{
   curse_reward:'×1.35 gold & XP', curse_accept:'Accept', curse_decline:'Decline', curse_decline_d:'A normal run without curse or bonus.',
   meta_refund:'Damage/health cap: <b>{n}</b> souls refunded',
   trade_label:'Trade', s_magnet:'Pickup radius',
+  relic_title:'Relic', relic_sub:'The boss has fallen. Choose a relic — it stays for the whole run.', relic_label:'Relic', relics_label:'Relics',
+  relic_recipe:'Fuses with {w} (Lv 10) into {r}', key_label:'Hidden', key_hidden:'Unknown goods at half price',
+  src_r_hammer:'Hammer (relic)', src_r_bell:'Death knell (relic)', src_r_urn:'Ash urn (relic)',
   hud_foes:'Enemies: {n}', gate_err:'Wrong watchword', rotate_hint:'Please turn your device sideways',
-  hint_shop:'1–3 buy · R reroll · Enter continue', hint_pick:'1–3 choose', endless_sub:'The summit is reached',
+  hint_shop:'1–{n} buy · R reroll · Enter continue', hint_pick:'1–3 choose', endless_sub:'The summit is reached',
   shop_evo:'Fusion', shop_evo_free:'Fuse (free)', shop_refine:'Refine', shop_max:'✦ MAX · Level 10', lvl_short:'Lv',
   w_proj:'{n} projectiles', w_single:'Single shot', w_pierce:'piercing', w_chain:'lightning', w_explosive:'explosive', w_deploy:'deployable',
   evo_done:'has been forged!', ab_evo:'Awakened fusion', ab_evo_done:'unleashed!', ab_card:'Ability', ab_owned:'Strengthens your ability',
@@ -268,6 +274,10 @@ const WEAPONS=[
  {id:'hellwitch',name:'Höllenhexe',rk:'epic',evo:true,ic:'witch',dmg:6,fr:70,spd:760,count:2,spread:0.14,pierce:2,size:5,kb:40,burn:true,pattern:'even',color:C.candle},
  {id:'naildriver',name:'Sturmnagler',rk:'legendary',evo:true,ic:'gatling',dmg:6,fr:55,frMin:38,spd:900,count:1,spread:0.1,pierce:1,size:4,kb:50,ramp:true,slow:true,color:C.steel},
  {id:'godsedge',name:'Götterzorn',rk:'legendary',evo:true,ic:'trinity',dmg:18,fr:360,spd:920,count:3,spread:0.22,pierce:2,size:6,kb:120,chain:true,pattern:'even',color:C.gold2},
+ /* --- ENDFORMEN aus Waffe St. 10 + Reliquie (Schritt 9) --- */
+ {id:'blackdeath',name:'Schwarzer Tod',rk:'mythic',evo:true,ic:'plague',dmg:12,fr:620,spd:440,count:3,spread:0.3,pierce:0,size:6,kb:20,life:0.6,poison:true,toxcloud:true,contagion:true,contagionMax:3,pattern:'even',color:'#5a7a1a'},
+ {id:'bonehail',name:'Knochenhagel',rk:'legendary',evo:true,ic:'weight',dmg:22,fr:650,spd:640,count:1,spread:0.04,pierce:0,size:7,kb:100,bounce:4,bounceGrow:0.15,color:'#e8e0c8'},
+ {id:'pyresalvo',name:'Scheiterhaufen-Salve',rk:'legendary',evo:true,ic:'bolt',dmg:14,fr:480,spd:780,count:3,spread:0.18,pierce:0,size:4,kb:60,burn:true,ignite:true,igniteN:2,pattern:'even',color:'#ff9a40'},
  /* --- BOSS-WAFFEN (abgespeckt, nur via Boss-Freischaltung, nicht im Shop) --- */
  {id:'bw_preach',name:'Predigtkreis',rk:'epic',evo:true,ic:'nova',dmg:10,fr:680,spd:560,count:8,spread:0.8,pierce:0,size:5,kb:60,pattern:'even',color:C.blood2},
  {id:'bw_plague',name:'Madenbrut',rk:'epic',evo:true,ic:'plague',dmg:11,fr:600,spd:430,count:1,spread:0.05,pierce:0,size:8,kb:60,puddle:true,color:C.sick},
@@ -297,7 +307,7 @@ const WEAPON_CLS={
  apocalypse:['feuer'], voidmaw:['eisen'], godhand:['heilig','blitz'], sentry:['konstrukt','pulver'], totem:['konstrukt','feuer'],
  minelayer:['konstrukt','pulver'], familiar:['konstrukt'], laser:['feuer'], railspike:['eisen'], stormcaller:['blitz'],
  pestburst:['seuche','feuer'], reckoning:['blitz','eisen'], hellwitch:['feuer','seuche'], naildriver:['eisen','frost'], godsedge:['heilig','blitz'],
- pestflask:['seuche'], ratcage:['seuche','konstrukt'], litany:['frost'], tears:['frost'], firearrow:['feuer'], skullsling:['eisen'],
+ blackdeath:['seuche'], bonehail:['eisen'], pyresalvo:['feuer'], pestflask:['seuche'], ratcage:['seuche','konstrukt'], litany:['frost'], tears:['frost'], firearrow:['feuer'], skullsling:['eisen'],
  bw_preach:['heilig'], bw_plague:['seuche'], bw_surgeon:['frost','eisen'], bw_lamb:['eisen'], bw_cross:['heilig'],
 };
 WEAPONS.forEach(w=>{ w.cls=WEAPON_CLS[w.id]||[]; });
@@ -340,16 +350,36 @@ const WEAPON_EVOS=[
  {a:'witchfire',b:'flame',result:'hellwitch'},
  {a:'nailgun',b:'gatling',result:'naildriver'},
  {a:'trinity',b:'wrath',result:'godsedge'},
+ /* Waffe auf Stufe 10 + Reliquie (Schritt 9) */
+ {a:'pestflask',relic:'urn',result:'blackdeath'},
+ {a:'skullsling',relic:'feather',result:'bonehail'},
+ {a:'firearrow',relic:'bell',result:'pyresalvo'},
 ];
+/* ---------- RELIQUIEN: nach jeder Boss-Station 1 aus 3, je Spieler, einzigartig im Lauf ---------- */
+const RELICS=[
+ {id:'hammer', name:'Hammer des Zimmermanns', ic:'nail',     desc:'Treffer: 10% Chance auf +50% Schaden und 0,5 s Festnageln'},
+ {id:'bell',   name:'Totenglocke',            ic:'nova',     desc:'Kill: Schallwelle (90 px) mit 30% des überschüssigen Schadens'},
+ {id:'urn',    name:'Aschenurne',             ic:'explosion',desc:'Kill eines brennenden Gegners: Explosion (60 px) mit 40% des letzten Treffers'},
+ {id:'feather',name:'Krähenfeder',            ic:'wing',     desc:'Kritischer Treffer: nächste Salve derselben Waffe +2 Durchschlag'},
+ {id:'mblood', name:'Märtyrerblut',           ic:'leech',    desc:'Erlittener Treffer: 2 s lang +30% Schaden'},
+ {id:'confess',name:'Beichtstuhl',            ic:'shield',   desc:'Welle ohne Treffer: +5 Gold und +2 Max-LP'},
+ {id:'lance',  name:'Lanze des Wächters',     ic:'lance',    desc:'Bosse beginnen mit 10% weniger Leben'},
+ {id:'dice',   name:'Würfel des Soldaten',    ic:'star',     desc:'Erstes Neuwürfeln pro Waffenkammer gratis'},
+ {id:'coffer', name:'Opferstock',             ic:'crown',    desc:'Wellenende: +5% Zinsen auf dein Gold (max. 20)'},
+ {id:'key',    name:'Schlüssel des Türhüters',ic:'eye',      desc:'Waffenkammer: ein 4. verdecktes Angebot zum halben Preis'},
+];
+const relicById=id=>RELICS.find(r=>r.id===id);
+const hasRelic=(p,id)=>!!(p&&p.relics&&p.relics[id]);
 const priceMul=()=>(player&&player.priceMul)||1;
 function weaponPrice(w){ return Math.round(RARITY_PRICE[rarRank(w.rk)]*(1+G.level*0.03)*priceMul()); }
-const rerollCost=()=>Math.round((15+G.level*2)*priceMul());
+const rerollCost=()=>player&&player.freeReroll?0:Math.round((15+G.level*2)*priceMul());
 function weaponLevel(id){ return (player.wLevel[id]||0)+1; }
 function upgradePrice(w){ const lvl=weaponLevel(w.id); return Math.round(RARITY_PRICE[rarRank(w.rk)]*0.6*(1+lvl*0.28)*(1+G.level*0.02)*priceMul()); }
 function availableWeaponEvos(){
   if(!player) return [];
-  return WEAPON_EVOS.filter(r=> player.weapons.includes(r.a)&&player.weapons.includes(r.b)
-    && weaponLevel(r.a)>=EVO_LEVEL_REQ && weaponLevel(r.b)>=EVO_LEVEL_REQ && !player.weapons.includes(r.result));
+  return WEAPON_EVOS.filter(r=> player.weapons.includes(r.a) && !player.weapons.includes(r.result) && (r.relic
+    ? weaponLevel(r.a)>=WEAPON_MAX_LEVEL && hasRelic(player,r.relic)                 // Waffe St. 10 + Reliquie
+    : player.weapons.includes(r.b) && weaponLevel(r.a)>=EVO_LEVEL_REQ && weaponLevel(r.b)>=EVO_LEVEL_REQ));
 }
 
 /* ---------- CHARAKTER-UPGRADES (Stufen, mit XP/Level) ---------- */
@@ -645,9 +675,9 @@ addEventListener('keydown',e=>{
   }
   if(document.activeElement && document.activeElement.tagName==='INPUT') return;
   keys[e.code]=true; initAudio();
-  const deck={shop:'#shopCards',upgrade:'#upgradeCards',ability:'#abilityCards',curse:'#curseCards'}[G.state];
+  const deck={shop:'#shopCards',upgrade:'#upgradeCards',ability:'#abilityCards',curse:'#curseCards',relic:'#relicCards'}[G.state];
   if(deck && !e.repeat && performance.now()-(G.menuAt||0)>250){   // Sperre: kein versehentliches Wählen beim Öffnen
-    const n=['Digit1','Digit2','Digit3'].indexOf(e.code)>=0?+e.code.slice(5)-1:['Numpad1','Numpad2','Numpad3'].indexOf(e.code);
+    const n=['Digit1','Digit2','Digit3','Digit4'].indexOf(e.code)>=0?+e.code.slice(5)-1:['Numpad1','Numpad2','Numpad3','Numpad4'].indexOf(e.code);
     if(n>=0){ const c=document.querySelectorAll(deck+' .rcard')[n]; if(c&&!c.classList.contains('locked'))c.click(); return; }
     if(G.state==='shop'&&e.code==='KeyR'){ $('#shopReroll').click(); return; }
     if(G.state==='shop'&&e.code==='Enter'){ $('#shopSkip').click(); return; }
@@ -706,7 +736,7 @@ function makePlayer(charId,ctrl){
     luck:0,goldMult:1,xpMult:1,
     weapons:[ch.weapon],wLevel:{},wCd:[0],heldTime:0,
     invuln:0,dashCd:0,dashTime:0,dashDir:{x:1,y:0},aim:0,
-    level:1,xp:0,xpNext:xpForLevel(1),items:[],abilities:[],taken:{},fxMods:[],magnet:1,priceMul:1,skull:false,
+    level:1,xp:0,xpNext:xpForLevel(1),items:[],abilities:[],taken:{},fxMods:[],magnet:1,priceMul:1,skull:false,relics:{},featherNext:{},mbloodT:0,waveHit:false,
     /* ability state */
     orbitN:0,orbitDmg:0,orbitR:46,orbitAng:0,
     novaDmg:0,novaCd:3,novaR:120,novaT:3,novaColor:C.gold2,
@@ -795,7 +825,7 @@ function updatePlayer(dt){
   else if(mlen>0){p.x+=(dx/mlen)*p.speed*chillMult*frenzyMove*dt;p.y+=(dy/mlen)*p.speed*chillMult*frenzyMove*dt;}
   collideObstacles(p);
   p.x=clamp(p.x,ROOM.x+p.r,ROOM.x+ROOM.w-p.r);p.y=clamp(p.y,ROOM.y+p.r,ROOM.y+ROOM.h-p.r);
-  if(p.invuln>0)p.invuln-=dt;if(p.dashCd>0)p.dashCd-=dt;
+  if(p.invuln>0)p.invuln-=dt;if(p.dashCd>0)p.dashCd-=dt;if(p.mbloodT>0)p.mbloodT-=dt;
   if(tgt) p.heldTime+=dt; else p.heldTime=Math.max(0,p.heldTime-dt*2);
   const frMul=p.frMult*(p.frenzyActive?(1-p.frenzyPow*0.5):1);
   for(let i=0;i<p.weapons.length;i++){
@@ -811,6 +841,8 @@ function updatePlayer(dt){
   if(p.ctrl!=='p2') $('#dashPip').classList.toggle('ready',p.dashCd<=0||Admin.dash);
 }
 const skullMul=p=>p.skull&&G.run?1+Math.min(0.4,G.run.kills/25*0.01):1;
+/* Zusatz-Schadensfaktoren aus Gaben/Reliquien: Totenschädel, Märtyrerblut */
+const bonusMul=p=>skullMul(p)*(p.mbloodT>0?1.3:1);
 function weaponDamage(w){ const lvl=player.wLevel[w.id]||0; return w.dmg*(1+lvl*0.22); }
 function fireWeapon(w,base){
   if(w.beam){ fireBeam(w,base); return; }
@@ -819,19 +851,21 @@ function fireWeapon(w,base){
   const baseDmg=weaponDamage(w);
   const frenzyDmg=p.frenzyActive?(1+p.frenzyPow):1;
   const martyrDmg=(p.curseMartyr && p.hp<p.maxHP*0.5)?1.9:1;   // Fluch Märtyrertum: +90% unter 50% LP
+  const feather=hasRelic(p,'feather')&&p.featherNext[w.id]; if(feather)p.featherNext[w.id]=false; let anyCrit=false;
   for(let i=0;i<n;i++){
     let ang;
     if(w.pattern==='even'&&n>1) ang=base-total/2+total*(i/(n-1));
     else ang=base+rand(-spr,spr);
-    let dmg=baseDmg*p.dmgMult*frenzyDmg*martyrDmg*skullMul(p)*Admin.dmg, crit=false;
-    if(Math.random()<p.crit){dmg*=p.critMult;crit=true;}
+    let dmg=baseDmg*p.dmgMult*frenzyDmg*martyrDmg*bonusMul(p)*Admin.dmg, crit=false;
+    if(Math.random()<p.crit){dmg*=p.critMult;crit=true;anyCrit=true;}
     const spd=w.spd*p.projSpeed, sz=w.size*p.projSize;
     const nb={id:uid++,x:p.x+Math.cos(ang)*16,y:p.y+Math.sin(ang)*16,
       vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,dmg,r:sz,
-      pierce:w.pierce+p.pierce+clsB(p,'eisen','pierce'),life:w.life||1.8,kb:w.kb*p.kbMult*(1+clsB(p,'eisen','kb')),color:w.color,crit,
+      pierce:w.pierce+p.pierce+clsB(p,'eisen','pierce')+(feather?2:0),life:w.life||1.8,kb:w.kb*p.kbMult*(1+clsB(p,'eisen','kb')),color:w.color,crit,
       fx:bulletFx(w,p),owner:p,depth:0,wid:w.id,hitIds:new Set()};
     bullets.push(nb); runFx(nb,'spawn');
   }
+  if(anyCrit&&hasRelic(p,'feather')) p.featherNext[w.id]=true;
   if(w.kb>250)G.shake=Math.max(G.shake,2.5);
   spawnParticle(p.x+Math.cos(base)*16,p.y+Math.sin(base)*16,'rgba(255,220,150,.7)',2,30);
 }
@@ -841,7 +875,7 @@ function fireBeam(w,base){
   const p=player; Audio2.shoot();
   const len=w.spd||900, ex=p.x+Math.cos(base)*len, ey=p.y+Math.sin(base)*len;
   const frenzyDmg=p.frenzyActive?(1+p.frenzyPow):1, martyrDmg=(p.curseMartyr&&p.hp<p.maxHP*0.5)?1.9:1;
-  let dmg=weaponDamage(w)*p.dmgMult*frenzyDmg*martyrDmg*skullMul(p)*Admin.dmg, crit=false;
+  let dmg=weaponDamage(w)*p.dmgMult*frenzyDmg*martyrDmg*bonusMul(p)*Admin.dmg, crit=false;
   if(Math.random()<p.crit){dmg*=p.critMult;crit=true;}
   const rad=(w.size||6)*p.projSize;
   for(const e of enemies){ if(distToSeg(e.x,e.y,p.x,p.y,ex,ey)<e.r+rad){
@@ -863,7 +897,7 @@ function deployFromWeapon(w){
   for(let k=0;k<(w.deploy==='rat'?(w.count||1):1);k++){   // Rattenkäfig setzt mehrere Ratten auf einmal frei
   if(k>0){ const ml=deployables.filter(d=>d.wid===w.id); if(ml.length>=max){ const j=deployables.indexOf(ml[0]); if(j>=0)deployables.splice(j,1); } }
   deployables.push({kind:w.deploy,wid:w.id,x:x+(k?rand(-14,14):0),y:y+(k?rand(-14,14):0),r:w.deploy==='mine'?8:w.deploy==='rat'?6:13,
-    dmg:weaponDamage(w)*p.dmgMult*frenzyDmg*skullMul(p)*Admin.dmg, fireCd:(w.deployFire||600)/1000, fireT:0.3,
+    dmg:weaponDamage(w)*p.dmgMult*frenzyDmg*bonusMul(p)*Admin.dmg, fireCd:(w.deployFire||600)/1000, fireT:0.3,
     life:(w.deployLife||10)*(1+clsB(p,'konstrukt','life')), color:w.color, spd:(w.spd||640)*p.projSpeed, count:w.count||1, spread:w.spread||0,
     pierce:(w.pierce||0)+p.pierce+clsB(p,'eisen','pierce'), size:(w.size||5)*p.projSize, novaR:w.novaR||90,
     burn:w.burn||p.burn, fx:bulletFx(w,p), owner:p, phase:rand(0,TAU)});
@@ -991,7 +1025,8 @@ function updateEnemy(e,dt){
   if(e.burnT>0){ e.burnT-=dt; const bh=e.hp; e.hp-=e.burnDmg*dt; trackDmg(e,bh,e.burnSrc||'burn'); if(Math.random()<0.3)spawnParticle(e.x,e.y,C.candle,1.5,30); if(e.hp<=0){killEnemy(e,e.burnOwner,e.burnSrc);return;} }
   if(e.poisonT>0){ e.poisonT-=dt; const ph=e.hp; e.hp-=e.poisonDps*e.poisonStacks*dt; trackDmg(e,ph,e.poisonSrc||'poison'); if(Math.random()<0.2)spawnParticle(e.x,e.y,C.sick,1.3,25);
     if(e.poisonT<=0){e.poisonStacks=0;e.poisonDps=0;} if(e.hp<=0){killEnemy(e,e.poisonOwner,e.poisonSrc);return;} }
-  const sp=e.speed*(e.slowT>0?(e.slowF||0.45):1)*(G.modEnemySpeed||1);
+  if(e.rootT>0)e.rootT-=dt;
+  const sp=e.speed*(e.slowT>0?(e.slowF||0.45):1)*(e.rootT>0?0:1)*(G.modEnemySpeed||1);
   const ang=Math.atan2(p.y-e.y,p.x-e.x), d=Math.hypot(p.x-e.x,p.y-e.y);
   if(e.isBoss){ updateBoss(e,dt,p); }
   else if(e.ranged){
@@ -1042,7 +1077,9 @@ function summonAdds(e){ const n=1+Math.floor(G.level/14);
 }
 function makeElite(e){ e.elite=true; e.maxHp*=2.6; e.hp=e.maxHp; e.dmg*=1.4; e.bdmg*=1.3; e.r=Math.round(e.r*1.3); e.xpValue=(e.xpValue||1)*3; e.speed*=0.92; }
 function damageEnemy(e,dmg,ang,kb,fromBullet,src,owner){
+  if(e.hp<=0)return;   // bereits tot: kein zweiter Kill
   if(Admin.one&&fromBullet)dmg=e.maxHp*99;
+  e.lastHit=dmg;
   const o=owner||player, credit=src; let before=e.hp;
   const hs=clsStage(o,'heilig'); if(hs) dmg*=(e.isBoss||e.elite)?1+CLS_BONUS.heilig.boss[hs]:1-CLS_BONUS.heilig.normal[hs];
   e.hp-=dmg; e.hitFlash=0.08;
@@ -1053,7 +1090,7 @@ function damageEnemy(e,dmg,ang,kb,fromBullet,src,owner){
   if(e.hp<=0) killEnemy(e,o,credit);
 }
 /* Schaden ohne Treffer-Effekte (Brand-, Aura-, Pfützen-Ticks) — läuft trotzdem durch die Messung */
-function hurtEnemyRaw(e,amt,src,owner){ const before=e.hp; e.hp-=amt; trackDmg(e,before,src); if(e.hp<=0)killEnemy(e,owner,src); }
+function hurtEnemyRaw(e,amt,src,owner){ if(e.hp<=0)return; const before=e.hp; e.hp-=amt; trackDmg(e,before,src); if(e.hp<=0)killEnemy(e,owner,src); }
 /* owner = Spieler, dem der Kill gehört (Lebensraub, Goldbonus); src = Quelle — Waffen-Kills zählen für Freischaltungen */
 function killEnemy(e,owner,src){
   if(e.isBoss){ bossDefeated(e); return; }
@@ -1066,7 +1103,7 @@ function killEnemy(e,owner,src){
   if(Math.random()<0.8) spawnPickup(e.x,e.y,'coin',Math.max(1,Math.round(randInt(1,3)*gm*rm)));
   if(Math.random()<0.07) spawnPickup(e.x,e.y,'health',randInt(8,14));
   if(o&&!o.dead&&o.lifesteal>0){ o.hp=clamp(o.hp+o.lifesteal,0,o.maxHP); updateHP(); }
-  spreadOnDeath(e);
+  spreadOnDeath(e); relicOnKill(e,o);
   removeEnemy(e);
 }
 function removeEnemy(e){ const i=enemies.indexOf(e); if(i>=0)enemies.splice(i,1); }
@@ -1083,7 +1120,8 @@ function spawnBoss(lvl){
     color:C.blood2,touchCd:0,slowT:0,burnT:0,burnDmg:0,hitFlash:0,_orbCd:0,
     name:BOSS_NAMES[idx],atkCd:1.4,bspd:270+idx*12,bdmg:11*sc.dmg*diffMul('enemyDmg'),wob:0,spin:0,moveT:0,
     homeX:WORLD.w/2,homeY:ROOM.y+140,tpT:0,chargeT:0,charging:false,cdx:0,cdy:0};
-  e.hp=e.maxHp; enemies.push(e); G.boss=e; G.bossMode=true;
+  e.hp=e.maxHp; if(players.some(pl=>hasRelic(pl,'lance'))) e.hp=Math.round(e.maxHp*0.9);
+  enemies.push(e); G.boss=e; G.bossMode=true;
   $('#bossName').textContent=e.name; $('#bossBarWrap').classList.add('show');
   Audio2.boss(); G.shake=8; return e;
 }
@@ -1204,7 +1242,7 @@ const BULLET_FX={
   bounce: { hit(b,e){ const w=weaponById(b.wid); if((b.bnc||0)>=((w&&w.bounce)||0))return;
       let best=null,bd=160*160; for(const o of enemies){ if(o===e||b.hitIds.has(o.id))continue; const d=dist2(e.x,e.y,o.x,o.y); if(d<bd){bd=d;best=o;} }
       if(!best)return; const sp=Math.hypot(b.vx,b.vy), a=Math.atan2(best.y-b.y,best.x-b.x);
-      b.vx=Math.cos(a)*sp; b.vy=Math.sin(a)*sp; b.bnc=(b.bnc||0)+1; b.pierce++; b.life=Math.max(b.life,0.6); } },
+      b.vx=Math.cos(a)*sp; b.vy=Math.sin(a)*sp; b.bnc=(b.bnc||0)+1; b.pierce++; b.life=Math.max(b.life,0.6); if(w.bounceGrow)b.dmg*=1+w.bounceGrow; } },
   /* Geschoss-Modifikatoren (Gaben, je 1× pro Lauf) */
   pitch:  { hit(b){ pitchPuddle(b); }, expire(b){ pitchPuddle(b); } },
   ricochet:{ wall(b){ if(b.rico)return; b.rico=1;
@@ -1236,15 +1274,31 @@ function applyPoison(e,dps,src,owner,stack){ e.poisonStacks=stack?Math.min(3,(e.
   e.poisonDps=Math.max(e.poisonDps||0,dps); e.poisonT=Math.max(e.poisonT||0,3); e.poisonSrc=src; e.poisonOwner=owner; e.poisonGen=0; }
 /* Ansteckung beim Tod (Pestflasche: Gift, Brandpfeil: Brand) — springt genau einmal auf den nächsten Gegner */
 function spreadOnDeath(e){
-  const near=r=>{ let best=null,bd=r*r; for(const o of enemies){ if(o===e)continue; const d=dist2(e.x,e.y,o.x,o.y); if(d<bd){bd=d;best=o;} } return best; };
-  const wp=weaponById(e.poisonSrc), wb=weaponById(e.burnSrc);
-  if(e.poisonT>0 && !e.poisonGen && wp&&wp.contagion){ const n=near(140); if(n){ applyPoison(n,e.poisonDps,e.poisonSrc,e.poisonOwner,true); n.poisonGen=1; bolts.push({x1:e.x,y1:e.y,x2:n.x,y2:n.y,t:0.12,color:C.sick}); } }
-  if(e.burnT>0 && !e.burnGen && wb&&wb.ignite){ const n=near(140); if(n){ applyBurn(n,e.burnDmg,e.burnSrc,e.burnOwner); n.burnGen=1; bolts.push({x1:e.x,y1:e.y,x2:n.x,y2:n.y,t:0.12,color:C.candle}); } } }
+  const near=(r,k)=>enemies.filter(o=>o!==e&&dist2(e.x,e.y,o.x,o.y)<r*r).sort((a,b)=>dist2(e.x,e.y,a.x,a.y)-dist2(e.x,e.y,b.x,b.y)).slice(0,k);
+  const wp=weaponById(e.poisonSrc), wb=weaponById(e.burnSrc), pg=e.poisonGen||0, bgn=e.burnGen||0;
+  if(e.poisonT>0 && wp&&wp.contagion && pg<(wp.contagionMax||1)){ for(const n of near(140,1)){ applyPoison(n,e.poisonDps,e.poisonSrc,e.poisonOwner,true); n.poisonGen=pg+1; bolts.push({x1:e.x,y1:e.y,x2:n.x,y2:n.y,t:0.12,color:C.sick}); } }
+  if(e.burnT>0 && wb&&wb.ignite && bgn<1){ for(const n of near(140,wb.igniteN||1)){ applyBurn(n,e.burnDmg,e.burnSrc,e.burnOwner); n.burnGen=bgn+1; bolts.push({x1:e.x,y1:e.y,x2:n.x,y2:n.y,t:0.12,color:C.candle}); } } }
 function applySlow(e,owner){ e.slowT=1.4+clsB(owner,'frost','dur'); e.slowF=clsB(owner,'frost','slow'); }
 function bulletFx(w,p){ const on={burn:w.burn||p.burn,slow:w.slow||p.slow,poison:w.poison,puddle:w.puddle,toxcloud:w.toxcloud,frostpool:w.frostpool,bounce:w.bounce,chain:w.chain,explode:w.explosive||p.explosive};
   return FX_ORDER.filter(k=>on[k]).concat(p.fxMods||[]); }
 function runFx(b,hook,a1,a2){ let res; for(const id of b.fx){ const h=BULLET_FX[id]&&BULLET_FX[id][hook]; if(h){ const r=h(b,a1,a2); if(r)res=r; } } return res; }
 function fxDmg(b,e){ let d=b.dmg; for(const id of b.fx){ const h=BULLET_FX[id]&&BULLET_FX[id].dmg; if(h)d=h(b,d,e); } return d; }
+
+/* ---------- RELIQUIEN-AUSLÖSER ----------
+   Bremse: Schaden aus einem Auslöser löst keine weiteren Auslöser aus (G._relicD); Hammer feuert aus
+   Splittern (depth 1) nur mit 20% der Chance, ab depth 2 gar nicht. */
+function relicOnHit(b,e,dmg){ const o=b.owner; if(!hasRelic(o,'hammer')||b.depth>1||G._relicD||e.hp<=0)return;
+  if(Math.random()<0.1*(b.depth?0.2:1)){ G._relicD=1; e.rootT=0.5; damageEnemy(e,dmg*0.5,0,0,false,'r_hammer',o); G._relicD=0; spawnFloater(e.x,e.y-e.r-10,'✚',true); } }
+function relicOnKill(e,o){ if(!o||!o.relics||G._relicD)return; G._relicD=1;
+  try{
+    if(o.relics.bell){ const ok=Math.max(0,-e.hp)*0.3; if(ok>=1){ novaRings.push({x:e.x,y:e.y,r:8,max:90,t:0.3,color:C.bone});
+      for(const n of enemies.slice()) if(n!==e&&dist2(e.x,e.y,n.x,n.y)<90*90) damageEnemy(n,ok,Math.atan2(n.y-e.y,n.x-e.x),30,false,'r_bell',o); } }
+    if(o.relics.urn && e.burnT>0){ const d=(e.lastHit||0)*0.4; if(d>0){ novaRings.push({x:e.x,y:e.y,r:8,max:60,t:0.3,color:C.candle});
+      for(const n of enemies.slice()) if(n!==e&&dist2(e.x,e.y,n.x,n.y)<60*60) damageEnemy(n,d,Math.atan2(n.y-e.y,n.x-e.x),40,false,'r_urn',o); } }
+  } finally { G._relicD=0; } }
+function giveRelic(p,id){ const r=relicById(id); if(!p||!r||hasRelic(p,id))return; p.relics[id]=true;
+  p.items.push({ic:r.ic,color:C.gold2,relic:true}); updateItemPills(); }
+function relicRecipeHint(id){ const rc=WEAPON_EVOS.find(x=>x.relic===id); return rc?t('relic_recipe',{w:weaponById(rc.a).name,r:weaponById(rc.result).name}):''; }
 
 function nearestEnemy(x,y){let best=null,bd=1e9;for(const e of enemies){const d=dist2(x,y,e.x,e.y);if(d<bd){bd=d;best=e;}}return best;}
 function updateBullets(dt){
@@ -1261,7 +1315,7 @@ function updateBullets(dt){
         if(b.hitIds.has(e.id))continue;
         if(dist2(b.x,b.y,e.x,e.y)<(b.r+e.r)*(b.r+e.r)){
           const dmg=fxDmg(b,e);
-          damageEnemy(e,dmg,Math.atan2(b.vy,b.vx),b.kb,true,b.wid,b.owner);
+          damageEnemy(e,dmg,Math.atan2(b.vy,b.vx),b.kb,true,b.wid,b.owner); relicOnHit(b,e,dmg);
           spawnFloater(e.x,e.y-e.r,Math.round(dmg),b.crit); Audio2.hit();
           b.hitIds.add(e.id); b.pierce--;
           if(runFx(b,'hit',e)==='die'){ dead=true; break; }
@@ -1354,6 +1408,7 @@ function updateFloaters(dt){for(let i=floaters.length-1;i>=0;i--){const f=floate
 
 function hurtPlayer(dmg,who){
   const p=who||player; if(p.dead||p.invuln>0||Admin.god)return;
+  p.waveHit=true; if(hasRelic(p,'mblood')) p.mbloodT=2;
   dmg=Math.max(1,dmg-(p.armorLocked?0:p.armor));   // Fluch Eiserne Gier: Rüstung wirkt nicht
   if(p.shield>0){ const a=Math.min(p.shield,dmg); p.shield-=a; dmg-=a; p.shieldRegT=Math.max(p.shieldRegT,2.0);
     for(let i=0;i<6;i++)spawnParticle(p.x,p.y,C.chill,2,90); }
@@ -1432,7 +1487,7 @@ function buildLevel(lvl){
   enemies=[];bullets=[];ebullets=[];puddles=[];bolts=[];novaRings=[];pickups=[];deployables=[];beams=[];
   G.cleared=false; G.clearTimer=0;
   /* Koop: tote Spieler in der nächsten Runde wiederbeleben; alle Statuseffekte löschen + platzieren */
-  players.forEach((pl,i)=>{ clearStatuses(pl); if(pl.dead){ pl.dead=false; pl.hp=Math.round(pl.maxHP*0.6); } pl.invuln=0.9;
+  players.forEach((pl,i)=>{ clearStatuses(pl); pl.waveHit=false; if(pl.dead){ pl.dead=false; pl.hp=Math.round(pl.maxHP*0.6); } pl.invuln=0.9;
     pl.x=WORLD.w/2 + (players.length>1?(i===0?-44:44):0); pl.y=WORLD.h-160; });
   player=players[0];
   const region=REGIONS[clamp(Math.floor((lvl-1)/10),0,4)];
@@ -1474,12 +1529,17 @@ function checkCleared(dt){
 function onCleared(){
   player.hp=clamp(player.hp+player.maxHP*0.10,0,player.maxHP); updateHP();
   const clearGold=Math.round(G.level*3*(G.rewardMul||1));
-  G.coins+=clearGold; if(G.run)G.run.gold+=clearGold; $('#coinTag').textContent=G.coins;
+  G.coins+=clearGold; if(G.run)G.run.gold+=clearGold;
+  for(const pl of players){ if(!pl.dead && hasRelic(pl,'confess') && !pl.waveHit){ G.coins+=5; pl.maxHP+=2; pl.hp+=2; updateHP(); showToast(relicById('confess').name,'+5 '+t('hud_gold')+' · +2 '+t('s_hp')); } }
+  if(players.some(pl=>hasRelic(pl,'coffer'))){ const z=Math.min(20,Math.floor(G.coins*0.05)); G.coins+=z; if(G.run)G.run.gold+=z; }
+  $('#coinTag').textContent=G.coins;
   G.state='collect'; G.collectT=0;
 }
 function openPostWave(){
   postQueue=[];
+  const bossStation=G.level%5===0 && G.level<=50;
   for(const pl of players){ if(pl.dead)continue;
+    if(bossStation && RELICS.some(r=>!hasRelic(pl,r.id))) postQueue.push({step:'relic',pl});   // vor dem Shop, damit Würfel/Schlüssel sofort wirken
     postQueue.push({step:'shop',pl});
     for(let i=0;i<pl.pendingUp;i++) postQueue.push({step:'upgrade',pl});
     for(let i=0;i<pl.pendingAb;i++) postQueue.push({step:'ability',pl});
@@ -1494,7 +1554,17 @@ function advancePost(){
   if(it.step==='shop') openShop();
   else if(it.step==='upgrade') openUpgrade();
   else if(it.step==='ability') openAbility();
+  else if(it.step==='relic') openRelic();
 }
+function openRelic(){ G.state='relic'; G.menuAt=performance.now(); $('#hud').classList.remove('show');
+  const pool=shuffle(RELICS.filter(r=>!hasRelic(player,r.id))).slice(0,3);
+  $('#relicSub').textContent=playerTag()+t('relic_sub');
+  const wrap=$('#relicCards'); wrap.innerHTML='';
+  pool.forEach((r,i)=>{ const el=document.createElement('div'); el.className='rcard relic'; el.dataset.key=i+1; const hint=relicRecipeHint(r.id);
+    el.innerHTML='<div class="ic">'+svgIcon(r.ic,C.gold2,34)+'</div><div class="rk" style="color:var(--gold2)">✦ '+t('relic_label')+'</div><div class="rn">'+r.name+'</div>'+
+      '<div class="rd">'+r.desc+(hint?'<br><span style="color:var(--epic)">'+hint+'</span>':'')+'</div>';
+    el.onclick=()=>{ giveRelic(player,r.id); Audio2.ability(); advancePost(); }; wrap.appendChild(el); });
+  Audio2.ability(); show('relic'); }
 function playerTag(){ return (G.coop&&players.length>1) ? (t('coop_player')+' '+(players.indexOf(player)+1)+' · ') : ''; }
 function finishPostWave(){
   player=players[0];
@@ -1536,22 +1606,29 @@ function rollShop(){
       for(const w of up){ if(offer.length<3 && !used.has(w.id)){ used.add(w.id); offer.push({weapon:w,upgrade:true}); } }
     }
   }
+  if(hasRelic(player,'key')){
+    const fresh=atCap?[]:WEAPONS.filter(x=>!x.evo && !used.has(x.id) && !player.weapons.includes(x.id) && rarRank(x.rk)<=rarRank(rollRarity(currentLuck()+0.1)));
+    const up=player.weapons.filter(id=>weaponLevel(id)<WEAPON_MAX_LEVEL && !used.has(id)).map(id=>weaponById(id));
+    if(fresh.length) offer.push({weapon:pick(fresh),hidden:true}); else if(up.length) offer.push({weapon:pick(up),upgrade:true,hidden:true});
+  }
   return offer;
 }
 function openShop(){
   G.state='shop'; G.menuAt=performance.now(); $('#hud').classList.remove('show');
+  player.freeReroll=hasRelic(player,'dice');
   shopOffer=rollShop(); Audio2.lvl(); renderShop();
   $('#shop').classList.add('show');
 }
 function renderShop(){
   $('#shopGold').textContent=G.coins;
   $('#shopSub').textContent = playerTag() + (player.weapons.length>=WEAPON_CAP ? t('shop_sub_full',{cap:WEAPON_CAP}) : t('shop_sub_buy'));
-  const wrap=$('#shopCards'); wrap.innerHTML='';
+  const wrap=$('#shopCards'); wrap.innerHTML=''; wrap.classList.toggle('four',shopOffer.length>3);
+  $('#shopHint').textContent=t('hint_shop',{n:Math.max(3,shopOffer.length)});
   if(!shopOffer.length){ wrap.innerHTML='<div class="rd" style="grid-column:1/-1;color:var(--bone-dim);padding:20px">'+t('shop_nothing')+'</div>'; }
   shopOffer.forEach((o,i)=>{
     const el=document.createElement('div'); el.dataset.key=i+1;
     if(o.evo){
-      const r=o.evo, res=weaponById(r.result), a=weaponById(r.a), b=weaponById(r.b);
+      const r=o.evo, res=weaponById(r.result), a=weaponById(r.a), b=r.relic?{name:relicById(r.relic).name}:weaponById(r.b);
       el.className='rcard evo'; el.style.borderColor=rarColor(res.rk);
       el.innerHTML='<div class="ic">'+svgIcon(res.ic,res.color,34)+'</div>'+
         '<div class="rk godlike">✦ '+t('shop_evo')+'</div>'+
@@ -1561,7 +1638,12 @@ function renderShop(){
       el.onclick=()=>performWeaponEvolution(r);
     } else {
       const w=o.weapon, lvl=weaponLevel(w.id), maxed=lvl>=WEAPON_MAX_LEVEL;
-      const price=o.upgrade?upgradePrice(w):weaponPrice(w); const can=G.coins>=price && !maxed;
+      const price=Math.round((o.upgrade?upgradePrice(w):weaponPrice(w))*(o.hidden?0.5:1)); const can=G.coins>=price && !maxed;
+      if(o.hidden){ el.className='rcard hidden-offer'+(can?'':' locked');
+        el.innerHTML='<div class="ic">'+svgIcon('eye',C.gold2,32)+'</div><div class="rk" style="color:var(--gold2)">🗝 '+t('key_label')+'</div><div class="rn">???</div><div class="rd">'+t('key_hidden')+'</div>'+
+          '<div class="price'+(can?'':' cant')+'">'+price+' '+t('hud_gold')+'</div>';
+        if(can) el.onclick=()=>{ showToast(t('key_label'),'<b style="color:'+rarColor(w.rk)+'">'+w.name+'</b>'+(o.upgrade?' · '+t('shop_refine'):'')); buyWeapon(w,price); };
+        wrap.appendChild(el); return; }
       el.className='rcard'+(can?'':' locked'); el.style.borderColor=rarColor(w.rk);
       el.innerHTML='<div class="ic">'+svgIcon(w.ic,w.color,32)+'</div>'+
         '<div class="rk '+w.rk+'">'+rarName(w.rk)+(o.upgrade?' · '+t('shop_refine'):'')+'</div>'+
@@ -1582,7 +1664,7 @@ function buyWeapon(w,price){
   G.coins-=price; $('#coinTag').textContent=G.coins; giveWeapon(w.id); Audio2.buy();
   advancePost();   // nur EIN Kauf pro Markt
 }
-$('#shopReroll').onclick=()=>{ const cost=rerollCost(); if(G.coins<cost)return; G.coins-=cost; $('#coinTag').textContent=G.coins; shopOffer=rollShop(); renderShop(); };
+$('#shopReroll').onclick=()=>{ const cost=rerollCost(); if(G.coins<cost)return; G.coins-=cost; player.freeReroll=false; $('#coinTag').textContent=G.coins; shopOffer=rollShop(); renderShop(); };
 $('#shopSkip').onclick=()=>advancePost();
 
 /* ---------- UPGRADE (Stufenaufstieg) ---------- */
@@ -1698,7 +1780,8 @@ function fillStats(){
   const wlist=p.weapons.map(id=>{const w=weaponById(id);const l=weaponLevel(id);return '<b>'+w.name+'</b> <span style="color:var(--gold2)">'+t('lvl_short')+l+'</span>';}).join(' · ');
   const act=Object.keys(p.clsSt||{}).filter(c=>p.clsSt[c]>0);
   $('#statWeapons').innerHTML=t('weapons_label')+': '+wlist+(act.length?'<div class="stat-cls">'+act.map(c=>clsChip(c,clsName(c)+' '+ROMAN[p.clsSt[c]])+' <span>'+clsDesc(c,p.clsSt[c])+'</span>').join('<br>')+'</div>':'');
-  $('#statAbilities').innerHTML=p.abilities.length?(t('abilities_label')+': '+p.abilities.map(a=>'<b style="color:'+rarColor(a.rk)+'">'+a.name+'</b>'+(a.level>1?' '+t('lvl_short')+a.level:'')).join(' · ')):'';
+  const rl=Object.keys(p.relics||{}).map(id=>'<b style="color:var(--gold2)">'+relicById(id).name+'</b>');
+  $('#statAbilities').innerHTML=(rl.length?t('relics_label')+': '+rl.join(' · ')+'<br>':'')+(p.abilities.length?(t('abilities_label')+': '+p.abilities.map(a=>'<b style="color:'+rarColor(a.rk)+'">'+a.name+'</b>'+(a.level>1?' '+t('lvl_short')+a.level:'')).join(' · ')):'');
 }
 $('#statsClose').onclick=closeStats;
 
@@ -2060,7 +2143,7 @@ function updateHudLive(){ const p=players[0]; if(!p)return;
   document.querySelectorAll('#weaponbar .wcd').forEach((el,i)=>{ const mx=(p.wCdMax&&p.wCdMax[i])||0; el.style.width=(mx>0.3?clamp(1-p.wCd[i]/mx,0,1)*100:100)+'%'; });
   const n=enemies.length; if(n!==G._foeN){ G._foeN=n; $('#foeLabel').innerHTML=t('hud_foes',{n:'<b>'+n+'</b>'}); } }
 function updateItemPills(){ if(!player)return;const wrap=$('#itemPills');wrap.innerHTML='';
-  player.items.forEach(it=>{const el=document.createElement('div');el.className='ipill'+(it.ability?' ab':'');el.innerHTML=svgIcon(it.ic,it.color,14);wrap.appendChild(el);});
+  player.items.forEach(it=>{const el=document.createElement('div');el.className='ipill'+(it.ability?' ab':'')+(it.relic?' rl':'');el.innerHTML=svgIcon(it.ic,it.color,14);wrap.appendChild(el);});
   autoCollapse('itemDock',player.items.length,10); }
 function autoCollapse(dockId,count,threshold){ const d=$('#'+dockId); if(!d)return; if(count>threshold && !d.dataset.user) d.classList.add('collapsed'); }
 function setDock(dockId,collapsed){ const d=$('#'+dockId); if(!d)return; d.classList.toggle('collapsed',collapsed); }
@@ -2103,7 +2186,7 @@ function loop(now){
     vacuumPickups(dt); updateParticles(dt); updateFloaters(dt);
     renderGame();
     if(pickups.length===0 || G.collectT>1.5) openPostWave();
-  } else if(G.state==='paused'||G.state==='stats'||G.state==='shop'||G.state==='upgrade'||G.state==='ability'||G.state==='endless'||G.state==='curse'){
+  } else if(G.state==='paused'||G.state==='stats'||G.state==='shop'||G.state==='upgrade'||G.state==='ability'||G.state==='endless'||G.state==='curse'||G.state==='relic'){
     renderGame();
   } else { renderAmbient(dt);
     if(G.state==='charselect') for(const pv of charPreviews){pv.ctx.clearRect(0,0,pv.cv.width,pv.cv.height);pv.ctx.globalAlpha=pv.locked?0.22:1;const aim=Math.sin(G.uiTime*1.1+pv.phase)*0.5-0.2;drawHero(pv.ctx,pv.id,pv.cv.width/2,pv.cv.height*0.66,pv.cv.width*0.26,G.uiTime,false,aim);pv.ctx.globalAlpha=1;}
@@ -2323,15 +2406,17 @@ $('#aXP').onclick=()=>{if(player){for(let i=0;i<5;i++){player.level++;player.xpN
 $('#aCure').onclick=()=>{if(player)clearStatuses();};
 $('#aWeaponGive').onclick=()=>giveWeapon($('#aWeaponSel').value);
 $('#aAllWeapons').onclick=()=>{WEAPONS.forEach(w=>giveWeapon(w.id));};
+$('#aRelicGive').onclick=()=>{ if(player) giveRelic(player,$('#aRelicSel').value); };
 $('#aItemGive').onclick=()=>{const def=upDefById($('#aItemSel').value);if(def)giveUpgradeDef(def,'rare');};
 $('#aClear').onclick=()=>{if(G.state==='playing')enemies.length=0;};
 $('#aNext').onclick=()=>{if(G.state==='playing'||G.state==='paused'){G.boss=null;G.bossMode=false;$('#bossBarWrap').classList.remove('show');if(G.state==='paused')togglePause(false);nextLevel();}};
 $('#aBoss').onclick=()=>{if(G.state==='playing'){enemies.length=0;spawnBoss(Math.max(5,G.level));}};
 (function(){const ws=$('#aWeaponSel');WEAPONS.forEach(w=>{const o=document.createElement('option');o.value=w.id;o.textContent=w.name+' ('+rarName(w.rk)+')';ws.appendChild(o);});
+  const rs=$('#aRelicSel'); RELICS.forEach(r=>{const o=document.createElement('option');o.value=r.id;o.textContent=r.name;rs.appendChild(o);});
   const is=$('#aItemSel');UPGRADE_DEFS.forEach(it=>{const o=document.createElement('option');o.value=it.id;o.textContent=it.name;is.appendChild(o);});})();
 
 [['cGod','change'],['cOne','change'],['cDash','change'],['cNoFire','change'],['cNoSpawn','change'],['cNoObs','change'],['cDmg','input'],['cLuck','input'],
- ['aHeal','click'],['aHP','click'],['aMoney','click'],['aXP','click'],['aCure','click'],['aWeaponGive','click'],['aAllWeapons','click'],['aItemGive','click'],
+ ['aHeal','click'],['aHP','click'],['aMoney','click'],['aXP','click'],['aCure','click'],['aWeaponGive','click'],['aAllWeapons','click'],['aItemGive','click'],['aRelicGive','click'],
  ['aClear','click'],['aNext','click'],['aBoss','click']].forEach(([id,ev])=>$('#'+id).addEventListener(ev,markCheated));
 
 $('#langBtn').onclick=toggleLang;
