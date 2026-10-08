@@ -143,7 +143,8 @@ Object.assign(I18N.de,{
   evo_done:'ist entstanden!', ab_evo:'Erwachte Verschmelzung', ab_evo_done:'entfesselt!', ab_card:'Fähigkeit', ab_owned:'Verstärkt deine Fähigkeit',
   end_all50:'Du hast alle 50 Stationen überstanden.', end_clvl:'Charakterstufe', end_station:'Erreichte Station', end_class:'Klasse', endless_q:'Wie weit reicht die Gnade?',
   dbg_title:'Schaden pro Quelle (F3)', dbg_dmg:'Schaden', dbg_export:'Verlauf exportieren (JSON)',
-  src_orbit:'Kreisende Klingen', src_nova:'Nova', src_aura:'Pestaura', src_thorns:'Dornen', src_exec:'Hinrichtung', src_burn:'Brand', src_puddle:'Pfützen', 'src_?':'Unbekannt',
+  src_orbit:'Kreisende Klingen', src_nova:'Nova', src_aura:'Pestaura', src_thorns:'Dornen', src_exec:'Hinrichtung', src_burn:'Brand', src_puddle:'Pfützen', src_poison:'Gift', 'src_?':'Unbekannt',
+  w_poison:'Gift', w_bounce:'prallt ab', w_spread:'steckt an', w_frostpool:'Frostpfütze',
   coop_off:'Koop: AUS', coop_on:'Koop: AN', coop_p1pick:'Spieler 1 wählt …', coop_p2:'Spieler 2 wählt … (Pfeiltasten + Rechte Umschalt)',
 });
 Object.assign(I18N.en,{
@@ -167,7 +168,8 @@ Object.assign(I18N.en,{
   evo_done:'has been forged!', ab_evo:'Awakened fusion', ab_evo_done:'unleashed!', ab_card:'Ability', ab_owned:'Strengthens your ability',
   end_all50:'You survived all 50 stations.', end_clvl:'Character level', end_station:'Station reached', end_class:'Class', endless_q:'How far does grace reach?',
   dbg_title:'Damage by source (F3)', dbg_dmg:'Damage', dbg_export:'Export history (JSON)',
-  src_orbit:'Orbiting blades', src_nova:'Nova', src_aura:'Plague aura', src_thorns:'Thorns', src_exec:'Execution', src_burn:'Burn', src_puddle:'Puddles', 'src_?':'Unknown',
+  src_orbit:'Orbiting blades', src_nova:'Nova', src_aura:'Plague aura', src_thorns:'Thorns', src_exec:'Execution', src_burn:'Burn', src_puddle:'Puddles', src_poison:'Poison', 'src_?':'Unknown',
+  w_poison:'poison', w_bounce:'bounces', w_spread:'spreads', w_frostpool:'frost pool',
   coop_off:'Co-op: OFF', coop_on:'Co-op: ON', coop_p1pick:'Player 1, choose …', coop_p2:'Player 2, choose … (Arrows + Right Shift)',
 });
 
@@ -251,6 +253,13 @@ const WEAPONS=[
  {id:'laser',    name:'Läuterungsstrahl', rk:'rare',     ic:'beam',      beam:true,         dmg:8, spd:780,count:1,spread:0,pierce:99,size:7,fr:95, kb:30,burn:true,color:'#ff5a6a'},
  {id:'railspike',name:'Schienennagel',    rk:'epic',     ic:'lance',     dmg:46,fr:620,spd:1300,count:1,spread:0,pierce:99,size:6,kb:160,color:'#cfe0ff'},
  {id:'stormcaller',name:'Sturmrufer',     rk:'epic',     ic:'lightning', dmg:14,fr:300,spd:1000,count:1,spread:0.03,pierce:0,size:5,kb:50,chain:true,color:'#9bbcff'},
+ /* --- SCHRITT 7: neue Waffen für die dünnen Klassen (Seuche, Frost, Feuer) --- */
+ {id:'pestflask', name:'Pestflasche',      rk:'common',  ic:'plague', dmg:6, fr:900, spd:420,count:1,spread:0.05,pierce:0,size:6,kb:20,life:0.55,poison:true,toxcloud:true,contagion:true,color:C.sick},
+ {id:'ratcage',   name:'Rattenkäfig',      rk:'rare',    ic:'leech',  deploy:'rat',deployMax:6,deployLife:5,dmg:6,fr:2400,spd:170,count:3,spread:0,pierce:0,size:5,kb:0,poison:true,color:'#8a7a5a'},
+ {id:'litany',    name:'Eisige Litanei',   rk:'uncommon',ic:'snow',   dmg:7, fr:1100,spd:520,count:8,spread:0.785,pierce:0,size:5,kb:40,life:0.6,slow:true,pattern:'even',color:C.chill},
+ {id:'tears',     name:'Gefrorene Tränen', rk:'rare',    ic:'snow',   dmg:5, fr:1300,spd:400,count:1,spread:0.05,pierce:0,size:6,kb:0,life:0.6,slow:true,frostpool:true,color:'#a8e8ff'},
+ {id:'firearrow', name:'Brandpfeil',       rk:'common',  ic:'bolt',   dmg:10,fr:520, spd:760,count:1,spread:0.03,pierce:0,size:4,kb:60,burn:true,ignite:true,color:C.candle},
+ {id:'skullsling',name:'Schädelschleuder', rk:'uncommon',ic:'weight', dmg:15,fr:800, spd:600,count:1,spread:0.04,pierce:0,size:6,kb:80,bounce:2,color:C.bone},
  /* --- EVOLVIERTE WAFFEN (nur durch Verschmelzung, nicht im normalen Shop) --- */
  {id:'pestburst',name:'Seuchenschlund',rk:'mythic',evo:true,ic:'plague',dmg:14,fr:560,spd:520,count:7,spread:0.5,pierce:1,size:6,kb:120,puddle:true,burn:true,pattern:'even',color:C.sick},
  {id:'reckoning',name:'Vergeltung',rk:'epic',evo:true,ic:'bolt',dmg:30,fr:300,spd:980,count:1,spread:0.01,pierce:5,size:6,kb:200,chain:true,color:C.blood2},
@@ -286,6 +295,7 @@ const WEAPON_CLS={
  apocalypse:['feuer'], voidmaw:['eisen'], godhand:['heilig','blitz'], sentry:['konstrukt','pulver'], totem:['konstrukt','feuer'],
  minelayer:['konstrukt','pulver'], familiar:['konstrukt'], laser:['feuer'], railspike:['eisen'], stormcaller:['blitz'],
  pestburst:['seuche','feuer'], reckoning:['blitz','eisen'], hellwitch:['feuer','seuche'], naildriver:['eisen','frost'], godsedge:['heilig','blitz'],
+ pestflask:['seuche'], ratcage:['seuche','konstrukt'], litany:['frost'], tears:['frost'], firearrow:['feuer'], skullsling:['eisen'],
  bw_preach:['heilig'], bw_plague:['seuche'], bw_surgeon:['frost','eisen'], bw_lamb:['eisen'], bw_cross:['heilig'],
 };
 WEAPONS.forEach(w=>{ w.cls=WEAPON_CLS[w.id]||[]; });
@@ -836,11 +846,14 @@ function deployFromWeapon(w){
   let x=p.x,y=p.y;
   if(w.deploy!=='companion'){ x=clamp(p.x+Math.cos(p.aim)*38,ROOM.x+12,ROOM.x+ROOM.w-12); y=clamp(p.y+Math.sin(p.aim)*38,ROOM.y+12,ROOM.y+ROOM.h-12); }
   const frenzyDmg=p.frenzyActive?(1+p.frenzyPow):1;
-  deployables.push({kind:w.deploy,wid:w.id,x,y,r:w.deploy==='mine'?8:13,
+  for(let k=0;k<(w.deploy==='rat'?(w.count||1):1);k++){   // Rattenkäfig setzt mehrere Ratten auf einmal frei
+  if(k>0){ const ml=deployables.filter(d=>d.wid===w.id); if(ml.length>=max){ const j=deployables.indexOf(ml[0]); if(j>=0)deployables.splice(j,1); } }
+  deployables.push({kind:w.deploy,wid:w.id,x:x+(k?rand(-14,14):0),y:y+(k?rand(-14,14):0),r:w.deploy==='mine'?8:w.deploy==='rat'?6:13,
     dmg:weaponDamage(w)*p.dmgMult*frenzyDmg*Admin.dmg, fireCd:(w.deployFire||600)/1000, fireT:0.3,
     life:(w.deployLife||10)*(1+clsB(p,'konstrukt','life')), color:w.color, spd:(w.spd||640)*p.projSpeed, count:w.count||1, spread:w.spread||0,
     pierce:(w.pierce||0)+p.pierce+clsB(p,'eisen','pierce'), size:(w.size||5)*p.projSize, novaR:w.novaR||90,
     burn:w.burn||p.burn, fx:bulletFx(w,p), owner:p, phase:rand(0,TAU)});
+  }
   for(let i=0;i<6;i++)spawnParticle(x,y,w.color,1.6,50);
 }
 function updateDeployables(dt){
@@ -850,6 +863,9 @@ function updateDeployables(dt){
     if(d.kind==='turret'||d.kind==='companion'){ d.fireT-=dt; const tg=nearestEnemy(d.x,d.y);
       if(tg && d.fireT<=0){ deployShoot(d,Math.atan2(tg.y-d.y,tg.x-d.x)); d.fireT=d.fireCd; } }
     else if(d.kind==='totem'){ d.fireT-=dt; if(d.fireT<=0){ d.fireT=d.fireCd; doDeployNova(d); } }
+    else if(d.kind==='rat'){ const tg=nearestEnemy(d.x,d.y); d.fireT-=dt;
+      if(tg){ const a=Math.atan2(tg.y-d.y,tg.x-d.x); d.ang=a; d.x+=Math.cos(a)*d.spd*dt; d.y+=Math.sin(a)*d.spd*dt;
+        if(d.fireT<=0 && dist2(d.x,d.y,tg.x,tg.y)<(tg.r+d.r+2)*(tg.r+d.r+2)){ d.fireT=0.5; damageEnemy(tg,d.dmg,a,10,false,d.wid,d.owner); applyPoison(tg,d.dmg*0.5+1,d.wid,d.owner,true); } } }
     else if(d.kind==='mine'){ for(const e of enemies){ if(!e.isBoss && dist2(d.x,d.y,e.x,e.y)<(d.r+e.r+12)*(d.r+e.r+12)){ deployMineExplode(d); d.life=0; break; } } }
     if(d.life<=0) deployables.splice(i,1);
   }
@@ -959,6 +975,8 @@ function updateEnemy(e,dt){
   if(e.slowT>0)e.slowT-=dt;
   if(e.hitFlash>0)e.hitFlash-=dt;
   if(e.burnT>0){ e.burnT-=dt; const bh=e.hp; e.hp-=e.burnDmg*dt; trackDmg(e,bh,e.burnSrc||'burn'); if(Math.random()<0.3)spawnParticle(e.x,e.y,C.candle,1.5,30); if(e.hp<=0){killEnemy(e,e.burnOwner,e.burnSrc);return;} }
+  if(e.poisonT>0){ e.poisonT-=dt; const ph=e.hp; e.hp-=e.poisonDps*e.poisonStacks*dt; trackDmg(e,ph,e.poisonSrc||'poison'); if(Math.random()<0.2)spawnParticle(e.x,e.y,C.sick,1.3,25);
+    if(e.poisonT<=0){e.poisonStacks=0;e.poisonDps=0;} if(e.hp<=0){killEnemy(e,e.poisonOwner,e.poisonSrc);return;} }
   const sp=e.speed*(e.slowT>0?(e.slowF||0.45):1)*(G.modEnemySpeed||1);
   const ang=Math.atan2(p.y-e.y,p.x-e.x), d=Math.hypot(p.x-e.x,p.y-e.y);
   if(e.isBoss){ updateBoss(e,dt,p); }
@@ -1034,6 +1052,7 @@ function killEnemy(e,owner,src){
   if(Math.random()<0.8) spawnPickup(e.x,e.y,'coin',Math.max(1,Math.round(randInt(1,3)*gm*rm)));
   if(Math.random()<0.07) spawnPickup(e.x,e.y,'health',randInt(8,14));
   if(o&&!o.dead&&o.lifesteal>0){ o.hp=clamp(o.hp+o.lifesteal,0,o.maxHP); updateHP(); }
+  spreadOnDeath(e);
   removeEnemy(e);
 }
 function removeEnemy(e){ const i=enemies.indexOf(e); if(i>=0)enemies.splice(i,1); }
@@ -1163,6 +1182,15 @@ const BULLET_FX={
   puddle: { hit(b,e){ spawnPuddle(b.x,b.y,b.dmg*0.4,{hostile:false,src:b.wid,owner:b.owner,life:2.2*(1+clsB(b.owner,'seuche','life')),rMul:1+clsB(b.owner,'seuche','rad')}); } },
   chain:  { hit(b,e){ chainLightning(b,e); } },
   explode:{ hit(b,e){ explodeBullet(b); return 'die'; } },
+  poison: { hit(b,e){ applyPoison(e,b.dmg*0.5+1,b.wid,b.owner,true); } },
+  /* Wurfwaffen: Wolke/Pfütze beim Aufprall oder am Ende der Wurfweite (je Geschoss einmal) */
+  toxcloud:{ hit(b){ dropPool(b,'toxin'); }, expire(b){ dropPool(b,'toxin'); } },
+  frostpool:{ hit(b){ dropPool(b,'chill'); }, expire(b){ dropPool(b,'chill'); } },
+  /* Schädelschleuder: springt nach einem Treffer zum nächsten Gegner in 160 px (w.bounce-mal) */
+  bounce: { hit(b,e){ const w=weaponById(b.wid); if((b.bnc||0)>=((w&&w.bounce)||0))return;
+      let best=null,bd=160*160; for(const o of enemies){ if(o===e||b.hitIds.has(o.id))continue; const d=dist2(e.x,e.y,o.x,o.y); if(d<bd){bd=d;best=o;} }
+      if(!best)return; const sp=Math.hypot(b.vx,b.vy), a=Math.atan2(best.y-b.y,best.x-b.x);
+      b.vx=Math.cos(a)*sp; b.vy=Math.sin(a)*sp; b.bnc=(b.bnc||0)+1; b.pierce++; b.life=Math.max(b.life,0.6); } },
   /* Geschoss-Modifikatoren (Gaben, je 1× pro Lauf) */
   pitch:  { hit(b){ pitchPuddle(b); }, expire(b){ pitchPuddle(b); } },
   ricochet:{ wall(b){ if(b.rico)return; b.rico=1;
@@ -1185,10 +1213,21 @@ function pitchPuddle(b){ if(b.depth>0||!b.owner)return; const tt=b.owner._pitchT
   if(G.time-(tt[b.wid]!=null?tt[b.wid]:-9)<0.2)return; tt[b.wid]=G.time;
   spawnPuddle(b.x,b.y,b.dmg*0.25,{hostile:false,effect:'fire',life:1.5,src:b.wid,owner:b.owner}); }
 /* Explosion zuletzt: früher beendete sie das Geschoss, bevor Kettenblitz und Pfütze auslösen konnten */
-const FX_ORDER=['burn','slow','puddle','chain','explode'];
-function applyBurn(e,dmg,src,owner){ e.burnT=2.0+clsB(owner,'feuer','dur'); e.burnDmg=Math.max(e.burnDmg,dmg*(1+clsB(owner,'feuer','dmg'))); e.burnSrc=src; e.burnOwner=owner; }
+const FX_ORDER=['burn','slow','poison','puddle','toxcloud','frostpool','bounce','chain','explode'];
+function applyBurn(e,dmg,src,owner){ e.burnGen=0; e.burnT=2.0+clsB(owner,'feuer','dur'); e.burnDmg=Math.max(e.burnDmg,dmg*(1+clsB(owner,'feuer','dmg'))); e.burnSrc=src; e.burnOwner=owner; }
+function dropPool(b,effect){ if(b.pooled||b.depth>0)return; b.pooled=1;
+  spawnPuddle(b.x,b.y,b.dmg*0.4,{hostile:false,effect,life:2.5*(effect==='toxin'?1+clsB(b.owner,'seuche','life'):1),rMul:1.3,src:b.wid,owner:b.owner}); }
+/* Gift auf Gegnern: bis 3 Stapel, jeder Stapel tickt dps; Wolken halten mindestens 1 Stapel aufrecht */
+function applyPoison(e,dps,src,owner,stack){ e.poisonStacks=stack?Math.min(3,(e.poisonStacks||0)+1):Math.max(1,e.poisonStacks||0);
+  e.poisonDps=Math.max(e.poisonDps||0,dps); e.poisonT=Math.max(e.poisonT||0,3); e.poisonSrc=src; e.poisonOwner=owner; e.poisonGen=0; }
+/* Ansteckung beim Tod (Pestflasche: Gift, Brandpfeil: Brand) — springt genau einmal auf den nächsten Gegner */
+function spreadOnDeath(e){
+  const near=r=>{ let best=null,bd=r*r; for(const o of enemies){ if(o===e)continue; const d=dist2(e.x,e.y,o.x,o.y); if(d<bd){bd=d;best=o;} } return best; };
+  const wp=weaponById(e.poisonSrc), wb=weaponById(e.burnSrc);
+  if(e.poisonT>0 && !e.poisonGen && wp&&wp.contagion){ const n=near(140); if(n){ applyPoison(n,e.poisonDps,e.poisonSrc,e.poisonOwner,true); n.poisonGen=1; bolts.push({x1:e.x,y1:e.y,x2:n.x,y2:n.y,t:0.12,color:C.sick}); } }
+  if(e.burnT>0 && !e.burnGen && wb&&wb.ignite){ const n=near(140); if(n){ applyBurn(n,e.burnDmg,e.burnSrc,e.burnOwner); n.burnGen=1; bolts.push({x1:e.x,y1:e.y,x2:n.x,y2:n.y,t:0.12,color:C.candle}); } } }
 function applySlow(e,owner){ e.slowT=1.4+clsB(owner,'frost','dur'); e.slowF=clsB(owner,'frost','slow'); }
-function bulletFx(w,p){ const on={burn:w.burn||p.burn,slow:w.slow||p.slow,puddle:w.puddle,chain:w.chain,explode:w.explosive||p.explosive};
+function bulletFx(w,p){ const on={burn:w.burn||p.burn,slow:w.slow||p.slow,poison:w.poison,puddle:w.puddle,toxcloud:w.toxcloud,frostpool:w.frostpool,bounce:w.bounce,chain:w.chain,explode:w.explosive||p.explosive};
   return FX_ORDER.filter(k=>on[k]).concat(p.fxMods||[]); }
 function runFx(b,hook,a1,a2){ let res; for(const id of b.fx){ const h=BULLET_FX[id]&&BULLET_FX[id][hook]; if(h){ const r=h(b,a1,a2); if(r)res=r; } } return res; }
 function fxDmg(b,e){ let d=b.dmg; for(const id of b.fx){ const h=BULLET_FX[id]&&BULLET_FX[id].dmg; if(h)d=h(b,d,e); } return d; }
@@ -1246,7 +1285,7 @@ function chainLightning(b,from){
     bolts.push({x1:last.x,y1:last.y,x2:best.x,y2:best.y,t:0.12}); last=best;
   }
 }
-function spawnPuddle(x,y,dps,opts){ opts=opts||{}; puddles.push({x,y,r:(opts.big?42:26)*(opts.rMul||1),dps,life:opts.life||2.2,hostile:!!opts.hostile,effect:opts.effect||'poison',src:opts.src,owner:opts.owner}); for(let i=0;i<6;i++)spawnParticle(x,y, opts.effect==='fire'?C.candle:C.sick,1.5,40); }
+function spawnPuddle(x,y,dps,opts){ opts=opts||{}; puddles.push({x,y,r:(opts.big?42:26)*(opts.rMul||1),dps,life:opts.life||2.2,hostile:!!opts.hostile,effect:opts.effect||'poison',src:opts.src,owner:opts.owner}); for(let i=0;i<6;i++)spawnParticle(x,y, opts.effect==='fire'?C.candle:opts.effect==='chill'?C.chill:C.sick,1.5,40); }
 function updatePuddles(dt){
   for(let i=puddles.length-1;i>=0;i--){const pu=puddles[i];pu.life-=dt;
     if(pu.hostile){
@@ -1254,7 +1293,10 @@ function updatePuddles(dt){
         if(pu.effect==='fire') applyStatus('burn',1.6,pu.dps,pl); else applyStatus('poison',2.4,pu.dps,pl);
       } }
     } else {
-      for(const e of enemies){ if(!e.isBoss && dist2(pu.x,pu.y,e.x,e.y)<pu.r*pu.r){ hurtEnemyRaw(e,pu.dps*dt,pu.src||'puddle',pu.owner);} }
+      for(const e of enemies){ if(!e.isBoss && dist2(pu.x,pu.y,e.x,e.y)<pu.r*pu.r){
+        if(pu.effect==='toxin'){ applyPoison(e,pu.dps,pu.src,pu.owner,false); continue; }    // Wolke vergiftet statt direkt zu schaden
+        if(pu.effect==='chill'){ applySlow(e,pu.owner); e.slowF=Math.min(e.slowF,0.3); }      // Frostpfütze: starke Verlangsamung + leichter Schaden
+        hurtEnemyRaw(e,pu.dps*dt,pu.src||'puddle',pu.owner);} }
     }
     if(pu.life<=0)puddles.splice(i,1);
   }
@@ -1521,7 +1563,7 @@ function renderShop(){
   $('#shopReroll').textContent=t('shop_reroll',{cost:rerollCost});
   $('#shopReroll').style.opacity=G.coins<rerollCost?0.45:1;
 }
-function weaponMeta(w,dmgTxt){ return t('dbg_dmg')+' '+dmgTxt+' · '+(w.count>1?t('w_proj',{n:w.count}):t('w_single'))+(w.pierce>2?' · '+t('w_pierce'):'')+(w.chain?' · '+t('w_chain'):'')+(w.burn?' · '+t('ammo_burn'):'')+(w.explosive?' · '+t('w_explosive'):'')+(w.deploy?' · '+t('w_deploy'):''); }
+function weaponMeta(w,dmgTxt){ return t('dbg_dmg')+' '+dmgTxt+' · '+(w.count>1?t('w_proj',{n:w.count}):t('w_single'))+(w.pierce>2?' · '+t('w_pierce'):'')+(w.chain?' · '+t('w_chain'):'')+(w.burn?' · '+t('ammo_burn'):'')+(w.explosive?' · '+t('w_explosive'):'')+(w.deploy?' · '+t('w_deploy'):'')+(w.poison?' · '+t('w_poison'):'')+(w.bounce?' · '+t('w_bounce'):'')+(w.contagion||w.ignite?' · '+t('w_spread'):'')+(w.frostpool?' · '+t('w_frostpool'):''); }
 function buyWeapon(w,price){
   if(G.coins<price)return;
   G.coins-=price; $('#coinTag').textContent=G.coins; giveWeapon(w.id); Audio2.buy();
@@ -1702,7 +1744,7 @@ function renderGame(){
 
   // Laternenlicht um jeden Spieler: hebt die Umgebung des Spielers vom dunklen Boden ab
   for(const pl of players){ if(pl.dead)continue; const lg=cx.createRadialGradient(pl.x,pl.y,8,pl.x,pl.y,280); lg.addColorStop(0,'rgba(255,214,160,.11)'); lg.addColorStop(1,'rgba(255,214,160,0)'); cx.fillStyle=lg; cx.fillRect(pl.x-280,pl.y-280,560,560); }
-  for(const pu of puddles){cx.save();cx.globalAlpha=clamp(pu.life,0,1)*0.5;cx.fillStyle=pu.effect==='fire'?'rgba(224,138,47,1)':C.sick;cx.beginPath();cx.arc(pu.x,pu.y,pu.r,0,TAU);cx.fill();
+  for(const pu of puddles){cx.save();cx.globalAlpha=clamp(pu.life,0,1)*0.5;cx.fillStyle=pu.effect==='fire'?'rgba(224,138,47,1)':pu.effect==='chill'?C.chill:C.sick;cx.beginPath();cx.arc(pu.x,pu.y,pu.r,0,TAU);cx.fill();
     if(pu.effect==='fire'){cx.globalAlpha=clamp(pu.life,0,1)*0.3;cx.fillStyle='#ffd27a';cx.beginPath();cx.arc(pu.x,pu.y,pu.r*0.6,0,TAU);cx.fill();}cx.restore();}
   for(const n of novaRings){cx.save();cx.globalAlpha=clamp(n.t/0.45,0,1)*0.6;cx.strokeStyle=n.color;cx.lineWidth=3;cx.beginPath();cx.arc(n.x,n.y,n.r,0,TAU);cx.stroke();cx.restore();}
   for(const ob of obstacles) drawObstacle(ob);
@@ -1715,7 +1757,7 @@ function renderGame(){
   for(const e of enemies) drawEnemy(e);
   // eigene Geschosse: weicher Schein ohne Rand (günstiger als shadowBlur)
   for(const b of bullets){cx.globalAlpha=0.18;cx.fillStyle=b.color;cx.beginPath();cx.arc(b.x,b.y,b.r*1.6,0,TAU);cx.fill();cx.globalAlpha=1;cx.fillStyle=b.crit?'#fff':b.color;cx.beginPath();cx.arc(b.x,b.y,b.r,0,TAU);cx.fill();}
-  for(const bo of bolts){cx.save();cx.globalAlpha=clamp(bo.t/0.12,0,1);cx.strokeStyle='#cfe0ff';cx.lineWidth=2;cx.shadowColor='#9bbcff';cx.shadowBlur=10;cx.beginPath();cx.moveTo(bo.x1,bo.y1);const mx=(bo.x1+bo.x2)/2+rand(-10,10),my=(bo.y1+bo.y2)/2+rand(-10,10);cx.lineTo(mx,my);cx.lineTo(bo.x2,bo.y2);cx.stroke();cx.restore();}
+  for(const bo of bolts){cx.save();cx.globalAlpha=clamp(bo.t/0.12,0,1);cx.strokeStyle=bo.color||'#cfe0ff';cx.lineWidth=2;cx.shadowColor=bo.color||'#9bbcff';cx.shadowBlur=10;cx.beginPath();cx.moveTo(bo.x1,bo.y1);const mx=(bo.x1+bo.x2)/2+rand(-10,10),my=(bo.y1+bo.y2)/2+rand(-10,10);cx.lineTo(mx,my);cx.lineTo(bo.x2,bo.y2);cx.stroke();cx.restore();}
   for(const bm of beams){cx.save();cx.globalAlpha=clamp(bm.t/0.09,0,1);cx.lineCap='round';cx.shadowColor=bm.color;cx.shadowBlur=14;cx.strokeStyle=bm.color;cx.lineWidth=bm.width||6;cx.beginPath();cx.moveTo(bm.x1,bm.y1);cx.lineTo(bm.x2,bm.y2);cx.stroke();cx.strokeStyle='#fff';cx.lineWidth=(bm.width||6)*0.35;cx.stroke();cx.restore();}
   for(const pl of players){ if(pl.dead)continue; player=pl; drawPlayer(); } player=anchorPlayer();
   // gegnerische Geschosse zuletzt und mit rotem Rand: Gefahr muss immer das Sichtbarste sein
@@ -1803,6 +1845,10 @@ function drawDeployables(){
       cx.fillStyle='#3a2a1a';cx.fillRect(-d.r*0.4,-d.r,d.r*0.8,d.r*2);
       cx.fillStyle=d.color;cx.beginPath();cx.arc(0,-d.r*0.6,d.r*0.5,0,TAU);cx.fill();
       cx.fillStyle='#000';cx.fillRect(-d.r*0.22,-d.r*0.72,d.r*0.44,d.r*0.2);
+    } else if(d.kind==='rat'){
+      cx.rotate(d.ang||0); cx.strokeStyle='#5a4a3a';cx.lineWidth=1.5;cx.beginPath();cx.moveTo(-d.r,0);cx.quadraticCurveTo(-d.r*2,Math.sin(G.uiTime*14+d.phase)*4,-d.r*2.6,0);cx.stroke();
+      cx.fillStyle=d.color;cx.beginPath();cx.ellipse(0,0,d.r*1.2,d.r*0.75,0,0,TAU);cx.fill();
+      cx.fillStyle=C.sick;cx.beginPath();cx.arc(d.r*0.9,-d.r*0.25,1.4,0,TAU);cx.fill();
     } else if(d.kind==='mine'){
       const blink=Math.sin(G.uiTime*8+d.phase)>0;
       for(let k=0;k<6;k++){const a=k/6*TAU;cx.strokeStyle='#5a2020';cx.lineWidth=2;cx.beginPath();cx.moveTo(Math.cos(a)*d.r,Math.sin(a)*d.r);cx.lineTo(Math.cos(a)*d.r*1.5,Math.sin(a)*d.r*1.5);cx.stroke();}
