@@ -38,7 +38,7 @@ const I18N={
   char_title:'Wähle deinen Büßer', char_sub:'Jeder trägt eine andere Sünde — eine andere Waffe — andere Fähigkeiten.', char_back:'Zurück',
   mod_title:'Modifikatoren', mod_back:'Zurück', mod_start:'Beginnen',
   mod_char:'{name} — wähle deinen Schwierigkeitsgrad. Je härter, desto mehr Gegner, Leben, Schaden und Feuer — aber bessere Beute.',
-  diff_note:'Gewählt: <b style="color:{color}">{name}</b> — {pct}% Chance auf einen <b style="color:#e0405f">Fluch</b> (deutlich härter, dafür ×1,35 Beute obendrauf).',
+  diff_note:'Gewählt: <b style="color:{color}">{name}</b> — {pct}% Chance, dass dir ein <b style="color:#e0405f">Fluch</b> angeboten wird (deutlich härter, dafür ×1,35 Beute — du entscheidest).',
   dc_enemies:'Gegner', dc_hp:'LP', dc_dmg:'Schaden', dc_fire:'Feuer', dc_reward:'Beute', dc_curse:'Fluch',
   shop_title:'Waffenkammer', shop_skip:'Weiter', shop_gold:'Gold:',
   shop_sub_full:'Arsenal voll ({cap} Waffen) — veredle sie (bis Stufe 10). Ein Kauf pro Markt.',
@@ -76,7 +76,7 @@ const I18N={
   char_title:'Choose your Penitent', char_sub:'Each carries a different sin — a different weapon — different abilities.', char_back:'Back',
   mod_title:'Modifiers', mod_back:'Back', mod_start:'Begin',
   mod_char:'{name} — choose your difficulty. The harder it is, the more enemies, health, damage and fire — but better loot.',
-  diff_note:'Selected: <b style="color:{color}">{name}</b> — {pct}% chance of a <b style="color:#e0405f">Curse</b> (much harder, but ×1.35 loot on top).',
+  diff_note:'Selected: <b style="color:{color}">{name}</b> — {pct}% chance to be offered a <b style="color:#e0405f">Curse</b> (much harder, but ×1.35 loot — your choice).',
   dc_enemies:'Enemies', dc_hp:'HP', dc_dmg:'Damage', dc_fire:'Fire', dc_reward:'Loot', dc_curse:'Curse',
   shop_title:'Armory', shop_skip:'Continue', shop_gold:'Gold:',
   shop_sub_full:'Arsenal full ({cap} weapons) — refine them (up to level 10). One purchase per market.',
@@ -133,6 +133,9 @@ Object.assign(I18N.de,{
   custom_hint:'Frei einstellbar — zählt NICHT.', custom_note:'<b style="color:#7fd0e6">Eigener Grad</b> — frei per Regler, zählt NICHT in Fortschritt, Erfolge oder Freischaltungen.',
   coop_down:'Gefallen', coop_revive:'belebt nächste Runde wieder', coop_player:'Spieler', coop_dead:'✝ Tot',
   run_unranked:'<span style="color:#7fd0e6">Lauf nicht gewertet (Admin/Eigener Grad)</span>',
+  curse_title:'Ein Fluch wird angeboten', curse_sub:'Nimm ihn an für mehr Beute — oder lehne ab und spiele normal.', hint_curse:'1 annehmen · 2 ablehnen',
+  curse_reward:'×1,35 Gold & XP', curse_accept:'Annehmen', curse_decline:'Ablehnen', curse_decline_d:'Normaler Lauf ohne Fluch und ohne Bonus.',
+  meta_refund:'Deckel bei Schaden/Leben: <b>{n}</b> Seelen erstattet',
   hud_foes:'Gegner: {n}', gate_err:'Falsche Losung', rotate_hint:'Bitte Gerät quer halten',
   hint_shop:'1–3 kaufen · R neu würfeln · Enter weiter', hint_pick:'1–3 wählen', endless_sub:'Der Gipfel ist erreicht',
   shop_evo:'Verschmelzung', shop_evo_free:'Verschmelzen (gratis)', shop_refine:'Veredeln', shop_max:'✦ MAX · Stufe 10', lvl_short:'St.',
@@ -154,6 +157,9 @@ Object.assign(I18N.en,{
   custom_hint:'Freely adjustable — does NOT count.', custom_note:'<b style="color:#7fd0e6">Custom</b> — set freely via sliders, does NOT count toward progress, achievements or unlocks.',
   coop_down:'Down', coop_revive:'revives next round', coop_player:'Player', coop_dead:'✝ Dead',
   run_unranked:'<span style="color:#7fd0e6">Run not counted (admin/custom)</span>',
+  curse_title:'A curse is offered', curse_sub:'Accept it for more loot — or decline and play normally.', hint_curse:'1 accept · 2 decline',
+  curse_reward:'×1.35 gold & XP', curse_accept:'Accept', curse_decline:'Decline', curse_decline_d:'A normal run without curse or bonus.',
+  meta_refund:'Damage/health cap: <b>{n}</b> souls refunded',
   hud_foes:'Enemies: {n}', gate_err:'Wrong watchword', rotate_hint:'Please turn your device sideways',
   hint_shop:'1–3 buy · R reroll · Enter continue', hint_pick:'1–3 choose', endless_sub:'The summit is reached',
   shop_evo:'Fusion', shop_evo_free:'Fuse (free)', shop_refine:'Refine', shop_max:'✦ MAX · Level 10', lvl_short:'Lv',
@@ -407,9 +413,16 @@ const META_UPGRADES=[
  {id:'fr',    ic:'clock'},  {id:'gold',ic:'crown'}, {id:'xp',   ic:'star'},
 ];
 const META_MAX=20;                                  // +5% pro Stufe → max +100%
+/* E1: Schaden und Leben höchstens +25 % — sonst ist jede Schwierigkeit nach vielen Läufen eine andere und nicht mehr zu balancen */
+const META_CAP={dmg:5,hp:5};
+const metaMax=id=>META_CAP[id]||META_MAX;
 const metaCost=lvl=>10+lvl*8;                       // Seelen für die NÄCHSTE Stufe
 function metaName(id){ return t('m_'+id); }
-function metaLevel(id){ const m=DB.current&&DB.current.meta&&DB.current.meta.levels; return (m&&m[id])||0; }
+function metaLevel(id){ const m=DB.current&&DB.current.meta&&DB.current.meta.levels; return Math.min((m&&m[id])||0,metaMax(id)); }
+/* Stufen über dem Deckel (aus der Zeit davor) werden in Seelen erstattet */
+function normalizeMeta(){ const m=DB.current&&DB.current.meta; if(!m||!m.levels)return; let refund=0;
+  for(const id in META_CAP){ const l=m.levels[id]||0; for(let k=META_CAP[id];k<l;k++)refund+=metaCost(k); if(l>META_CAP[id])m.levels[id]=META_CAP[id]; }
+  if(refund){ m.currency=(m.currency||0)+refund; DB.save(); showToast(t('meta_title'),t('meta_refund',{n:refund})); } }
 function applyMeta(p){
   p.dmgMult*=1+0.05*metaLevel('dmg');
   const hpL=metaLevel('hp'); p.maxHP=Math.round(p.maxHP*(1+0.05*hpL)); p.hp=p.maxHP;
@@ -548,7 +561,7 @@ addEventListener('keydown',e=>{
   }
   if(document.activeElement && document.activeElement.tagName==='INPUT') return;
   keys[e.code]=true; initAudio();
-  const deck={shop:'#shopCards',upgrade:'#upgradeCards',ability:'#abilityCards'}[G.state];
+  const deck={shop:'#shopCards',upgrade:'#upgradeCards',ability:'#abilityCards',curse:'#curseCards'}[G.state];
   if(deck && !e.repeat && performance.now()-(G.menuAt||0)>250){   // Sperre: kein versehentliches Wählen beim Öffnen
     const n=['Digit1','Digit2','Digit3'].indexOf(e.code)>=0?+e.code.slice(5)-1:['Numpad1','Numpad2','Numpad3'].indexOf(e.code);
     if(n>=0){ const c=document.querySelectorAll(deck+' .rcard')[n]; if(c&&!c.classList.contains('locked'))c.click(); return; }
@@ -1243,7 +1256,7 @@ function startRun(charId){
   if(G.coop) players.push( mk(G.pendingChar2||charId, 'p2') );
   player=players[0];
   /* Fluch gilt für alle Spieler (nicht bei Custom) */
-  if(!G.noSave && Math.random()<G.diff.curseChance){ const c=pick(CURSE_DEFS); players.forEach(pl=>c.apply(pl)); G.activeCurse=c; G.rewardMul*=1.35; }
+  const curseOffer=(!G.noSave && Math.random()<G.diff.curseChance)?pick(CURSE_DEFS):null;   // E4: wird angeboten, nicht verhängt
   $('#diffTag').textContent=diffName(G.diff);
   G.level=clamp(Admin.startLevel,1,50); G.coins=Admin.startCoins; G.kills=0; G.time=0; G.endless=false;
   postQueue=[];
@@ -1256,9 +1269,21 @@ function startRun(charId){
   updateWeaponBar(); updateItemPills(); updateHP(); updateXPBar(); updateStatusBar();
   $('#coinTag').textContent=G.coins; $('#killTag').textContent=0;
   buildLevel(G.level); updateCamera(true);
-  if(G.activeCurse){ const c=G.activeCurse;
-    showToast(t('curse_label')+' · '+c.name,'<span style="color:#e0405f">'+c.down+'</span> &nbsp;·&nbsp; <span style="color:#5fbf52">'+c.up+'</span>'); }
+  if(curseOffer) openCurseOffer(curseOffer);
 }
+/* ---------- FLUCH-ANGEBOT: annehmen = Fluch für alle Spieler + ×1,35 Beute, ablehnen = normaler Lauf ---------- */
+function openCurseOffer(c){ G.state='curse'; G.menuAt=performance.now(); $('#hud').classList.remove('show');
+  const wrap=$('#curseCards'); wrap.innerHTML='';
+  const acc=document.createElement('div'); acc.className='rcard cursed'; acc.dataset.key=1;
+  acc.innerHTML='<div class="ic">'+svgIcon(c.ic,'#e0405f',34)+'</div><div class="rk">'+t('curse_label')+'</div><div class="rn">'+c.name+'</div>'+
+    '<div class="rd"><span style="color:#5fbf52">'+c.up+'</span><span class="curse-down">'+c.down+'</span><span style="color:var(--gold2);display:block;margin-top:6px">'+t('curse_reward')+'</span></div>'+
+    '<div class="price">'+t('curse_accept')+'</div>';
+  acc.onclick=()=>{ players.forEach(pl=>c.apply(pl)); G.activeCurse=c; G.rewardMul*=1.35; updateHP(); closeCurseOffer(); };
+  const dec=document.createElement('div'); dec.className='rcard'; dec.dataset.key=2;
+  dec.innerHTML='<div class="ic">'+svgIcon('shield',C.bone,34)+'</div><div class="rk" style="color:var(--bone-dim)">—</div><div class="rn">'+t('curse_decline')+'</div><div class="rd">'+t('curse_decline_d')+'</div>';
+  dec.onclick=closeCurseOffer;
+  wrap.append(acc,dec); show('curse'); }
+function closeCurseOffer(){ hideAllOverlays(); G.state='playing'; $('#hud').classList.add('show'); last=performance.now(); }
 function buildLevel(lvl){
   setWorld(lvl);
   enemies=[];bullets=[];ebullets=[];puddles=[];bolts=[];novaRings=[];pickups=[];deployables=[];beams=[];
@@ -1908,7 +1933,7 @@ function loop(now){
     vacuumPickups(dt); updateParticles(dt); updateFloaters(dt);
     renderGame();
     if(pickups.length===0 || G.collectT>1.5) openPostWave();
-  } else if(G.state==='paused'||G.state==='stats'||G.state==='shop'||G.state==='upgrade'||G.state==='ability'||G.state==='endless'){
+  } else if(G.state==='paused'||G.state==='stats'||G.state==='shop'||G.state==='upgrade'||G.state==='ability'||G.state==='endless'||G.state==='curse'){
     renderGame();
   } else { renderAmbient(dt);
     if(G.state==='charselect') for(const pv of charPreviews){pv.ctx.clearRect(0,0,pv.cv.width,pv.cv.height);pv.ctx.globalAlpha=pv.locked?0.22:1;const aim=Math.sin(G.uiTime*1.1+pv.phase)*0.5-0.2;drawHero(pv.ctx,pv.id,pv.cv.width/2,pv.cv.height*0.66,pv.cv.width*0.26,G.uiTime,false,aim);pv.ctx.globalAlpha=1;}
@@ -1943,7 +1968,7 @@ function refreshProfile(){
   $('#profileBox').innerHTML=t('prof_line',{name:u.name,runs:s.runs,best:s.bestLevel,kills:s.kills});
 }
 $('#loginBtn').onclick=async ()=>{ initAudio(); $('#loginErr').textContent='…'; const err=await DB.login($('#loginUser').value,$('#loginPass').value);
-  if(err){$('#loginErr').textContent=err;return;} $('#loginErr').textContent=''; $('#loginPass').value=''; if(DB.current.meta&&DB.current.meta.lang)LANG=DB.current.meta.lang; applyLang(); refreshProfile(); hideAllOverlays(); G.state='menu'; show('menu'); };
+  if(err){$('#loginErr').textContent=err;return;} $('#loginErr').textContent=''; $('#loginPass').value=''; if(DB.current.meta&&DB.current.meta.lang)LANG=DB.current.meta.lang; normalizeMeta(); applyLang(); refreshProfile(); hideAllOverlays(); G.state='menu'; show('menu'); };
 $('#registerBtn').onclick=async ()=>{ initAudio(); $('#loginErr').textContent='…'; const err=await DB.register($('#loginUser').value,$('#loginPass').value);
   if(err){$('#loginErr').textContent=err;return;} $('#loginErr').textContent=''; $('#loginPass').value=''; applyLang(); refreshProfile(); hideAllOverlays(); G.state='menu'; show('menu'); };
 $('#loginPass').addEventListener('keydown',e=>{if(e.code==='Enter')$('#loginBtn').click();});
@@ -1963,18 +1988,18 @@ function renderMeta(){
   $('#metaSub').innerHTML=t('meta_sub',{souls:cur});
   const wrap=$('#metaCards'); wrap.innerHTML='';
   META_UPGRADES.forEach(u=>{
-    const lvl=metaLevel(u.id), maxed=lvl>=META_MAX, cost=metaCost(lvl), can=!maxed&&cur>=cost;
+    const mx=metaMax(u.id), lvl=metaLevel(u.id), maxed=lvl>=mx, cost=metaCost(lvl), can=!maxed&&cur>=cost;
     const el=document.createElement('div'); el.className='rcard'+(can?'':' locked'); el.style.borderColor='var(--gold)';
     el.innerHTML='<div class="ic">'+svgIcon(u.ic,C.gold2,32)+'</div>'+
       '<div class="rn">'+metaName(u.id)+'</div>'+
-      '<div class="mlvl">'+t('meta_lvl',{lvl:lvl,max:META_MAX})+' · +'+(lvl*5)+'%</div>'+
-      '<div class="mbar"><div class="mfill" style="width:'+(lvl/META_MAX*100)+'%"></div></div>'+
+      '<div class="mlvl">'+t('meta_lvl',{lvl:lvl,max:mx})+' · +'+(lvl*5)+'%</div>'+
+      '<div class="mbar"><div class="mfill" style="width:'+(lvl/mx*100)+'%"></div></div>'+
       (maxed?'<div class="owned">'+t('meta_max')+'</div>':'<div class="price'+(can?'':' cant')+'">'+t('meta_buy',{cost:cost})+'</div>');
     if(can) el.onclick=()=>buyMeta(u.id);
     wrap.appendChild(el);
   });
 }
-function buyMeta(id){ if(!DB.current)return; const lvl=metaLevel(id); if(lvl>=META_MAX)return;
+function buyMeta(id){ if(!DB.current)return; const lvl=metaLevel(id); if(lvl>=metaMax(id))return;
   const m=DB.current.meta=DB.current.meta||{currency:0,levels:{}}; const cost=metaCost(lvl);
   if((m.currency||0)<cost)return;
   m.currency-=cost; m.levels=m.levels||{}; m.levels[id]=lvl+1; DB.save(); Audio2.buy(); renderMeta(); }

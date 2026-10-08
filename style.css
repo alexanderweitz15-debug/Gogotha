@@ -122,6 +122,7 @@ input{font-family:inherit}
 .rcard.cursed{border-color:#7a1530 !important;background:linear-gradient(180deg,#1a0c10,#0c0608);box-shadow:0 0 0 1px rgba(192,31,80,.25),0 0 22px rgba(192,31,80,.1) inset}
 .rcard.cursed:hover{box-shadow:0 12px 30px rgba(0,0,0,.6),0 0 26px rgba(192,31,80,.3)}
 .rcard.cursed .rk{color:#e0405f;animation:godpulse 1.6s ease-in-out infinite}
+.curse-cards{grid-template-columns:repeat(2,1fr);max-width:500px}
 .rcard.cursed .curse-down{color:#e0405f;font-size:10.5px;margin-top:6px;display:block}
 
 /* META (Seelenschmiede) + ACHIEVEMENTS + locked chars */

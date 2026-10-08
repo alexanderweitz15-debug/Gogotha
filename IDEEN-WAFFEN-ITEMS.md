@@ -313,7 +313,7 @@ Jeder Pool enthält mindestens ein Paar für eine Fähigkeits-Verschmelzung (orb
 | 1 ✓ | Bugs aus `IST-ZUSTAND.md` (1, 2, 5, 6, 8) – erledigt | S × 5 | Endlos-Tod zählt 1 Lauf, Cheat-Lauf zählt 0, DB nicht abrufbar |
 | 2 ✓ | Debug-Overlay (3.2) – erledigt: F3 im Spiel, Export als JSON. Explosion und Kettenblitz zählen zur auslösenden Waffe, Brand ebenfalls | M | Jede Schadensquelle erscheint, Kills = Tötungen im HUD (geprüft) |
 | 3 ✓ | Besitzer + Effektliste (3.3) – erledigt; Brand-/Pfützen-Kills zählen jetzt auch als Waffen-Kills | M | Verteilung im Overlay wie vor dem Umbau; Koop-Lebensraub geht an den richtigen Spieler |
-| 4 ✓ | Entscheidungen E1–E4: Empfehlung übernommen; E1 (Deckel) und E4 (Fluch-Wahl) sind eigene kleine Umbauten | S × 2 | – |
+| 4 ✓ | Entscheidungen E1–E4 – erledigt: Seelenschmiede Schaden/Leben max. St. 5 (+25 %, Überschuss wird erstattet), Fluch wird beim Laufstart angeboten | S × 2 | – |
 | 5 | Waffenklassen (4) | M | Shop zeigt Klassen, Boni im Werte-Panel sichtbar |
 | 6 | Geschoss-Modifikatoren (5) | S × 5 | Jeder einzeln per Admin-Panel testbar |
 | 7 | Gegner-Gift + 6 Waffen (6) | M | Jede Klasse im Shop bis Stufe 4 erreichbar |
