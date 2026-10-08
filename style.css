@@ -17,10 +17,14 @@ input{font-family:inherit}
 #stage{position:relative;width:min(100vw, calc(100vh * 1.6));height:min(100vh, calc(100vw / 1.6));box-shadow:0 0 0 1px #2a221a, 0 0 80px rgba(0,0,0,.8);overflow:hidden}
 #game{position:absolute;inset:0;width:100%;height:100%;display:block;background:#070708}
 
-.overlay{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:10;padding:24px;text-align:center}
+/* Overlays scrollen als Ganzes, wenn der Platz nicht reicht (kleine Fenster, Handy quer); der Hintergrund liegt
+   auf dem Overlay selbst, damit er beim Scrollen nicht mitwandert */
+.overlay{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:safe center;z-index:10;padding:24px;text-align:center;overflow-y:auto;
+  background:radial-gradient(circle at 50% 40%, rgba(8,6,6,.74), rgba(4,4,6,.94))}
+.overlay > *{flex-shrink:0}
 .overlay.show{display:flex;animation:ov .35s ease}
 @keyframes ov{from{opacity:0}to{opacity:1}}
-.scrim{position:absolute;inset:0;background:radial-gradient(circle at 50% 40%, rgba(8,6,6,.74), rgba(4,4,6,.94))}
+.scrim{display:none}
 .overlay > *{position:relative;z-index:1}
 .title{font-family:'UnifrakturMaguntia',serif;font-size:clamp(48px,9vw,116px);line-height:.9;color:var(--bone);text-shadow:0 0 30px rgba(192,31,36,.4),0 4px 0 #000;letter-spacing:.02em}
 .subtitle{font-family:'Cinzel',serif;letter-spacing:.42em;font-size:clamp(11px,1.6vw,15px);color:var(--gold2);text-transform:uppercase;margin-top:6px;padding-left:.42em}
@@ -148,7 +152,7 @@ input{font-family:inherit}
 #hud{position:absolute;inset:0;pointer-events:none;z-index:6;display:none;font-family:var(--mono)}
 #hud.show{display:block}
 .hud-top{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;padding:12px 16px;gap:16px}
-.hud-left{display:flex;gap:10px;align-items:flex-start}
+.hud-left{display:flex;gap:10px;align-items:flex-start;max-width:calc(50% - 26px)}
 #headCanvas{width:54px;height:54px;border:1px solid var(--gold);border-radius:6px;background:radial-gradient(circle at 50% 60%,#15110d,#0a0806);pointer-events:auto;cursor:pointer;transition:.12s;flex-shrink:0}
 #headCanvas:hover{border-color:var(--gold2);box-shadow:0 0 14px rgba(224,178,90,.35)}
 .hud-col{display:flex;flex-direction:column;gap:6px}
@@ -164,8 +168,40 @@ input{font-family:inherit}
 #statusBar{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
 .sbadge{display:inline-flex;align-items:center;gap:4px;padding:3px 7px;border:1px solid var(--line);border-radius:20px;background:rgba(10,8,6,.7)}
 .sb-t{font-size:11px;font-weight:700}
-.dash-pip{display:inline-block;width:34px;height:5px;border-radius:3px;background:#2a2a30;vertical-align:middle}
-.dash-pip.ready{background:var(--gold2);box-shadow:0 0 8px var(--gold2)}
+.dash-pip{display:inline-block;width:34px;height:5px;border-radius:3px;background:#2a2a30;vertical-align:middle;overflow:hidden}
+.dash-pip i{display:block;height:100%;width:100%;background:var(--bone-dim)}
+.dash-pip.ready{box-shadow:0 0 8px var(--gold2)}
+.dash-pip.ready i{background:var(--gold2)}
+.foe-label{font-size:11px;color:var(--bone-dim);letter-spacing:.08em;margin-top:3px}
+.foe-label b{color:var(--blood2)}
+.hud-btn{position:absolute;top:12px;left:50%;transform:translateX(-50%);pointer-events:auto;width:30px;height:26px;border:1px solid var(--line);border-radius:5px;background:rgba(10,8,6,.75);color:var(--gold2);font-size:10px;letter-spacing:-1px;transition:.14s}
+.hud-btn:hover{border-color:var(--gold);color:var(--bone)}
+.wslot{position:relative;overflow:hidden}
+.wslot .wcd{position:absolute;left:0;bottom:0;height:2px;width:0;background:var(--gold2);opacity:.8}
+.key-hint{font-family:var(--mono);font-size:11px;color:#6e675a;margin-top:10px;letter-spacing:.04em}
+.rcard[data-key]::before{content:attr(data-key);position:absolute;top:7px;left:9px;width:18px;height:18px;border:1px solid var(--line);border-radius:4px;font-family:var(--mono);font-size:10px;line-height:16px;color:var(--bone-dim)}
+body.touch .rcard[data-key]::before, body.touch .key-hint, body.touch #menu .hint{display:none}
+/* Schaden-pro-Quelle (F3) */
+#dbg{position:absolute;left:16px;top:120px;z-index:25;display:none;background:rgba(8,7,6,.9);border:1px solid var(--gold);border-radius:6px;padding:10px 12px;font-family:var(--mono);font-size:11px;color:var(--bone-dim);max-height:70%;overflow-y:auto;text-align:left}
+#dbg.show{display:block}
+#dbg .dbg-h{color:var(--gold2);margin-bottom:6px;letter-spacing:.06em}
+#dbg table{border-collapse:collapse;margin-bottom:8px}
+#dbg th{font-weight:400;color:#6e675a;text-align:right;padding:2px 6px}
+#dbg td{text-align:right;padding:2px 6px;border-top:1px solid rgba(184,137,59,.1)}
+#dbg td:first-child{text-align:left;color:var(--bone)}
+#dbg tr.hot td{color:var(--blood2)}
+#dbg tr.tot td{color:var(--gold2);border-top:1px solid var(--line)}
+/* Touch: virtueller Stick + Ausweich-Knopf (nur auf Touch-Geräten, nur im Lauf) */
+#touchUI{display:none;position:absolute;inset:0;z-index:7;pointer-events:none}
+body.touch #hud.show ~ #touchUI{display:block}
+#joy{position:absolute;width:96px;height:96px;margin:-48px 0 0 -48px;border:1px solid rgba(224,178,90,.35);border-radius:50%;background:rgba(10,8,6,.25);display:none}
+#joy.on{display:block}
+#joyKnob{position:absolute;left:50%;top:50%;width:42px;height:42px;border-radius:50%;background:rgba(224,178,90,.35);border:1px solid var(--gold2);transform:translate(-50%,-50%)}
+#dashBtn{position:absolute;right:22px;bottom:44px;width:72px;height:72px;border-radius:50%;border:1px solid var(--gold);background:conic-gradient(rgba(224,178,90,.38) calc(var(--cd,1)*360deg),rgba(13,11,9,.6) 0);color:var(--gold2);font-size:28px;pointer-events:auto;touch-action:none}
+#stage{touch-action:none}
+#rotateHint{display:none;position:fixed;inset:0;z-index:200;background:#060608;color:var(--gold2);font-family:'Cinzel',serif;letter-spacing:.12em;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px}
+#rotateHint .rot-ic{font-size:48px}
+@media (orientation:portrait) and (pointer:coarse){ #rotateHint{display:flex} }
 
 .minimap-wrap{margin-top:6px;border:1px solid var(--gold);border-radius:6px;overflow:hidden;background:#06060a;box-shadow:0 4px 16px rgba(0,0,0,.5)}
 #minimap{display:block;width:186px;height:120px}
@@ -245,3 +281,14 @@ input{font-family:inherit}
 #langBtn{position:absolute;top:12px;left:12px;z-index:40;width:46px;height:30px;border:1px solid var(--gold);border-radius:5px;background:rgba(13,11,9,.85);color:var(--gold2);font-family:'Cinzel',serif;font-weight:700;letter-spacing:.08em;font-size:12px;cursor:pointer;transition:.14s;display:none}
 #langBtn:hover{background:var(--gold2);color:#160f08;box-shadow:0 0 12px rgba(224,178,90,.4)}
 @media (max-width:560px){ .char-lore{min-height:auto} .reward-cards{grid-template-columns:1fr} .stat-grid{grid-template-columns:1fr} #minimap{width:130px;height:84px} }
+/* Niedrige Fenster / Handy quer: HUD und Menüs verdichten */
+@media (max-height:520px){
+  .hud-top{padding:6px 8px;gap:8px} #headCanvas{width:38px;height:38px} .hp-bar{width:150px;height:14px} .hp-text{font-size:10px}
+  .hud-tags{font-size:10px;gap:8px} .station-label{font-size:11px} .region-label{font-size:9px} #minimap{width:110px;height:71px}
+  .dock-items{top:54px;left:8px} .wslot{padding:4px 6px} .wslot .wn{display:none} .dock-weapons{bottom:14px} .boss-bar-wrap{top:72px;width:42%} .boss-name{font-size:10px}
+  #menu .hint{display:none}
+  .overlay{padding:10px} .title{font-size:48px} .sect-title{font-size:1.05rem} .sect-sub{margin-bottom:10px}
+  .menu-btns{margin-top:14px;gap:7px} .mbtn{padding:8px 14px;font-size:.82rem}
+  .rcard{padding:10px 8px} .rcard .ic{height:26px;margin-bottom:4px} .reward-cards{margin-bottom:8px}
+  #dashBtn{width:60px;height:60px;bottom:30px}
+}

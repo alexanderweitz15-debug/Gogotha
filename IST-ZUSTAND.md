@@ -13,7 +13,9 @@ Im Test traten keine JavaScript-Fehler auf.
 | 5. Doppelte Wertung im Endlos-Modus | **Behoben.** Nach Station 50 wird nur noch der Zuwachs gewertet, der Lauf zählt einmal (getestet). |
 | 6. Cheats zählen | **Behoben.** Läufe mit aktivem Cheat beim Start oder mit Admin-Eingriff während des Laufs werden nicht gewertet, Boss-Freischaltungen auch nicht (getestet). Bereits gespeicherte Werte bleiben, wie sie sind. |
 | 8. Leere Charakterbilder | **Behoben**, auch nach „Erneut bereuen“ (getestet). |
-| 3, 4, 7, 9–12 | Offen |
+| 10. Übersetzung halb fertig | **Teilweise behoben.** Shop, Endbildschirme, Toasts, Seltenheiten und Charakterwerte sind übersetzt. Upgrade-/Fähigkeitstexte, Lore und Eigennamen bleiben deutsch, so steht es als Absicht im Code (`game.js:23`). Das Admin-Panel bleibt deutsch. |
+| Mobil nicht spielbar | **Behoben, nur emuliert getestet.** Touch-Stick links, Ausweich-Knopf rechts, Pause-Knopf, Hinweis „quer halten“ im Hochformat, verdichtetes HUD bei niedriger Höhe. Auf einem echten Gerät nicht getestet. |
+| 3, 4, 7, 9, 11, 12 | Offen |
 
 ## 1. Was das Spiel ist
 
