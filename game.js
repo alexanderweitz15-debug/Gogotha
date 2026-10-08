@@ -136,6 +136,9 @@ Object.assign(I18N.de,{
   curse_title:'Ein Fluch wird angeboten', curse_sub:'Nimm ihn an für mehr Beute — oder lehne ab und spiele normal.', hint_curse:'1 annehmen · 2 ablehnen',
   curse_reward:'×1,35 Gold & XP', curse_accept:'Annehmen', curse_decline:'Ablehnen', curse_decline_d:'Normaler Lauf ohne Fluch und ohne Bonus.',
   meta_refund:'Deckel bei Schaden/Leben: <b>{n}</b> Seelen erstattet',
+  save_err_t:'Speichern fehlgeschlagen', save_err_session:'Sitzung abgelaufen — bitte abmelden und neu anmelden. Dein Fortschritt bleibt auf diesem Gerät erhalten und wird dann hochgeladen.',
+  save_err_offline:'Server nicht erreichbar — Fortschritt wird auf diesem Gerät gehalten und beim nächsten Speichern erneut gesendet.',
+  save_merged_t:'Fortschritt übernommen', save_merged:'Der neuere Stand dieses Geräts wurde hochgeladen.',
   trade_label:'Tausch', s_magnet:'Sammelradius', affinity:'Affinität', mal_heal:'Heilung −30%', mal_hp:'Max-LP −15%',
   shrine_greed_done:'Gegner gestärkt — Gold dieser Welle ×2',
   relic_title:'Reliquie', relic_sub:'Der Boss ist gefallen. Wähle eine Reliquie — sie bleibt für den ganzen Lauf.', relic_label:'Reliquie', relics_label:'Reliquien',
@@ -166,6 +169,9 @@ Object.assign(I18N.en,{
   curse_title:'A curse is offered', curse_sub:'Accept it for more loot — or decline and play normally.', hint_curse:'1 accept · 2 decline',
   curse_reward:'×1.35 gold & XP', curse_accept:'Accept', curse_decline:'Decline', curse_decline_d:'A normal run without curse or bonus.',
   meta_refund:'Damage/health cap: <b>{n}</b> souls refunded',
+  save_err_t:'Saving failed', save_err_session:'Session expired — please sign out and sign in again. Your progress is kept on this device and uploaded then.',
+  save_err_offline:'Server unreachable — progress is kept on this device and resent on the next save.',
+  save_merged_t:'Progress restored', save_merged:'The newer progress from this device was uploaded.',
   trade_label:'Trade', s_magnet:'Pickup radius', affinity:'Affinity', mal_heal:'Healing −30%', mal_hp:'Max HP −15%',
   shrine_greed_done:'Enemies empowered — gold this wave ×2',
   relic_title:'Relic', relic_sub:'The boss has fallen. Choose a relic — it stays for the whole run.', relic_label:'Relic', relics_label:'Relics',
@@ -665,18 +671,33 @@ const DB=(()=>{
   function blankProfile(name){return {name,stats:newStats(),unlocks:{},achievements:{},meta:{currency:0,levels:{}}};}
   function fill(p){ p.stats=p.stats||newStats(); p.unlocks=p.unlocks||{}; p.achievements=p.achievements||{}; p.meta=p.meta||{currency:0,levels:{}}; if(!p.meta.levels)p.meta.levels={}; return p; }
   function dataOf(p){ return {stats:p.stats,unlocks:p.unlocks,achievements:p.achievements,meta:p.meta}; }
+  /* Speicherfehler werden gemeldet statt verschluckt; _unsynced markiert lokal gecachte, nicht hochgeladene Stände */
+  let onSaveError=null, lastErrAt=0;
+  function saveFailed(reason){ if(current){ current._unsynced=true; cache(); }
+    if(reason==='Nicht angemeldet'){ online=false; token=null; }
+    const now=Date.now(); if(onSaveError && now-lastErrAt>20000){ lastErrAt=now; onSaveError(reason); } }
   function cache(){ if(!current)return; const k=current.name.toLowerCase(); const prev=local.users[k]||{}; const m=Object.assign({},current); if(prev.pass)m.pass=prev.pass; local.users[k]=m; saveLocal(); }
-  function persist(){ if(!current)return; cache(); if(API&&online&&token) api('/save',{token,data:dataOf(current)}).catch(()=>{}); }
+  function persist(){ if(!current)return;
+    if(!(API&&online&&token)){ if(API&&current._server){ current._unsynced=true; } cache(); if(API&&current._server) saveFailed('offline'); return; }
+    current._unsynced=true; cache();
+    api('/save',{token,data:dataOf(current)}).then(res=>{ if(res&&res.ok){ current&&(current._unsynced=false); cache(); } else saveFailed(res&&res.error); }).catch(()=>saveFailed('offline')); }
+  /* Login: lokal nicht hochgeladener Stand mit mindestens so vielen Läufen wie auf dem Server gewinnt und wird hochgeladen */
+  function adoptServer(res){ const k=res.profile.name.toLowerCase(), loc=local.users[k];
+    if(loc && loc._unsynced && ((loc.stats&&loc.stats.runs)||0)>=((res.profile.stats&&res.profile.stats.runs)||0)){
+      current=fill(Object.assign({},loc,{name:res.profile.name})); token=res.token; online=true; current._server=true; persist(); return 'merged'; }
+    current=fill(res.profile); current._server=true; token=res.token; online=true; cache(); return null; }
   async function api(path,body){ const r=await fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); return r.json(); }
   return {
     async register(u,p){ u=(u||'').trim(); if(u.length<2)return 'Name zu kurz (min. 2)'; if(!p)return 'Losungswort fehlt';
-      if(API){ try{ const res=await api('/register',{user:u,pass:p}); if(res.error)return res.error; current=fill(res.profile); token=res.token; online=true; cache(); return null; }catch(e){} }
+      if(API){ try{ const res=await api('/register',{user:u,pass:p}); if(res.error)return res.error; current=fill(res.profile); current._server=true; token=res.token; online=true; cache(); return null; }catch(e){} }
       if(local.users[u.toLowerCase()])return 'Pilger existiert bereits';
       current=fill(Object.assign(blankProfile(u),{pass:hash(p)})); local.users[u.toLowerCase()]=current; saveLocal(); online=false; return null; },
     async login(u,p){ u=(u||'').trim();
-      if(API){ try{ const res=await api('/login',{user:u,pass:p}); if(res.error)return res.error; current=fill(res.profile); token=res.token; online=true; cache(); return null; }catch(e){} }
+      if(API){ try{ const res=await api('/login',{user:u,pass:p}); if(res.error)return res.error; this.merged=adoptServer(res)==='merged'; return null; }catch(e){} }
       const rec=local.users[u.toLowerCase()]; if(!rec)return 'Unbekannter Pilger'; if(rec.pass!==hash(p))return 'Falsches Losungswort'; current=fill(rec); online=false; return null; },
-    logout(){current=null;token=null;online=false;},
+    logout(){ if(API&&token) api('/logout',{token}).catch(()=>{}); current=null;token=null;online=false; },
+    set onSaveError(fn){ onSaveError=fn; },
+    get unsynced(){ return !!(current&&current._unsynced); },
     get current(){return current;},
     get online(){return online;},
     save(){ persist(); },
@@ -2285,7 +2306,9 @@ function refreshProfile(){
   $('#profileBox').innerHTML=t('prof_line',{name:u.name,runs:s.runs,best:s.bestLevel,kills:s.kills});
 }
 $('#loginBtn').onclick=async ()=>{ initAudio(); $('#loginErr').textContent='…'; const err=await DB.login($('#loginUser').value,$('#loginPass').value);
-  if(err){$('#loginErr').textContent=err;return;} $('#loginErr').textContent=''; $('#loginPass').value=''; if(DB.current.meta&&DB.current.meta.lang)LANG=DB.current.meta.lang; normalizeMeta(); applyLang(); refreshProfile(); hideAllOverlays(); G.state='menu'; show('menu'); };
+  if(err){$('#loginErr').textContent=err;return;} $('#loginErr').textContent=''; $('#loginPass').value=''; if(DB.current.meta&&DB.current.meta.lang)LANG=DB.current.meta.lang; normalizeMeta(); applyLang(); refreshProfile(); hideAllOverlays(); G.state='menu'; show('menu');
+  if(DB.merged) showToast(t('save_merged_t'),t('save_merged')); };
+DB.onSaveError=reason=>showToast(t('save_err_t'), reason==='Nicht angemeldet'?t('save_err_session'):t('save_err_offline'));
 $('#registerBtn').onclick=async ()=>{ initAudio(); $('#loginErr').textContent='…'; const err=await DB.register($('#loginUser').value,$('#loginPass').value);
   if(err){$('#loginErr').textContent=err;return;} $('#loginErr').textContent=''; $('#loginPass').value=''; applyLang(); refreshProfile(); hideAllOverlays(); G.state='menu'; show('menu'); };
 $('#loginPass').addEventListener('keydown',e=>{if(e.code==='Enter')$('#loginBtn').click();});

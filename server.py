@@ -12,8 +12,9 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(ROOT, "golgotha.db")
 PORT = int(os.environ.get("PORT", "8731"))
 
-# ponytail: in-memory sessions. Fine for one process; move to a `sessions` table if you scale out.
-TOKENS = {}
+# Sitzungen liegen in SQLite und überleben einen Neustart des Servers; sie laufen nach 30 Tagen ab.
+SESSION_TTL = 30 * 86400
+MAX_BODY = 256 * 1024
 
 
 def db():
@@ -34,6 +35,7 @@ def init_db():
             created INTEGER,
             updated INTEGER)"""
     )
+    c.execute("CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY, name TEXT NOT NULL, created INTEGER)")
     c.commit()
     c.close()
 
@@ -50,6 +52,25 @@ def blank_data():
         "achievements": {},   # Erfolge (Phase 4)
         "meta": {"currency": 0, "levels": {}},  # globale Progression (Phase 3)
     }
+
+
+def new_session(c, name):
+    tok = secrets.token_hex(16)
+    now = int(time.time())
+    c.execute("DELETE FROM sessions WHERE created<?", (now - SESSION_TTL,))
+    c.execute("INSERT INTO sessions(token,name,created) VALUES(?,?,?)", (tok, name, now))
+    c.commit()
+    return tok
+
+
+def session_user(tok):
+    if not isinstance(tok, str) or not tok:
+        return None
+    c = db()
+    row = c.execute("SELECT name FROM sessions WHERE token=? AND created>=?",
+                    (tok, int(time.time()) - SESSION_TTL)).fetchone()
+    c.close()
+    return row["name"] if row else None
 
 
 def profile_of(row):
@@ -103,7 +124,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return
         try:
             n = int(self.headers.get("Content-Length", 0))
+            if n > MAX_BODY:
+                self._json({"error": "Anfrage zu groß"}, 413)
+                return
             req = json.loads(self.rfile.read(n) or b"{}")
+            if not isinstance(req, dict):
+                raise ValueError
         except Exception:
             self._json({"error": "Ungültige Anfrage"}, 400)
             return
@@ -114,14 +140,18 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self._json(self.login(req))
         elif route == "save":
             self._json(self.save(req))
+        elif route == "logout":
+            self._json(self.logout(req))
         else:
             self._json({"error": "Unbekannt"}, 404)
 
     def register(self, req):
-        user = (req.get("user") or "").strip()
-        pw = req.get("pass") or ""
+        user = str(req.get("user") or "").strip()
+        pw = str(req.get("pass") or "")
         if len(user) < 2:
             return {"error": "Name zu kurz (min. 2)"}
+        if len(user) > 16 or len(pw) > 128:
+            return {"error": "Name oder Losungswort zu lang"}
         if not pw:
             return {"error": "Losungswort fehlt"}
         c = db()
@@ -136,27 +166,31 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         )
         c.commit()
         row = c.execute("SELECT * FROM accounts WHERE name=?", (user,)).fetchone()
+        tok = new_session(c, row["name"])
         c.close()
-        tok = secrets.token_hex(16)
-        TOKENS[tok] = user
         return {"ok": True, "token": tok, "profile": profile_of(row)}
 
     def login(self, req):
-        user = (req.get("user") or "").strip()
-        pw = req.get("pass") or ""
+        user = str(req.get("user") or "").strip()
+        pw = str(req.get("pass") or "")
         c = db()
         row = c.execute("SELECT * FROM accounts WHERE name=?", (user,)).fetchone()
+        if not row or not secrets.compare_digest(hash_pw(pw, row["salt"]), row["pass"]):
+            c.close()
+            return {"error": "Unbekannter Pilger" if not row else "Falsches Losungswort"}
+        tok = new_session(c, row["name"])
         c.close()
-        if not row:
-            return {"error": "Unbekannter Pilger"}
-        if hash_pw(pw, row["salt"]) != row["pass"]:
-            return {"error": "Falsches Losungswort"}
-        tok = secrets.token_hex(16)
-        TOKENS[tok] = row["name"]
         return {"ok": True, "token": tok, "profile": profile_of(row)}
 
+    def logout(self, req):
+        c = db()
+        c.execute("DELETE FROM sessions WHERE token=?", (str(req.get("token") or ""),))
+        c.commit()
+        c.close()
+        return {"ok": True}
+
     def save(self, req):
-        name = TOKENS.get(req.get("token"))
+        name = session_user(req.get("token"))
         if not name:
             return {"error": "Nicht angemeldet"}
         data = req.get("data")
