@@ -17,7 +17,7 @@ Ein Roguelite-Arena-Shooter im Stil von „Vampire Survivors / Brotato“ mit Gr
 | Bereich | Umfang |
 |---|---|
 | Charaktere | 4 Start-Charaktere + 12 freischaltbare (über Stufe, Waffen-Kills oder Boss-Kills) |
-| Waffen | 27 im Shop (inkl. Geschütz, Totem, Minen, Begleiter, Laser), 5 Verschmelzungen, 5 Boss-Waffen |
+| Waffen | 28 im Shop (inkl. Geschütz, Totem, Minen, Begleiter, Laser), 5 Verschmelzungen, 5 Boss-Waffen |
 | Upgrades | 16 Charakter-Upgrades, 16 Fähigkeiten + 3 Fähigkeits-Verschmelzungen |
 | Seltenheiten | 8 Stufen (Gewöhnlich bis Godlike), beeinflusst durch Glück |
 | Gegner | 9 Typen + Elite-Variante; 5 Boss-Muster (10 Boss-Namen, Muster ab Boss 6 wiederholt) |
