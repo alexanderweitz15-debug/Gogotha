@@ -136,6 +136,7 @@ Object.assign(I18N.de,{
   curse_title:'Ein Fluch wird angeboten', curse_sub:'Nimm ihn an für mehr Beute — oder lehne ab und spiele normal.', hint_curse:'1 annehmen · 2 ablehnen',
   curse_reward:'×1,35 Gold & XP', curse_accept:'Annehmen', curse_decline:'Ablehnen', curse_decline_d:'Normaler Lauf ohne Fluch und ohne Bonus.',
   meta_refund:'Deckel bei Schaden/Leben: <b>{n}</b> Seelen erstattet',
+  trade_label:'Tausch', s_magnet:'Sammelradius',
   hud_foes:'Gegner: {n}', gate_err:'Falsche Losung', rotate_hint:'Bitte Gerät quer halten',
   hint_shop:'1–3 kaufen · R neu würfeln · Enter weiter', hint_pick:'1–3 wählen', endless_sub:'Der Gipfel ist erreicht',
   shop_evo:'Verschmelzung', shop_evo_free:'Verschmelzen (gratis)', shop_refine:'Veredeln', shop_max:'✦ MAX · Stufe 10', lvl_short:'St.',
@@ -161,6 +162,7 @@ Object.assign(I18N.en,{
   curse_title:'A curse is offered', curse_sub:'Accept it for more loot — or decline and play normally.', hint_curse:'1 accept · 2 decline',
   curse_reward:'×1.35 gold & XP', curse_accept:'Accept', curse_decline:'Decline', curse_decline_d:'A normal run without curse or bonus.',
   meta_refund:'Damage/health cap: <b>{n}</b> souls refunded',
+  trade_label:'Trade', s_magnet:'Pickup radius',
   hud_foes:'Enemies: {n}', gate_err:'Wrong watchword', rotate_hint:'Please turn your device sideways',
   hint_shop:'1–3 buy · R reroll · Enter continue', hint_pick:'1–3 choose', endless_sub:'The summit is reached',
   shop_evo:'Fusion', shop_evo_free:'Fuse (free)', shop_refine:'Refine', shop_max:'✦ MAX · Level 10', lvl_short:'Lv',
@@ -339,9 +341,11 @@ const WEAPON_EVOS=[
  {a:'nailgun',b:'gatling',result:'naildriver'},
  {a:'trinity',b:'wrath',result:'godsedge'},
 ];
-function weaponPrice(w){ return Math.round(RARITY_PRICE[rarRank(w.rk)]*(1+G.level*0.03)); }
+const priceMul=()=>(player&&player.priceMul)||1;
+function weaponPrice(w){ return Math.round(RARITY_PRICE[rarRank(w.rk)]*(1+G.level*0.03)*priceMul()); }
+const rerollCost=()=>Math.round((15+G.level*2)*priceMul());
 function weaponLevel(id){ return (player.wLevel[id]||0)+1; }
-function upgradePrice(w){ const lvl=weaponLevel(w.id); return Math.round(RARITY_PRICE[rarRank(w.rk)]*0.6*(1+lvl*0.28)*(1+G.level*0.02)); }
+function upgradePrice(w){ const lvl=weaponLevel(w.id); return Math.round(RARITY_PRICE[rarRank(w.rk)]*0.6*(1+lvl*0.28)*(1+G.level*0.02)*priceMul()); }
 function availableWeaponEvos(){
   if(!player) return [];
   return WEAPON_EVOS.filter(r=> player.weapons.includes(r.a)&&player.weapons.includes(r.b)
@@ -366,6 +370,15 @@ const UPGRADE_DEFS=[
  {id:'burn',name:'Pestodem',ic:'flame',minRank:2,desc:r=>'Schüsse entzünden Gegner',apply:(p,r)=>{p.burn=true;p.dmgMult+=0.05*r;}},
  {id:'slow',name:'Eiserne Gnade',ic:'snow',minRank:1,desc:r=>'Schüsse verlangsamen',apply:(p,r)=>{p.slow=true;}},
  {id:'explosive',name:'Höllenfeuer',ic:'explosion',minRank:4,desc:r=>'Schüsse explodieren',apply:(p,r)=>{p.explosive=true;}},
+ /* --- Tausch-Gaben (Schritt 8): Vorteil mit festem Nachteil, Seltenheit wirkt nicht, je 1× pro Lauf --- */
+ {id:'t_belt',  name:'Bußgürtel',      ic:'sword', trade:true,max:1,up:'+15% Schaden',down:'−10 Max-LP',apply:p=>{p.dmgMult+=0.15;p.maxHP=Math.max(1,p.maxHP-10);}},
+ {id:'t_lead',  name:'Bleischuhe',     ic:'boot',  trade:true,max:1,up:'+5 Rüstung',down:'−12% Tempo',apply:p=>{p.armor+=5;p.speed*=0.88;}},
+ {id:'t_staff', name:'Pilgerstab',     ic:'arrow', trade:true,max:1,up:'+10% Tempo',down:'−3 Rüstung',apply:p=>{p.speed*=1.10;p.armor-=3;}},
+ {id:'t_chain', name:'Rostige Kette',  ic:'weight',trade:true,max:1,up:'+30% Rückstoß',down:'−8% Feuerrate',apply:p=>{p.kbMult*=1.3;p.frMult*=1.08;}},
+ {id:'t_skull', name:'Totenschädel',   ic:'ghost', trade:true,max:1,up:'+1% Schaden je 25 Kills im Lauf (max. 40%)',down:'−10 Max-LP',apply:p=>{p.skull=true;p.maxHP=Math.max(1,p.maxHP-10);}},
+ {id:'t_hood',  name:'Schwarze Kapuze', ic:'eye',   trade:true,max:1,up:'+10% Krit-Chance',down:'−20% Sammelradius',apply:p=>{p.crit+=0.10;p.magnet*=0.8;}},
+ {id:'t_purse', name:'Almosenbeutel',  ic:'crown', trade:true,max:1,up:'+30% Sammelradius',down:'−5% Schaden',apply:p=>{p.magnet*=1.3;p.dmgMult-=0.05;}},
+ {id:'t_letter',name:'Ablassbrief',    ic:'star',  trade:true,max:1,up:'+25% Gold',down:'Shop-Preise +10%',apply:p=>{p.goldMult+=0.25;p.priceMul*=1.10;}},
  /* --- Geschoss-Modifikatoren (Schritt 6): ändern das Geschoss statt einer Zahl, höchstens 1× pro Lauf --- */
  {id:'m_pitch',name:'Pechfass',ic:'flame',minRank:1,max:1,mod:'pitch',desc:r=>'Einschläge hinterlassen 1,5 s eine Brandpfütze (25% Schaden/s)',apply:p=>p.fxMods.push('pitch')},
  {id:'m_rico',name:'Querschläger',ic:'arrow',minRank:2,max:1,mod:'ricochet',desc:r=>'Geschosse prallen 1× von Wänden und Hindernissen ab',apply:p=>p.fxMods.push('ricochet')},
@@ -693,7 +706,7 @@ function makePlayer(charId,ctrl){
     luck:0,goldMult:1,xpMult:1,
     weapons:[ch.weapon],wLevel:{},wCd:[0],heldTime:0,
     invuln:0,dashCd:0,dashTime:0,dashDir:{x:1,y:0},aim:0,
-    level:1,xp:0,xpNext:xpForLevel(1),items:[],abilities:[],taken:{},fxMods:[],
+    level:1,xp:0,xpNext:xpForLevel(1),items:[],abilities:[],taken:{},fxMods:[],magnet:1,priceMul:1,skull:false,
     /* ability state */
     orbitN:0,orbitDmg:0,orbitR:46,orbitAng:0,
     novaDmg:0,novaCd:3,novaR:120,novaT:3,novaColor:C.gold2,
@@ -797,6 +810,7 @@ function updatePlayer(dt){
   }
   if(p.ctrl!=='p2') $('#dashPip').classList.toggle('ready',p.dashCd<=0||Admin.dash);
 }
+const skullMul=p=>p.skull&&G.run?1+Math.min(0.4,G.run.kills/25*0.01):1;
 function weaponDamage(w){ const lvl=player.wLevel[w.id]||0; return w.dmg*(1+lvl*0.22); }
 function fireWeapon(w,base){
   if(w.beam){ fireBeam(w,base); return; }
@@ -809,7 +823,7 @@ function fireWeapon(w,base){
     let ang;
     if(w.pattern==='even'&&n>1) ang=base-total/2+total*(i/(n-1));
     else ang=base+rand(-spr,spr);
-    let dmg=baseDmg*p.dmgMult*frenzyDmg*martyrDmg*Admin.dmg, crit=false;
+    let dmg=baseDmg*p.dmgMult*frenzyDmg*martyrDmg*skullMul(p)*Admin.dmg, crit=false;
     if(Math.random()<p.crit){dmg*=p.critMult;crit=true;}
     const spd=w.spd*p.projSpeed, sz=w.size*p.projSize;
     const nb={id:uid++,x:p.x+Math.cos(ang)*16,y:p.y+Math.sin(ang)*16,
@@ -827,7 +841,7 @@ function fireBeam(w,base){
   const p=player; Audio2.shoot();
   const len=w.spd||900, ex=p.x+Math.cos(base)*len, ey=p.y+Math.sin(base)*len;
   const frenzyDmg=p.frenzyActive?(1+p.frenzyPow):1, martyrDmg=(p.curseMartyr&&p.hp<p.maxHP*0.5)?1.9:1;
-  let dmg=weaponDamage(w)*p.dmgMult*frenzyDmg*martyrDmg*Admin.dmg, crit=false;
+  let dmg=weaponDamage(w)*p.dmgMult*frenzyDmg*martyrDmg*skullMul(p)*Admin.dmg, crit=false;
   if(Math.random()<p.crit){dmg*=p.critMult;crit=true;}
   const rad=(w.size||6)*p.projSize;
   for(const e of enemies){ if(distToSeg(e.x,e.y,p.x,p.y,ex,ey)<e.r+rad){
@@ -849,7 +863,7 @@ function deployFromWeapon(w){
   for(let k=0;k<(w.deploy==='rat'?(w.count||1):1);k++){   // Rattenkäfig setzt mehrere Ratten auf einmal frei
   if(k>0){ const ml=deployables.filter(d=>d.wid===w.id); if(ml.length>=max){ const j=deployables.indexOf(ml[0]); if(j>=0)deployables.splice(j,1); } }
   deployables.push({kind:w.deploy,wid:w.id,x:x+(k?rand(-14,14):0),y:y+(k?rand(-14,14):0),r:w.deploy==='mine'?8:w.deploy==='rat'?6:13,
-    dmg:weaponDamage(w)*p.dmgMult*frenzyDmg*Admin.dmg, fireCd:(w.deployFire||600)/1000, fireT:0.3,
+    dmg:weaponDamage(w)*p.dmgMult*frenzyDmg*skullMul(p)*Admin.dmg, fireCd:(w.deployFire||600)/1000, fireT:0.3,
     life:(w.deployLife||10)*(1+clsB(p,'konstrukt','life')), color:w.color, spd:(w.spd||640)*p.projSpeed, count:w.count||1, spread:w.spread||0,
     pierce:(w.pierce||0)+p.pierce+clsB(p,'eisen','pierce'), size:(w.size||5)*p.projSize, novaR:w.novaR||90,
     burn:w.burn||p.burn, fx:bulletFx(w,p), owner:p, phase:rand(0,TAU)});
@@ -1306,7 +1320,7 @@ function updatePickups(dt){
   for(let i=pickups.length-1;i>=0;i--){const pk=pickups[i];pk.life-=dt;pk.bob+=dt*4;
     const tp=nearestPlayer(pk.x,pk.y); if(!tp){ if(pk.life<=0)pickups.splice(i,1); continue; }
     const d=Math.hypot(pk.x-tp.x,pk.y-tp.y);
-    const magnet=pk.type==='xp'?105:80;
+    const magnet=(pk.type==='xp'?105:80)*(tp.magnet||1);
     if(d<magnet){const a=Math.atan2(tp.y-pk.y,tp.x-pk.x);pk.x+=Math.cos(a)*250*dt;pk.y+=Math.sin(a)*250*dt;}
     if(collectPickup(pk,i,d,tp)) continue;
     if(pk.life<=0)pickups.splice(i,1);
@@ -1559,9 +1573,8 @@ function renderShop(){
     }
     wrap.appendChild(el);
   });
-  const rerollCost=15+G.level*2;
-  $('#shopReroll').textContent=t('shop_reroll',{cost:rerollCost});
-  $('#shopReroll').style.opacity=G.coins<rerollCost?0.45:1;
+  $('#shopReroll').textContent=t('shop_reroll',{cost:rerollCost()});
+  $('#shopReroll').style.opacity=G.coins<rerollCost()?0.45:1;
 }
 function weaponMeta(w,dmgTxt){ return t('dbg_dmg')+' '+dmgTxt+' · '+(w.count>1?t('w_proj',{n:w.count}):t('w_single'))+(w.pierce>2?' · '+t('w_pierce'):'')+(w.chain?' · '+t('w_chain'):'')+(w.burn?' · '+t('ammo_burn'):'')+(w.explosive?' · '+t('w_explosive'):'')+(w.deploy?' · '+t('w_deploy'):'')+(w.poison?' · '+t('w_poison'):'')+(w.bounce?' · '+t('w_bounce'):'')+(w.contagion||w.ignite?' · '+t('w_spread'):'')+(w.frostpool?' · '+t('w_frostpool'):''); }
 function buyWeapon(w,price){
@@ -1569,10 +1582,11 @@ function buyWeapon(w,price){
   G.coins-=price; $('#coinTag').textContent=G.coins; giveWeapon(w.id); Audio2.buy();
   advancePost();   // nur EIN Kauf pro Markt
 }
-$('#shopReroll').onclick=()=>{ const cost=15+G.level*2; if(G.coins<cost)return; G.coins-=cost; $('#coinTag').textContent=G.coins; shopOffer=rollShop(); renderShop(); };
+$('#shopReroll').onclick=()=>{ const cost=rerollCost(); if(G.coins<cost)return; G.coins-=cost; $('#coinTag').textContent=G.coins; shopOffer=rollShop(); renderShop(); };
 $('#shopSkip').onclick=()=>advancePost();
 
 /* ---------- UPGRADE (Stufenaufstieg) ---------- */
+let TRADE_CHANCE=0.25;   // Chance je Aufstieg, dass eine der drei Karten eine Tausch-Gabe ist
 const upAvail=u=>!(u.max && (player.taken[u.id]||0)>=u.max);   // Karten mit Limit nur bis zum Limit anbieten
 function rollUpgrades(){
   const cards=[]; const usedIds=new Set();
@@ -1580,12 +1594,14 @@ function rollUpgrades(){
     let def=null,rk='common',tries=0;
     while(tries++<30){
       rk=rollRarity(currentLuck()); const r=rarRank(rk);
-      const pool=UPGRADE_DEFS.filter(u=>(u.minRank||0)<=r && !usedIds.has(u.id) && upAvail(u));
+      const pool=UPGRADE_DEFS.filter(u=>!u.trade && (u.minRank||0)<=r && !usedIds.has(u.id) && upAvail(u));
       if(pool.length){ def=pick(pool); break; }
     }
-    if(!def){ const pool=UPGRADE_DEFS.filter(u=>!usedIds.has(u.id) && !u.minRank && upAvail(u)); def=pool.length?pick(pool):pick(UPGRADE_DEFS.filter(u=>!u.minRank)); rk='common'; }
+    if(!def){ const pool=UPGRADE_DEFS.filter(u=>!u.trade && !usedIds.has(u.id) && !u.minRank && upAvail(u)); def=pool.length?pick(pool):pick(UPGRADE_DEFS.filter(u=>!u.trade&&!u.minRank)); rk='common'; }
     usedIds.add(def.id); cards.push({def,rk});
   }
+  const trades=UPGRADE_DEFS.filter(u=>u.trade && upAvail(u));
+  if(trades.length && Math.random()<TRADE_CHANCE) cards[randInt(0,2)]={def:pick(trades),rk:'common'};
   return cards;
 }
 function openUpgrade(){
@@ -1597,11 +1613,14 @@ function renderUpgrade(cards){
   const wrap=$('#upgradeCards'); wrap.innerHTML='';
   cards.forEach((c,i)=>{
     const r=rarRank(c.rk);
-    const el=document.createElement('div'); el.className='rcard'; el.dataset.key=i+1; el.style.borderColor=rarColor(c.rk);
-    el.innerHTML='<div class="ic">'+svgIcon(c.def.ic,rarColor(c.rk),32)+'</div>'+
-      '<div class="rk '+c.rk+'">'+rarName(c.rk)+'</div>'+
-      '<div class="rn">'+c.def.name+'</div>'+
-      '<div class="rd">'+c.def.desc(r)+'</div>';
+    const el=document.createElement('div'); el.className='rcard'+(c.def.trade?' trade':''); el.dataset.key=i+1; el.style.borderColor=c.def.trade?'':rarColor(c.rk);
+    el.innerHTML=c.def.trade
+      ? '<div class="ic">'+svgIcon(c.def.ic,'#d8a0a0',32)+'</div><div class="rk trade">⇄ '+t('trade_label')+'</div><div class="rn">'+c.def.name+'</div>'+
+        '<div class="rd"><span style="color:#5fbf52">'+c.def.up+'</span><span class="curse-down">'+c.def.down+'</span></div>'
+      : '<div class="ic">'+svgIcon(c.def.ic,rarColor(c.rk),32)+'</div>'+
+        '<div class="rk '+c.rk+'">'+rarName(c.rk)+'</div>'+
+        '<div class="rn">'+c.def.name+'</div>'+
+        '<div class="rd">'+c.def.desc(r)+'</div>';
     el.onclick=()=>{ giveUpgradeDef(c.def,c.rk); advancePost(); };
     wrap.appendChild(el);
   });
@@ -1671,6 +1690,7 @@ function fillStats(){
     [t('s_thorns'),p.thorns],
     [t('s_ammo'),ammo.length?ammo.join(', '):t('val_none')],
     [t('s_luck'),(currentLuck()).toFixed(2)],
+    [t('s_magnet'),pct(p.magnet||1)],
     [t('s_xp'),p.xp+' / '+p.xpNext],
     [t('s_items'),p.items.length],
   ];

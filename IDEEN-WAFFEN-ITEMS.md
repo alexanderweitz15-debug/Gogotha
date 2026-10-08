@@ -317,7 +317,7 @@ Jeder Pool enthält mindestens ein Paar für eine Fähigkeits-Verschmelzung (orb
 | 5 ✓ | Waffenklassen (4) – erledigt. Shop-Neigung greift auch auf niedrigere Seltenheiten zurück; gemessen: Pulver 51→61 %, Seuche 14→24 %, Feuer nur 3→7 %, weil es keine gewöhnliche Feuerwaffe gibt (Brandpfeil in Schritt 7 schließt die Lücke) | M | Shop zeigt Klassen, Boni im Werte-Panel sichtbar |
 | 6 ✓ | Geschoss-Modifikatoren (5) – erledigt als Gaben im Upgrade-Pool (je 1× pro Lauf); gelten nicht für den Laserstrahl (kein Geschoss) | S × 5 | Jeder einzeln per Admin-Panel testbar |
 | 7 ✓ | Gegner-Gift + 6 Waffen (6) – erledigt. Shop-Neigung Feuer jetzt 11→27 % (vorher 3→7 %) | M | Jede Klasse im Shop bis Stufe 4 erreichbar |
-| 8 | Tausch-Gaben (7) | M | – |
+| 8 ✓ | Tausch-Gaben (7) – erledigt: 8 Karten, in 25 % der Aufstiege ersetzt eine davon eine normale Karte, je 1× pro Lauf | M | – |
 | 9 | Boss-Reliquien + 3 Rezepte (8) | M | – |
 | 10 | Fluch-Wahl, Pakte (9), Schreine (10), Charakter-Profile (11) | S / M / M | – |
 

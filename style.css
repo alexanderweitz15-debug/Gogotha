@@ -124,6 +124,9 @@ input{font-family:inherit}
 .rcard.cursed .rk{color:#e0405f;animation:godpulse 1.6s ease-in-out infinite}
 .curse-cards{grid-template-columns:repeat(2,1fr);max-width:500px}
 .rcard.cursed .curse-down{color:#e0405f;font-size:10.5px;margin-top:6px;display:block}
+.rcard.trade{border-style:dashed;border-color:#8a5a5a;background:linear-gradient(180deg,#171010,#0b0807)}
+.rcard.trade .rk.trade{color:#d8a0a0}
+.rcard.trade .curse-down{color:#e0405f;font-size:11px;margin-top:6px;display:block}
 
 /* META (Seelenschmiede) + ACHIEVEMENTS + locked chars */
 .rcard .mlvl{font-family:var(--mono);font-size:11px;color:var(--gold2);margin-bottom:4px}
