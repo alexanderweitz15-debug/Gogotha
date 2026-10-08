@@ -94,7 +94,7 @@ Ein Roguelite-Arena-Shooter im Stil von „Vampire Survivors / Brotato“ mit Gr
 
 - **Mobil nicht spielbar:** Es gibt keine Touch- oder Gamepad-Steuerung, nur Tastatur.
 - „Aufgeben“ zählt als Tod und gibt trotzdem Seelen.
-- Die 12 Zusatz-Charaktere haben keinen eigenen Fähigkeiten-Pool (Fallback auf den Büßer, `game.js:1347`) und kein eigenes Aussehen (sie verwenden das Design eines Basis-Charakters).
+- Die 12 Zusatz-Charaktere haben keinen eigenen Fähigkeiten-Pool (Fallback auf den Büßer, `game.js:1347`) ~~und kein eigenes Aussehen~~ – **behoben (08.10.):** eigene Figuren in `sprites.js`, ebenso neue Figuren für alle 9 Gegnertypen.
 - Server: keine Größenbegrenzung für Anfragen, kein Rate-Limit beim Login, Tokens laufen nie ab, Abmelden macht das Token serverseitig nicht ungültig.
 - Die Kollisionsprüfung vergleicht jedes Geschoss mit jedem Gegner. Bei bis zu 90 Gegnern plus Beschwörungen ist das in späten Stationen ein mögliches Performance-Problem. **Nicht gemessen.**
 

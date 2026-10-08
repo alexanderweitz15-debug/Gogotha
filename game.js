@@ -431,7 +431,7 @@ const CHARS=[
  {id:'executioner',name:'Der Henker',role:'Panzer',weapon:'scatter',lore:'Hat tausend Seelen zur Ruhe gebracht. Langsam, doch kaum etwas wirft ihn um.',hp:165,speed:0.8,dmg:0.95,fr:1.0,armor:3},
  {id:'heretic',name:'Die Ketzerin',role:'Glaskanone',weapon:'witchfire',lore:'Sprach mit Dingen jenseits der Mauer. Tödlich — aber zerbrechlich wie Glas.',hp:52,speed:1.16,dmg:1.26,fr:0.92},
  {id:'plaguepriest',name:'Der Pestpriester',role:'Seuche',weapon:'plague',lore:'Predigt das Wort der Fäulnis. Seine Wunden brennen lange, nachdem er sie schlug.',hp:100,speed:0.95,dmg:1.0,fr:1.0,burn:true},
- /* --- FREISCHALTBARE CHARAKTERE (skin = wiederverwendetes Hero-Design bis Phase 6 Redesign) --- */
+ /* --- FREISCHALTBARE CHARAKTERE (eigene Figuren in sprites.js/HERO_ART; skin = Rückfall-Design) --- */
  {id:'crusader',name:'Der Kreuzritter',role:'Bollwerk',weapon:'handcannon',lore:'Trug das Banner durch zehn Schlachten und ließ es nie sinken.',hp:130,speed:1.0,dmg:1.05,fr:1.0,armor:1,skin:'penitent',unlock:{level:10}},
  {id:'flagellant',name:'Der Flagellant',role:'Panzer',weapon:'nailgun',lore:'Jede Wunde, die er austeilt, hat er sich erst selbst geschlagen.',hp:155,speed:0.9,dmg:1.0,fr:1.1,skin:'executioner',unlock:{level:20}},
  {id:'inquisitor',name:'Der Inquisitor',role:'Glaskanone',weapon:'bolt',lore:'Findet die Ketzerei in jedem Herzen — und brennt sie heraus.',hp:70,speed:1.1,dmg:1.3,fr:0.95,skin:'heretic',unlock:{level:30}},
@@ -1910,8 +1910,16 @@ function drawEnemy(e){
   cx.fillStyle='rgba(0,0,0,.4)';cx.beginPath();cx.ellipse(0,e.r*0.8,e.r*0.9,e.r*0.35,0,0,TAU);cx.fill();
   if(e.elite){ cx.save();cx.globalAlpha=0.5+Math.sin(G.uiTime*5+e.wob)*0.22;cx.strokeStyle=C.gold2;cx.lineWidth=2.5;cx.shadowColor=C.gold2;cx.shadowBlur=8;cx.beginPath();cx.arc(0,0,e.r+5,0,TAU);cx.stroke();cx.restore(); }
   const col=e.hitFlash>0?'#fff':e.color;
-  if(!e.isBoss){ cx.strokeStyle='rgba(255,236,210,.32)';cx.lineWidth=2;cx.beginPath();cx.arc(0,0,e.r+1.5,0,TAU);cx.stroke(); }
   if(e.isBoss){ drawBoss(e,col); }
+  else if(ENEMY_ART[e.type]){   // vorgezeichnete Figur (sprites.js), schaut zum nächsten Spieler
+    const tg=nearestPlayer(e.x,e.y)||player, face=tg&&tg.x<e.x?-1:1, nf=ENEMY_FRAMES[e.type]||1;
+    const spr=enemySprite(e.type,Math.round(e.r),e.color,nf>1?Math.floor(G.uiTime*8+e.wob)%nf:0,e.hitFlash>0);
+    if(e.type==='exploder'){ const pulse=0.5+Math.sin(G.uiTime*10+e.wob)*0.5; cx.globalAlpha=0.25+pulse*0.35; cx.fillStyle=C.candle; cx.beginPath(); cx.arc(face*e.r*0.35,e.r*0.15,e.r*(0.7+pulse*0.25),0,TAU); cx.fill(); cx.globalAlpha=1; }
+    if(e.type==='summoner'){ cx.save(); cx.translate(0,-e.r*1.45); cx.rotate(G.uiTime*1.4); cx.strokeStyle='rgba(208,168,255,.7)'; cx.lineWidth=1.5; cx.beginPath(); for(let k=0;k<=3;k++){const a=k/3*TAU; cx.lineTo(Math.cos(a)*e.r*0.5,Math.sin(a)*e.r*0.5);} cx.stroke(); cx.beginPath(); cx.arc(0,0,e.r*0.55,0,TAU); cx.stroke(); cx.restore(); }
+    if(e.type==='healer'){ cx.save(); cx.globalAlpha=0.3+Math.sin(G.uiTime*4+e.wob)*0.2; cx.strokeStyle='#bfeacf'; cx.lineWidth=2; cx.beginPath(); cx.arc(0,0,e.r*1.35,0,TAU); cx.stroke(); cx.restore(); }
+    cx.save(); cx.scale(face,1); cx.drawImage(spr,-spr._pad,-spr._pad); cx.restore();
+    if(e.type==='exploder'&&Math.random()<0.5) spawnParticle(e.x+face*e.r*0.5,e.y-e.r*0.75,'#ffd27a',1.2,30);
+  }
   else {
     cx.fillStyle=col;
     if(e.type==='swarmer'){cx.beginPath();cx.arc(0,0,e.r,0,TAU);cx.fill();cx.fillStyle='#000';cx.beginPath();cx.arc(0,0,e.r*0.4,0,TAU);cx.fill();}
@@ -1973,7 +1981,8 @@ function drawHero(g,id,x,y,s,t,moving,aim){
   g.save();g.translate(x,y+bob);
   g.fillStyle='rgba(0,0,0,.4)';g.beginPath();g.ellipse(0,s*1.0,s*0.85,s*0.32,0,0,TAU);g.fill();
   const W2=v=>Math.max(1,v);
-  if(sk==='penitent'){
+  if(HERO_ART[id]){ HERO_ART[id](g,s,t,sw,aim); }   // eigene Figur (sprites.js)
+  else if(sk==='penitent'){
     g.fillStyle='#23222a';g.beginPath();g.moveTo(-s*0.8+sw,s);g.lineTo(-s*0.45,-s*0.45);g.lineTo(s*0.45,-s*0.45);g.lineTo(s*0.8-sw,s);g.closePath();g.fill();
     g.strokeStyle='rgba(216,205,184,.4)';g.lineWidth=W2(s*0.08);g.beginPath();g.moveTo(-s*0.8+sw,s);g.lineTo(s*0.8-sw,s);g.stroke();
     g.strokeStyle='#8a7a4a';g.lineWidth=W2(s*0.07);g.beginPath();g.moveTo(-s*0.4,s*0.15);g.lineTo(s*0.4,s*0.15);g.stroke();

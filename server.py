@@ -61,7 +61,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         super().__init__(*a, directory=ROOT, **k)
 
     # Nur diese Dateien sind öffentlich — golgotha.db und server.py bleiben unerreichbar.
-    PUBLIC = {"/": "/index.html", "/index.html": "/index.html", "/game.js": "/game.js", "/style.css": "/style.css"}
+    PUBLIC = {"/": "/index.html", "/index.html": "/index.html", "/game.js": "/game.js", "/sprites.js": "/sprites.js",
+              "/style.css": "/style.css"}
 
     def _public_path(self):
         path = self.path.split("?", 1)[0].split("#", 1)[0]
