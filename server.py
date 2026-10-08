@@ -60,6 +60,29 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *a, **k):
         super().__init__(*a, directory=ROOT, **k)
 
+    # Nur diese Dateien sind öffentlich — golgotha.db und server.py bleiben unerreichbar.
+    PUBLIC = {"/": "/index.html", "/index.html": "/index.html", "/game.js": "/game.js", "/style.css": "/style.css"}
+
+    def _public_path(self):
+        path = self.path.split("?", 1)[0].split("#", 1)[0]
+        return self.PUBLIC.get(path)
+
+    def do_GET(self):
+        target = self._public_path()
+        if not target:
+            self.send_error(404)
+            return
+        self.path = target
+        super().do_GET()
+
+    def do_HEAD(self):
+        target = self._public_path()
+        if not target:
+            self.send_error(404)
+            return
+        self.path = target
+        super().do_HEAD()
+
     def end_headers(self):
         # ponytail: kein Caching — Code-Änderungen sind nach Reload sofort sichtbar
         self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
