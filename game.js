@@ -513,7 +513,7 @@ const REGIONS=[
  {name:'Golgotha',floor:'#120f12',tint:'#2a1c24'},
 ];
 const BOSS_NAMES=['Der Grabenpredigter','Made Magna','Der Verschollene Chirurg','Das Schlächterlamm','Erster Gekreuzigter','Choral der Asche','Mutter der Seuche','Der Eiserne Heilige','Schlund von Golgotha','Der Letzte Gekreuzigte'];
-const BOSS_KINDS=['preacher','maggot','surgeon','lamb','crucified'];
+const BOSS_KINDS=['preacher','maggot','surgeon','lamb','crucified','choir','mother','ironsaint','maw','lastcross'];
 
 /* ---------- SCHWIERIGKEITSGRADE ---------- *//* je härter: mehr Gegner, mehr LP, mehr Schaden, schnelleres Feuer */
 const DIFFICULTIES=[
@@ -1127,6 +1127,7 @@ function makeElite(e){ e.elite=true; e.maxHp*=2.6; e.hp=e.maxHp; e.dmg*=1.4; e.b
 function damageEnemy(e,dmg,ang,kb,fromBullet,src,owner){
   if(e.hp<=0)return;   // bereits tot: kein zweiter Kill
   if(Admin.one&&fromBullet)dmg=e.maxHp*99;
+  if(e.isBoss&&e.shieldT>0) dmg*=0.25;   // Eiserner Heiliger hinter dem Schild
   e.lastHit=dmg;
   const o=owner||player, credit=src; let before=e.hp;
   const hs=clsStage(o,'heilig'); if(hs) dmg*=(e.isBoss||e.elite)?1+CLS_BONUS.heilig.boss[hs]:1-CLS_BONUS.heilig.normal[hs];
@@ -1160,14 +1161,16 @@ function removeEnemy(e){ const i=enemies.indexOf(e); if(i>=0)enemies.splice(i,1)
    BOSSE — eigene Designs & Muster
    ========================================================================= */
 function spawnBoss(lvl){
-  const idx=clamp(Math.floor(lvl/5)-1,0,BOSS_NAMES.length-1);
+  const idx=Math.max(0,Math.floor(lvl/5)-1)%BOSS_NAMES.length, cycle=Math.floor(Math.max(0,lvl-1)/50);   // ab Station 55: reihum, je Durchlauf +50% Leben
   const kind=BOSS_KINDS[idx%BOSS_KINDS.length];
   const sc=scaleFor(lvl);
   const e={id:uid++,type:'boss',isBoss:true,bossKind:kind,bossIdx:idx,x:WORLD.w/2,y:ROOM.y+120,r:36,
-    maxHp:Math.round(460*sc.hp*(1+idx*0.16)*diffMul('enemyHp')*(G.curseHp||1)),hp:0,speed:46+idx*3,dmg:18*sc.dmg*diffMul('enemyDmg'),
+    maxHp:Math.round(460*sc.hp*(1+idx*0.16)*(1+cycle*0.5)*diffMul('enemyHp')*(G.curseHp||1)),hp:0,speed:46+idx*3,dmg:18*sc.dmg*diffMul('enemyDmg'),
     color:C.blood2,touchCd:0,slowT:0,burnT:0,burnDmg:0,hitFlash:0,_orbCd:0,
     name:BOSS_NAMES[idx],atkCd:1.4,bspd:270+idx*12,bdmg:11*sc.dmg*diffMul('enemyDmg'),wob:0,spin:0,moveT:0,
-    homeX:WORLD.w/2,homeY:ROOM.y+140,tpT:0,chargeT:0,charging:false,cdx:0,cdy:0};
+    homeX:WORLD.w/2,homeY:ROOM.y+140,tpT:0,chargeT:0,charging:false,cdx:0,cdy:0,burstN:0,burstT:0,shieldT:0,pullT:0,dropT:0};
+  if(kind==='maw'){ e.x=WORLD.w/2; e.y=ROOM.y+ROOM.h*0.42; e.r=44; }   // der Schlund sitzt fest in der Raummitte
+  if(kind==='mother'||kind==='lastcross') e.r=42;
   e.hp=e.maxHp; if(players.some(pl=>hasRelic(pl,'lance'))) e.hp=Math.round(e.maxHp*0.9);
   enemies.push(e); G.boss=e; G.bossMode=true;
   $('#bossName').textContent=e.name; $('#bossBarWrap').classList.add('show');
@@ -1219,6 +1222,8 @@ function updateBoss(e,dt,tg){
       if(roll<0.4){ for(let d4=0;d4<4;d4++){const base=e.spin*0.6+d4*TAU/4; for(let j=-1;j<=1;j++)bshoot(e,base+j*0.1,e.bspd,e.bdmg,6,C.gold2);} e.atkCd=0.9; }
       else if(roll<0.75){ const cnt=20+Math.floor(G.level/6); for(let i=0;i<cnt;i++){const a=i/cnt*TAU+rand(-.03,.03);bshoot(e,a,e.bspd*0.85,e.bdmg,6,C.blood2);} e.atkCd=1.5; G.shake=4; }
       else { const types=['chaser','shooter','tank']; for(let i=0;i<2+Math.floor(G.level/12);i++){const a=rand(0,TAU),rr=rand(50,100);spawnEnemy(pick(types),clamp(e.x+Math.cos(a)*rr,ROOM.x+20,ROOM.x+ROOM.w-20),clamp(e.y+Math.sin(a)*rr,ROOM.y+20,ROOM.y+ROOM.h-20),Math.max(1,G.level-2));} e.atkCd=2.4; } }
+  } else if(k==='choir'||k==='mother'||k==='ironsaint'||k==='maw'||k==='lastcross'){
+    BOSS_AI[k](e,dt,tg,ang,cx0,cy0,ax,ay);
   } else {
     /* Grabenpredigter (Standard): radiale Ringe / gezielter Fächer / Beschwörung */
     const tx=cx0+Math.cos(e.moveT*0.6)*ax, ty=cy0+Math.sin(e.moveT*0.9)*ay;
@@ -1230,6 +1235,79 @@ function updateBoss(e,dt,tg){
   }
   e.x=clamp(e.x,ROOM.x+e.r,ROOM.x+ROOM.w-e.r); e.y=clamp(e.y,ROOM.y+e.r,ROOM.y+ROOM.h-e.r);
 }
+/* ---------- GEFAHRENZONEN (Bosse 6–10): erst sichtbare Warnung, dann Schaden — Ausweichschritt hilft ---------- */
+function addHazard(h){ h.t=0; (G.hazards||(G.hazards=[])).push(h); }
+function updateHazards(dt){ const hz=G.hazards; if(!hz)return;
+  for(let i=hz.length-1;i>=0;i--){ const h=hz[i]; h.t+=dt;
+    if(!h.hit && h.t>=h.delay){ h.hit=true; G.shake=Math.max(G.shake,3);
+      for(const pl of players){ if(pl.dead)continue;
+        const inside=h.kind==='circle'?dist2(pl.x,pl.y,h.x,h.y)<(h.r+pl.r)*(h.r+pl.r):distToSeg(pl.x,pl.y,h.x1,h.y1,h.x2,h.y2)<h.w/2+pl.r;
+        if(inside) hurtPlayer(h.dmg,pl); }
+      const px=h.kind==='circle'?h.x:(h.x1+h.x2)/2, py=h.kind==='circle'?h.y:(h.y1+h.y2)/2;
+      for(let k=0;k<10;k++)spawnParticle(px+rand(-20,20),py+rand(-20,20),h.color||C.candle,rand(1.5,3),rand(60,160)); }
+    if(h.t>=h.delay+0.25) hz.splice(i,1); } }
+function drawHazards(){ const hz=G.hazards; if(!hz)return;
+  for(const h of hz){ const pr=clamp(h.t/h.delay,0,1), col=h.color||'#c01f24';
+    cx.save();
+    if(!h.hit){ cx.globalAlpha=0.12+pr*0.16; cx.fillStyle=col; cx.strokeStyle=col; cx.lineWidth=2;
+      if(h.kind==='circle'){ cx.beginPath(); cx.arc(h.x,h.y,h.r,0,TAU); cx.fill(); cx.globalAlpha=0.7; cx.stroke(); cx.globalAlpha=0.35; cx.beginPath(); cx.arc(h.x,h.y,h.r*pr,0,TAU); cx.fill(); }
+      else { cx.lineCap='butt'; cx.lineWidth=h.w; cx.beginPath(); cx.moveTo(h.x1,h.y1); cx.lineTo(h.x2,h.y2); cx.stroke(); cx.globalAlpha=0.5; cx.lineWidth=Math.max(2,h.w*pr); cx.stroke(); } }
+    else { cx.globalAlpha=clamp(1-(h.t-h.delay)/0.25,0,1)*0.8; cx.fillStyle='#ffd27a'; cx.strokeStyle='#ffd27a';
+      if(h.kind==='circle'){ cx.beginPath(); cx.arc(h.x,h.y,h.r,0,TAU); cx.fill(); } else { cx.lineWidth=h.w; cx.beginPath(); cx.moveTo(h.x1,h.y1); cx.lineTo(h.x2,h.y2); cx.stroke(); } }
+    cx.restore(); } }
+function bossRing(e,cnt,spd,off,col,r){ for(let i=0;i<cnt;i++){ const a=i/cnt*TAU+off; bshoot(e,a,spd,e.bdmg,r||6,col); } }
+function bossAdds(e,types,n,lvlOff){ for(let i=0;i<n;i++){ const a=rand(0,TAU),rr=rand(50,100);
+  spawnEnemy(pick(types),clamp(e.x+Math.cos(a)*rr,ROOM.x+20,ROOM.x+ROOM.w-20),clamp(e.y+Math.sin(a)*rr,ROOM.y+20,ROOM.y+ROOM.h-20),Math.max(1,G.level-(lvlOff||3))); } }
+function rainNear(tg,n,r,dmg,col){ for(let i=0;i<n;i++) addHazard({kind:'circle',x:clamp(tg.x+rand(-170,170),ROOM.x+30,ROOM.x+ROOM.w-30),y:clamp(tg.y+rand(-150,150),ROOM.y+30,ROOM.y+ROOM.h-30),r,delay:rand(0.9,1.3),dmg,color:col}); }
+/* Feuerstöße über mehrere Bilder (e.burstN Stöße im Abstand e.burstGap) */
+function bossBurst(e,dt){ if(e.burstN<=0)return; e.burstT-=dt; if(e.burstT<=0){ e.burstN--; e.burstT=e.burstGap; e.burstFn(e.burstN); } }
+const BOSS_AI={
+  /* Choral der Asche: Spiralgesang, Aschenregen (Warnkreise), Geflügelte */
+  choir(e,dt,tg,ang,cx0,cy0,ax,ay){ const tx=cx0+Math.cos(e.moveT*0.45)*ax*0.8, ty=cy0+Math.sin(e.moveT*0.7)*ay*0.8;
+    e.x+=(tx-e.x)*0.7*dt; e.y+=(ty-e.y)*0.7*dt; bossBurst(e,dt);
+    if(e.atkCd<=0 && !Admin.noFire){ const roll=Math.random();
+      if(roll<0.4){ e.burstN=5; e.burstGap=0.22; e.burstT=0; e.burstFn=n=>bossRing(e,14,e.bspd*0.75,e.spin+n*0.22,'#b8b0a0',6); e.atkCd=2.0; }
+      else if(roll<0.75){ rainNear(tg,5+Math.floor(G.level/15),46,e.bdmg*1.6,'#d06030'); e.atkCd=1.7; }
+      else { bossAdds(e,['flyer'],3+Math.floor(G.level/15)); e.atkCd=2.2; } } },
+  /* Mutter der Seuche: Giftbrocken, Madenbrut, Giftspur; ab halbem Leben kriecht sie auf dich zu */
+  mother(e,dt,tg,ang,cx0,cy0,ax,ay){ const angry=e.hp<e.maxHp*0.5;
+    if(angry){ e.x+=Math.cos(ang)*e.speed*0.7*dt; e.y+=Math.sin(ang)*e.speed*0.7*dt; }
+    else { const tx=cx0+Math.cos(e.moveT*0.35)*ax*0.6, ty=cy0+Math.sin(e.moveT*0.5)*ay*0.6; e.x+=(tx-e.x)*0.5*dt; e.y+=(ty-e.y)*0.5*dt; }
+    e.dropT-=dt; if(e.dropT<=0){ e.dropT=angry?0.8:1.5; spawnPuddle(e.x,e.y,e.bdmg*0.5,{hostile:true,effect:'poison',big:true,life:3.5}); }
+    if(e.atkCd<=0 && !Admin.noFire){ const roll=Math.random();
+      if(roll<0.45){ for(let i=0;i<4;i++){ const a=ang+rand(-0.5,0.5), d=Math.hypot(tg.x-e.x,tg.y-e.y)*rand(0.6,1.2);
+          ebullets.push({x:e.x,y:e.y,vx:Math.cos(a)*240,vy:Math.sin(a)*240,r:8,dmg:e.bdmg,life:4,lob:true,color:C.sick,startD:0,maxD:d}); } e.atkCd=angry?1.2:1.6; }
+      else if(roll<0.75){ bossAdds(e,['swarmer','swarmer','swarmer','spitter'],5+Math.floor(G.level/12)); e.atkCd=2.4; }
+      else { bossRing(e,14,e.bspd*0.6,e.spin,C.sick,7); e.atkCd=1.4; } } },
+  /* Der Eiserne Heilige: Schildwall (nimmt 25% Schaden, feuert Salven), Ansturm mit Aufprall, Kreuzhieb */
+  ironsaint(e,dt,tg,ang,cx0,cy0,ax,ay){ if(e.shieldT>0)e.shieldT-=dt; bossBurst(e,dt);
+    if(e.charging){ e.x+=e.cdx*520*dt; e.y+=e.cdy*520*dt; e.chargeT-=dt;
+      if(e.chargeT<=0||e.x<=ROOM.x+e.r||e.x>=ROOM.x+ROOM.w-e.r||e.y<=ROOM.y+e.r||e.y>=ROOM.y+ROOM.h-e.r){ e.charging=false; e.atkCd=1.3;
+        addHazard({kind:'circle',x:e.x,y:e.y,r:95,delay:0.55,dmg:e.bdmg*2,color:C.gold2}); } return; }
+    if(e.shieldT<=0){ const tx=cx0+Math.cos(e.moveT*0.6)*ax*0.7, ty=cy0+Math.sin(e.moveT*0.8)*ay*0.7; e.x+=(tx-e.x)*0.6*dt; e.y+=(ty-e.y)*0.6*dt; }
+    if(e.atkCd<=0 && !Admin.noFire){ const roll=Math.random();
+      if(roll<0.35){ e.shieldT=2.6; e.burstN=6; e.burstGap=0.4; e.burstT=0.2; e.burstFn=()=>{ const a=Math.atan2(tg.y-e.y,tg.x-e.x); for(let j=-1;j<=1;j++)bshoot(e,a+j*0.14,e.bspd*1.1,e.bdmg,6,C.gold2); }; e.atkCd=3.0; }
+      else if(roll<0.7){ e.charging=true; e.chargeT=0.9; e.cdx=Math.cos(ang); e.cdy=Math.sin(ang); G.shake=4; }
+      else { const L=900; for(const a of [0,Math.PI/2]){ addHazard({kind:'line',x1:e.x-Math.cos(a)*L,y1:e.y-Math.sin(a)*L,x2:e.x+Math.cos(a)*L,y2:e.y+Math.sin(a)*L,w:36,delay:0.9,dmg:e.bdmg*1.8,color:C.gold2}); } e.atkCd=1.6; } } },
+  /* Schlund von Golgotha: sitzt fest, saugt Spieler an, speit Knochenringe, ruft Selbstmörder */
+  maw(e,dt,tg,ang,cx0,cy0,ax,ay){ bossBurst(e,dt); if(e.pullT>0)e.pullT-=dt;
+    const pull=e.pullT>0?150:45;
+    for(const pl of players){ if(pl.dead||pl.dashTime>0)continue; const d=Math.hypot(e.x-pl.x,e.y-pl.y); if(d<560&&d>e.r){ pl.x+=(e.x-pl.x)/d*pull*dt; pl.y+=(e.y-pl.y)/d*pull*dt; } }
+    if(e.atkCd<=0 && !Admin.noFire){ const roll=Math.random();
+      if(roll<0.4){ e.burstN=3; e.burstGap=0.35; e.burstT=0; e.burstFn=n=>bossRing(e,20,e.bspd*0.8,e.spin+n*0.16,C.bone,6); e.atkCd=1.9; }
+      else if(roll<0.7){ e.pullT=2.0; e.burstN=1; e.burstGap=0; e.burstT=2.0; e.burstFn=()=>bossRing(e,28,e.bspd,e.spin,C.blood2,7); e.atkCd=2.8; }
+      else { bossAdds(e,['exploder','exploder','chaser'],3+Math.floor(G.level/15)); e.atkCd=2.3; } } },
+  /* Der Letzte Gekreuzigte: Ringe, Kreuzsalven, Beschwörung; unter halbem Leben Kreuzbalken über den Raum und Aschenregen */
+  lastcross(e,dt,tg,ang,cx0,cy0,ax,ay){ const p2=e.hp<e.maxHp*0.5; bossBurst(e,dt);
+    const tx=cx0+Math.cos(e.moveT*0.5)*ax*0.6, ty=cy0+Math.sin(e.moveT*0.65)*ay*0.6; e.x+=(tx-e.x)*0.7*dt; e.y+=(ty-e.y)*0.7*dt;
+    if(e.atkCd<=0 && !Admin.noFire){ const roll=Math.random(), sp=p2?0.75:1;
+      if(p2&&roll<0.3){ addHazard({kind:'line',x1:ROOM.x,y1:tg.y,x2:ROOM.x+ROOM.w,y2:tg.y,w:40,delay:1.0,dmg:e.bdmg*2,color:C.blood2});
+        addHazard({kind:'line',x1:tg.x,y1:ROOM.y,x2:tg.x,y2:ROOM.y+ROOM.h,w:40,delay:1.0,dmg:e.bdmg*2,color:C.blood2}); e.atkCd=1.5*sp; }
+      else if(p2&&roll<0.5){ rainNear(tg,6,44,e.bdmg*1.6,'#8a2020'); e.atkCd=1.4*sp; }
+      else if(roll<0.7){ for(let d4=0;d4<4;d4++){ const base=e.spin*0.7+d4*TAU/4; for(let j=-1;j<=1;j++)bshoot(e,base+j*0.1,e.bspd,e.bdmg,6,C.gold2); } e.atkCd=0.9*sp; }
+      else if(roll<0.88){ e.burstN=2; e.burstGap=0.3; e.burstT=0; e.burstFn=n=>bossRing(e,22+Math.floor(G.level/8),e.bspd*0.85,e.spin+n*0.14,C.blood2,6); e.atkCd=1.6*sp; }
+      else { bossAdds(e,['chaser','shooter','tank','healer'],3+Math.floor(G.level/12),2); e.atkCd=2.4*sp; } } },
+};
 function bossDefeated(e){
   G.bossMode=false; G.boss=null; $('#bossBarWrap').classList.remove('show');
   if(G.run){G.run.bossKills=(G.run.bossKills||0)+1; G.run.bossKinds=G.run.bossKinds||{}; G.run.bossKinds[e.bossKind]=true;}
@@ -1575,7 +1653,8 @@ function buildLevel(lvl){
   $('#regionLabel').textContent=region.name;
   buildDecor(region); buildObstacles();
   G.waveGoldMul=1; G.shrine=null;
-  if(lvl%5===0 && lvl<=50) spawnBoss(lvl); else { spawnWave(lvl); maybeShrine(); }
+  G.hazards=[];
+  if(lvl%5===0) spawnBoss(lvl); else { spawnWave(lvl); maybeShrine(); }   // auch im Endlos-Modus alle 5 Stationen ein Boss
   updateCamera(true);
 }
 function spawnWave(lvl){
@@ -1618,7 +1697,7 @@ function onCleared(){
 }
 function openPostWave(){
   postQueue=[];
-  const bossStation=G.level%5===0 && G.level<=50;
+  const bossStation=G.level%5===0;
   for(const pl of players){ if(pl.dead)continue;
     if(bossStation && RELICS.some(r=>!hasRelic(pl,r.id))) postQueue.push({step:'relic',pl});   // vor dem Shop, damit Würfel/Schlüssel sofort wirken
     if(!(G.silence && G.level%2===1)) postQueue.push({step:'shop',pl});   // Pakt des Schweigens: Shop nur nach geraden Stationen
@@ -1932,7 +2011,7 @@ function renderGame(){
     if(pu.effect==='fire'){cx.globalAlpha=clamp(pu.life,0,1)*0.3;cx.fillStyle='#ffd27a';cx.beginPath();cx.arc(pu.x,pu.y,pu.r*0.6,0,TAU);cx.fill();}cx.restore();}
   for(const n of novaRings){cx.save();cx.globalAlpha=clamp(n.t/0.45,0,1)*0.6;cx.strokeStyle=n.color;cx.lineWidth=3;cx.beginPath();cx.arc(n.x,n.y,n.r,0,TAU);cx.stroke();cx.restore();}
   for(const ob of obstacles) drawObstacle(ob);
-  drawShrine();
+  drawShrine(); drawHazards();
   for(const pk of pickups){const yy=pk.y+Math.sin(pk.bob)*2;
     if(pk.type==='coin'){cx.fillStyle=C.gold2;cx.beginPath();cx.arc(pk.x,yy,4,0,TAU);cx.fill();cx.fillStyle='rgba(255,255,255,.4)';cx.beginPath();cx.arc(pk.x-1,yy-1,1.5,0,TAU);cx.fill();}
     else if(pk.type==='xp'){cx.save();cx.translate(pk.x,yy);cx.rotate(Math.PI/4);cx.shadowColor=C.xp;cx.shadowBlur=6;cx.fillStyle=C.xp;cx.fillRect(-3,-3,6,6);cx.restore();}
@@ -2109,6 +2188,7 @@ function drawEnemy(e){
 }
 function drawBoss(e,col){
   const s=e.r, k=e.bossKind, t=G.uiTime;
+  if(BOSS_ART[k]){ BOSS_ART[k](cx,e,col,t); return; }   // Bosse 6–10 (sprites.js)
   if(k==='maggot'){
     // segmentierter Wurm-Körper
     for(let i=4;i>=0;i--){const seg=s*(1-i*0.12);cx.fillStyle=i===0?col:'#7a8c3a';cx.beginPath();cx.arc(-Math.cos(e.spin)*i*6, i*6, seg,0,TAU);cx.fill();}
@@ -2261,7 +2341,7 @@ function loop(now){
       player=anchorPlayer();
       for(let i=enemies.length-1;i>=0;i--) if(enemies[i]) updateEnemy(enemies[i],dt);
       updateDeployables(dt);updateBullets(dt);updatePuddles(dt);updatePickups(dt);updateParticles(dt);updateFloaters(dt);
-      updateShrine(dt); checkCleared(dt);
+      updateShrine(dt); updateHazards(dt); checkCleared(dt);
       if(G.boss)$('#bossFill').style.width=clamp(G.boss.hp/G.boss.maxHp*100,0,100)+'%';
       updateHudLive();
     }

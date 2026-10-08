@@ -18,7 +18,9 @@ Im Test traten keine JavaScript-Fehler auf.
 | 9. Koop: Effekte beim falschen Spieler | **Behoben.** Lebensraub, Hinrichtung und Goldbonus gehören dem Spieler, dessen Geschoss/Fähigkeit getroffen hat; Begleiter folgen ihrem Besitzer; Bosse und Bogenschützen zielen auf den nächsten Spieler (getestet). Gold bleibt eine gemeinsame Kasse. |
 | Neu gefunden: Explosion blockierte Kettenblitz und Pfützen | **Behoben.** Mit explosiven Schüssen (Upgrade „Höllenfeuer“, Fähigkeit „Inferno“, Hand Gottes) lösten Kettenblitz und Seuchenpfützen nie aus, weil die Explosion das Geschoss vorher beendete. Die Explosion kommt jetzt zuletzt (getestet). |
 | 7. Speicherfehler unbemerkt | **Behoben.** Sitzungen liegen in SQLite (überleben Neustarts, 30 Tage gültig), Abmelden macht das Token ungültig. Scheitert das Speichern, erscheint eine Meldung, der Stand bleibt lokal und wird beim nächsten Login hochgeladen, wenn er mindestens so viele Läufe hat wie der Server-Stand (getestet). Anfragen > 256 KB und Namen > 16 Zeichen werden abgelehnt. |
-| 3, 4, 11, 12 | Offen |
+| 12. Keine Bosse im Endlos-Modus | **Geändert:** Ab Station 55 kehren die Bosse alle 5 Stationen reihum zurück, je 50 Stationen mit +50% Leben, danach wieder Reliquienwahl. Falls das Endlos-Modus ohne Bosse Absicht war: eine Zeile in `buildLevel` (`lvl%5===0`) zurück auf `lvl%5===0 && lvl<=50`. |
+| Neu: Bosse 6–10 ohne eigenes Design | **Behoben.** Eigene Figuren und Muster für Choral der Asche, Mutter der Seuche, Eiserner Heiliger, Schlund von Golgotha, Letzter Gekreuzigter; neue Mechanik: angekündigte Gefahrenzonen (Warnkreise/-balken, Ausweichschritt hilft). |
+| 3, 4, 11 | Offen |
 
 ## 1. Was das Spiel ist
 

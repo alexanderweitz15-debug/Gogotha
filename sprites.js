@@ -261,3 +261,51 @@ function enemySprite(type,r,col,frame,white){
   og.globalCompositeOperation='source-over'; og.drawImage(base,0,0);
   out._pad=pad; SPRITE_CACHE.set(key,out); return out;
 }
+
+/* ---------- BOSSE 6–10 (eigene Figuren; col = Körperfarbe bzw. Weiß beim Treffer-Blitz) ---------- */
+const BOSS_ART={
+  /* Choral der Asche: drei Aschenmasken kreisen um eine dunkle Flamme */
+  choir(g,e,col,t){ const s=e.r, fl=col==='#fff'?'#fff':'#5a5048';
+    g.save(); g.globalAlpha=0.5+Math.sin(t*4)*0.15; spCirc(g,0,0,s*0.9,'#2a2420'); g.restore();
+    g.fillStyle=fl; g.beginPath(); g.moveTo(0,-s*1.05); g.quadraticCurveTo(s*0.6,-s*0.2,s*0.35,s*0.5); g.quadraticCurveTo(0,s*0.75,-s*0.35,s*0.5); g.quadraticCurveTo(-s*0.6,-s*0.2,0,-s*1.05); g.fill();
+    spCirc(g,0,s*0.05,s*0.18,'#e08a2f');
+    for(let i=0;i<3;i++){ const a=t*1.2+i*TAU/3, x=Math.cos(a)*s*0.95, y=Math.sin(a)*s*0.7;
+      g.fillStyle=col==='#fff'?'#fff':'#b8b0a0'; g.beginPath(); g.ellipse(x,y,s*0.28,s*0.34,0,0,TAU); g.fill();
+      g.fillStyle='#14100c'; g.beginPath(); g.ellipse(x-s*0.1,y-s*0.06,s*0.05,s*0.08,0,0,TAU); g.ellipse(x+s*0.1,y-s*0.06,s*0.05,s*0.08,0,0,TAU); g.fill();
+      g.beginPath(); g.ellipse(x,y+s*0.14,s*0.07,s*0.1+Math.sin(t*6+i)*s*0.03,0,0,TAU); g.fill(); } },
+  /* Mutter der Seuche: aufgedunsener Leib voller Beulen, Madenkrone */
+  mother(g,e,col,t){ const s=e.r, body=col==='#fff'?'#fff':'#5a6a24', pulse=1+Math.sin(t*3)*0.04;
+    g.fillStyle=body; g.beginPath(); g.ellipse(0,s*0.15,s*1.05*pulse,s*0.9*pulse,0,0,TAU); g.fill();
+    for(const [x,y,r] of [[-0.5,-0.1,0.24],[0.45,0.3,0.2],[-0.2,0.55,0.18],[0.6,-0.25,0.15],[-0.75,0.4,0.14],[0.15,-0.4,0.13]]){ spCirc(g,s*x,s*y,s*r,'#8aa03a'); spCirc(g,s*x-s*r*0.3,s*y-s*r*0.3,s*r*0.35,'#e8f8b0'); }
+    spCirc(g,0,-s*0.75,s*0.36,'#3a4418'); spCirc(g,-s*0.13,-s*0.78,s*0.07,C.sick); spCirc(g,s*0.13,-s*0.78,s*0.07,C.sick);
+    g.fillStyle='#1a2006'; g.beginPath(); g.ellipse(0,-s*0.6,s*0.14,s*0.07,0,0,TAU); g.fill();
+    for(let i=0;i<6;i++){ const a=-Math.PI*0.9+i*Math.PI*0.16, w=Math.sin(t*5+i)*s*0.05; spLine(g,Math.cos(a)*s*0.35,-s*0.75+Math.sin(a)*s*0.35,Math.cos(a)*s*0.55+w,-s*0.75+Math.sin(a)*s*0.55,'#e8e0c0',s*0.08); } },
+  /* Der Eiserne Heilige: Plattenrüstung, Heiligenschein, Turmschild; leuchtet golden im Schildwall */
+  ironsaint(g,e,col,t){ const s=e.r, steel=col==='#fff'?'#fff':'#6d727c';
+    if(e.shieldT>0){ g.save(); g.globalAlpha=0.35+Math.sin(t*10)*0.15; spCirc(g,0,0,s*1.35,C.gold2); g.restore(); }
+    g.fillStyle='#3a3e46'; g.fillRect(-s*0.45,s*0.45,s*0.3,s*0.55); g.fillRect(s*0.15,s*0.45,s*0.3,s*0.55);
+    g.fillStyle=steel; g.beginPath(); g.moveTo(-s*0.75,-s*0.35); g.lineTo(s*0.75,-s*0.35); g.lineTo(s*0.55,s*0.6); g.lineTo(-s*0.55,s*0.6); g.closePath(); g.fill();
+    g.fillStyle='#8a909a'; g.beginPath(); g.ellipse(-s*0.7,-s*0.32,s*0.3,s*0.2,0,0,TAU); g.ellipse(s*0.7,-s*0.32,s*0.3,s*0.2,0,0,TAU); g.fill();
+    g.fillStyle='#4a4e56'; g.fillRect(-s*0.3,-s*1.0,s*0.6,s*0.65); g.fillStyle='#0a0a0c'; g.fillRect(-s*0.22,-s*0.75,s*0.44,s*0.07); g.fillRect(-s*0.035,-s*0.85,s*0.07,s*0.35);
+    g.strokeStyle=C.gold2; g.lineWidth=Math.max(1,s*0.07); g.beginPath(); g.ellipse(0,-s*1.15,s*0.42,s*0.12,0,0,TAU); g.stroke();
+    g.fillStyle='#3a3228'; g.fillRect(s*0.6,-s*0.7,s*0.45,s*1.5); g.strokeStyle=C.gold; g.lineWidth=Math.max(1,s*0.06); g.strokeRect(s*0.6,-s*0.7,s*0.45,s*1.5);
+    g.fillStyle=C.gold2; g.fillRect(s*0.78,-s*0.5,s*0.09,s*1.0); g.fillRect(s*0.66,-s*0.2,s*0.33,s*0.09); },
+  /* Schlund von Golgotha: riesiges Maul mit rotierendem Zahnkranz, Augen ringsum */
+  maw(g,e,col,t){ const s=e.r;
+    spCirc(g,0,0,s*1.1,col==='#fff'?'#fff':'#3a1418'); spCirc(g,0,0,s*0.78,'#120406');
+    g.save(); g.rotate(t*0.6); g.fillStyle='#e8dcc0';
+    for(let i=0;i<16;i++){ const a=i/16*TAU; g.save(); g.rotate(a); g.beginPath(); g.moveTo(s*0.78,-s*0.08); g.lineTo(s*0.5,0); g.lineTo(s*0.78,s*0.08); g.closePath(); g.fill(); g.restore(); }
+    g.restore();
+    g.save(); g.globalAlpha=0.5+Math.sin(t*3)*0.2; spCirc(g,0,0,s*0.3,'#5a0a0e'); g.restore();
+    for(let i=0;i<6;i++){ const a=i/6*TAU+0.3, x=Math.cos(a)*s*0.95, y=Math.sin(a)*s*0.95; spCirc(g,x,y,s*0.13,'#e8dcc0'); spCirc(g,x+Math.cos(t+i)*s*0.04,y,s*0.06,C.blood2); } },
+  /* Der Letzte Gekreuzigte: Gestalt am brennenden Kreuz, Aschenflügel, roter Schein */
+  lastcross(g,e,col,t){ const s=e.r, p2=e.hp<e.maxHp*0.5;
+    g.save(); g.globalAlpha=0.4+Math.sin(t*2)*0.15; g.strokeStyle=p2?C.blood2:C.gold2; g.lineWidth=Math.max(1,s*0.08); g.beginPath(); g.arc(0,-s*0.85,s*0.5,0,TAU); g.stroke(); g.restore();
+    for(const sd of [-1,1]){ g.fillStyle='#2a2420'; g.beginPath(); g.moveTo(sd*s*0.3,-s*0.4);
+      for(let i=0;i<=4;i++){ g.lineTo(sd*s*(0.6+i*0.22),-s*0.7+i*s*0.3+Math.sin(t*3+i)*s*0.06); } g.lineTo(sd*s*0.3,s*0.4); g.closePath(); g.fill(); }
+    g.fillStyle='#3a2414'; g.fillRect(-s*0.12,-s*1.3,s*0.24,s*2.4); g.fillRect(-s*0.9,-s*0.6,s*1.8,s*0.2);
+    if(p2) for(let i=0;i<5;i++){ const x=rand(-s*0.8,s*0.8), y=rand(-s*1.2,s*1.0); g.save(); g.globalAlpha=0.6; spCirc(g,x,y,s*0.08,i%2?C.candle:'#ffb040'); g.restore(); }
+    g.fillStyle=col==='#fff'?'#fff':'#5a0c10'; g.beginPath(); g.moveTo(-s*0.3,-s*0.4); g.lineTo(s*0.3,-s*0.4); g.lineTo(s*0.45,s*0.9); g.lineTo(-s*0.45,s*0.9); g.closePath(); g.fill();
+    spCirc(g,0,-s*0.68,s*0.26,'#c8a890'); g.strokeStyle='#4a3018'; g.lineWidth=Math.max(1,s*0.07); g.beginPath(); g.ellipse(0,-s*0.88,s*0.28,s*0.08,0,0,TAU); g.stroke();
+    spCirc(g,-s*0.09,-s*0.68,s*0.04,'#1a0a0a'); spCirc(g,s*0.09,-s*0.68,s*0.04,'#1a0a0a'); },
+};
