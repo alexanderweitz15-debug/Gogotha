@@ -4,6 +4,17 @@ Grundlage: vollständiges Lesen des Codes (Commit `8422146`) und ein automatisie
 (Server lokal gestartet, Account angelegt, ca. 60 s gespielt bis Station 5, Endlos-Modus und Tod per Skript erzwungen).
 Im Test traten keine JavaScript-Fehler auf.
 
+## Status der Korrekturen (08.10.2026)
+
+| Punkt | Status |
+|---|---|
+| 1. Datenbank downloadbar | **Behoben.** Der Server liefert nur noch `/`, `index.html`, `game.js`, `style.css` aus, alles andere gibt 404 (getestet). |
+| 2. `golgotha.db` im Repo | **Aus dem Repo entfernt** und in `.gitignore`. In der Git-Historie bleibt sie; das Passwort des Accounts gilt weiter als kompromittiert. |
+| 5. Doppelte Wertung im Endlos-Modus | **Behoben.** Nach Station 50 wird nur noch der Zuwachs gewertet, der Lauf zählt einmal (getestet). |
+| 6. Cheats zählen | **Behoben.** Läufe mit aktivem Cheat beim Start oder mit Admin-Eingriff während des Laufs werden nicht gewertet, Boss-Freischaltungen auch nicht (getestet). Bereits gespeicherte Werte bleiben, wie sie sind. |
+| 8. Leere Charakterbilder | **Behoben**, auch nach „Erneut bereuen“ (getestet). |
+| 3, 4, 7, 9–12 | Offen |
+
 ## 1. Was das Spiel ist
 
 Ein Roguelite-Arena-Shooter im Stil von „Vampire Survivors / Brotato“ mit Grimdark-Setting:
