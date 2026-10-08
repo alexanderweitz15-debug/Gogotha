@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GOLGOTHA — Kreuzzug der Verdammten</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Cinzel:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css?v=2">
+</head>
+<body>
+<div id="wrap">
+<div id="stage">
+  <canvas id="game" width="960" height="600"></canvas>
+
+  <div id="hud">
+    <div class="hud-top">
+      <div class="hud-left">
+        <canvas id="headCanvas" width="64" height="64" title="Werte ansehen"></canvas>
+        <div class="hud-col">
+          <div class="hp-bar"><div class="hp-fill" id="hpFill"></div><div class="shield-fill" id="shieldFill"></div><div class="hp-text" id="hpText">100 / 100</div></div>
+          <div class="hud-tags">
+            <span><span data-i18n="hud_level">Stufe</span> <b id="lvlTag">1</b></span>
+            <span><span data-i18n="hud_gold">Gold</span> <b id="coinTag">0</b></span>
+            <span><span data-i18n="hud_kills">Tötungen</span> <b id="killTag">0</b></span>
+            <span><span data-i18n="hud_diff">Grad</span> <b id="diffTag">Mittel</b></span>
+            <span><span data-i18n="hud_dodge">Ausweichen</span> <span class="dash-pip ready" id="dashPip"></span></span>
+          </div>
+        </div>
+      </div>
+      <div class="hud-right">
+        <div>
+          <div class="station-label" id="stationLabel">Station 1 / 50</div>
+          <div class="region-label" id="regionLabel">Die Gräben</div>
+        </div>
+        <div id="statusBar"></div>
+        <div class="minimap-wrap"><canvas id="minimap" width="186" height="120"></canvas></div>
+      </div>
+    </div>
+
+    <div class="dock dock-items" id="itemDock">
+      <button class="dock-toggle" id="itemToggle" title="Gaben ein-/ausklappen">▾</button>
+      <div class="item-pills" id="itemPills"></div>
+    </div>
+
+    <div class="boss-bar-wrap" id="bossBarWrap">
+      <div class="boss-name" id="bossName">Boss</div>
+      <div class="boss-bar"><div class="boss-fill" id="bossFill"></div></div>
+    </div>
+    <div id="banner"><div class="bt" id="bannerTitle">Station 1</div><div class="bs" id="bannerSub">Die Gräben</div></div>
+
+    <div class="dock dock-weapons" id="weaponDock">
+      <button class="dock-toggle" id="weaponToggle" title="Waffen ein-/ausklappen">▸</button>
+      <div id="weaponbar"></div>
+    </div>
+    <div id="xpBar"><div id="xpFill"></div></div>
+
+    <div id="hud2" style="display:none">
+      <div class="p2tag">P2 · <span data-i18n="hud_level">Stufe</span> <b id="lvlTag2">1</b></div>
+      <div class="hp-bar small"><div class="hp-fill" id="hpFill2"></div><div class="shield-fill" id="shieldFill2"></div><div class="hp-text" id="hpText2">—</div></div>
+    </div>
+  </div>
+
+  <!-- SITE PASSWORD GATE -->
+  <div class="overlay show" id="siteGate">
+    <div class="scrim"></div>
+    <div class="title">GOLGOTHA</div>
+    <div class="subtitle" data-i18n="subtitle">Kreuzzug der Verdammten</div>
+    <div class="login-box">
+      <div class="sect-sub" style="margin-bottom:14px" data-i18n="gate_sub">Diese Pforte ist verschlossen. Nenne die Losung, um einzutreten.</div>
+      <input id="siteGatePass" type="password" placeholder="Zugangswort" data-i18n-ph="gate_ph" maxlength="32" autocomplete="off">
+      <div class="login-err" id="siteGateErr"></div>
+      <div class="menu-btns" style="margin-top:14px">
+        <button class="mbtn blood" id="siteGateBtn" data-i18n="gate_btn">Eintreten</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOGIN -->
+  <div class="overlay" id="login">
+    <div class="scrim"></div>
+    <div class="title">GOLGOTHA</div>
+    <div class="subtitle" data-i18n="subtitle">Kreuzzug der Verdammten</div>
+    <div class="login-box">
+      <div class="sect-sub" style="margin-bottom:14px" data-i18n="login_sub">Melde dich an oder weihe einen neuen Pilger. Dein Fortschritt wird auf diesem Gerät bewahrt.</div>
+      <input id="loginUser" placeholder="Pilgername" data-i18n-ph="login_user" maxlength="16" autocomplete="off">
+      <input id="loginPass" type="password" placeholder="Losungswort" data-i18n-ph="login_pass" maxlength="32" autocomplete="off">
+      <div class="login-err" id="loginErr"></div>
+      <div class="menu-btns" style="margin-top:16px">
+        <button class="mbtn blood" id="loginBtn" data-i18n="login_btn">Anmelden</button>
+        <button class="mbtn ghost" id="registerBtn" data-i18n="register_btn">Neuen Pilger weihen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN MENU -->
+  <div class="overlay" id="menu">
+    <div class="scrim"></div>
+    <div class="title">GOLGOTHA</div>
+    <div class="subtitle" data-i18n="subtitle">Kreuzzug der Verdammten</div>
+    <div class="profile" id="profileBox"></div>
+    <div class="tagline" data-i18n="menu_tagline">Vierzehn mal vierzehn Schritte trennen dich vom Gipfel. An jeder Station wartet das Fegefeuer, und am Ende der Straße steht das Kreuz, das auf dich gewartet hat. Nimm eine Waffe. Bereue später.</div>
+    <div class="menu-btns">
+      <button class="mbtn blood" id="btnStart" data-i18n="menu_start">Beginnen</button>
+      <button class="mbtn ghost" id="btnHow" data-i18n="menu_how">Steuerung</button>
+      <button class="mbtn ghost" id="btnProfile" data-i18n="menu_profile">Statistik</button>
+      <button class="mbtn ghost" id="btnMeta" data-i18n="menu_meta">Seelenschmiede</button>
+      <button class="mbtn ghost" id="btnAch" data-i18n="menu_ach">Erfolge</button>
+      <button class="mbtn ghost" id="btnAdmin" data-i18n="menu_admin">Admin-Panel</button>
+      <button class="mbtn ghost" id="btnLogout" data-i18n="menu_logout">Abmelden</button>
+    </div>
+    <div class="hint" data-i18n="menu_hint">WASD Bewegen · Leertaste Ausweichen · Automatisches Zielen &amp; Feuern · Kopf-Symbol = Werte</div>
+  </div>
+
+  <!-- HOW -->
+  <div class="overlay" id="how">
+    <div class="scrim"></div>
+    <div class="sect-title" data-i18n="how_title">Steuerung</div>
+    <div class="gostat" style="max-width:520px" data-i18n-html="how_body">
+      <b>WASD / Pfeile</b> — Bewegen<br>
+      <b>Leertaste</b> — Ausweichschritt (kurz unverwundbar, langer Cooldown)<br>
+      <b>Esc</b> — Pause &nbsp;·&nbsp; <b>Kopf-Symbol</b> (oben links) — aktuelle Werte<br><br>
+      Deine Waffen zielen und feuern <b>automatisch</b> auf den nächsten Gegner. Feinde lassen <b>Gold</b> und <b>XP-Splitter</b> fallen.
+      Nach jeder überstandenen Welle fliegen alle XP-Orbs zu dir und ein <b>kleines Menü</b> öffnet sich: kaufe <b>Waffen mit Gold</b>,
+      verbessere deinen <b>Charakter mit Stufen</b>, und bei Stufe 10/20/30/40/50 erwachen <b>Fähigkeiten</b>.
+      Die <b>Minimap</b> oben rechts zeigt die Welt. Alle 5 Stationen wartet ein Gekreuzigter — jeder mit eigenem Muster.
+    </div>
+    <div class="menu-btns"><button class="mbtn" id="howBack" data-i18n="how_back">Zurück</button></div>
+  </div>
+
+  <!-- CHAR SELECT -->
+  <div class="overlay" id="charselect">
+    <div class="scrim"></div>
+    <div class="sect-title" data-i18n="char_title">Wähle deinen Büßer</div>
+    <div class="sect-sub" data-i18n="char_sub">Jeder trägt eine andere Sünde — eine andere Waffe — andere Fähigkeiten.</div>
+    <button class="mbtn ghost" id="coopToggle" style="padding:8px 18px;font-size:.78rem;width:auto;margin-bottom:4px">Koop: AUS</button>
+    <div id="coopStatus" style="color:var(--chill);font-size:13px;min-height:18px;margin-bottom:6px;font-family:var(--mono)"></div>
+    <div class="cards" id="charCards"></div>
+    <div class="menu-btns" style="margin-top:24px"><button class="mbtn ghost" id="charBack" data-i18n="char_back">Zurück</button></div>
+  </div>
+
+  <!-- MODIFIERS / DIFFICULTY -->
+  <div class="overlay" id="modifiers">
+    <div class="scrim"></div>
+    <div class="sect-title" data-i18n="mod_title">Modifikatoren</div>
+    <div class="sect-sub" id="modChar">Wähle deinen Schwierigkeitsgrad — je härter, desto mehr Gegner, mehr Leben, mehr Feuer.</div>
+    <div class="diff-cards" id="diffCards"></div>
+    <div class="mod-chips" id="modChips"></div>
+    <div class="custom-sliders" id="customSliders">
+      <div class="crow"><label data-i18n="dc_enemies">Gegner</label><input type="range" id="cdCount" min="0.5" max="3.5" step="0.1" value="1"><span class="cv" id="cdCountV">1.0×</span></div>
+      <div class="crow"><label data-i18n="dc_hp">LP</label><input type="range" id="cdHp" min="0.4" max="4" step="0.1" value="1"><span class="cv" id="cdHpV">1.0×</span></div>
+      <div class="crow"><label data-i18n="dc_dmg">Schaden</label><input type="range" id="cdDmg" min="0.4" max="4" step="0.1" value="1"><span class="cv" id="cdDmgV">1.0×</span></div>
+      <div class="crow"><label data-i18n="dc_fire">Feuer</label><input type="range" id="cdFire" min="0.5" max="3" step="0.1" value="1"><span class="cv" id="cdFireV">1.0×</span></div>
+    </div>
+    <div class="mod-note" id="diffNote"></div>
+    <div class="post-btns" style="margin-top:18px">
+      <button class="mbtn ghost" id="modBack" data-i18n="mod_back">Zurück</button>
+      <button class="mbtn blood" id="modStart" data-i18n="mod_start">Beginnen</button>
+    </div>
+  </div>
+
+  <!-- SHOP (post-wave weapon purchase) -->
+  <div class="overlay" id="shop">
+    <div class="scrim"></div>
+    <div class="sect-title" data-i18n="shop_title">Waffenkammer</div>
+    <div class="sect-sub" id="shopSub">Welle überstanden. Kaufe mit Gold — oder ziehe weiter.</div>
+    <div class="shop-bar"><span data-i18n="shop_gold">Gold:</span> <b id="shopGold">0</b></div>
+    <div class="reward-cards" id="shopCards"></div>
+    <div class="post-btns">
+      <button class="amini" id="shopReroll">Neu würfeln</button>
+      <button class="mbtn ghost" id="shopSkip" data-i18n="shop_skip">Weiter</button>
+    </div>
+  </div>
+
+  <!-- UPGRADE (level-up character upgrade) -->
+  <div class="overlay" id="upgrade">
+    <div class="scrim"></div>
+    <div class="sect-title" data-i18n="up_title">Aufstieg</div>
+    <div class="sect-sub" id="upgradeSub">Wähle eine Verbesserung.</div>
+    <div class="reward-cards" id="upgradeCards"></div>
+  </div>
+
+  <!-- ABILITY (milestone special ability) -->
+  <div class="overlay" id="ability">
+    <div class="scrim"></div>
+    <div class="sect-title" style="color:var(--epic)" data-i18n="ab_title">Erwachte Gabe</div>
+    <div class="sect-sub" id="abilitySub">Wähle eine Fähigkeit.</div>
+    <div class="reward-cards" id="abilityCards"></div>
+  </div>
+
+  <!-- ENDLESS choice at lvl 50 -->
+  <div class="overlay" id="endless">
+    <div class="scrim"></div>
+    <div class="title" style="color:var(--gold2)">GOLGOTHA</div>
+    <div class="subtitle">Der Gipfel ist erreicht</div>
+    <div class="gostat" id="endlessStats"></div>
+    <div class="menu-btns">
+      <button class="mbtn blood" id="endlessGo" data-i18n="endless_go">Endlos weiter</button>
+      <button class="mbtn ghost" id="endlessRestart" data-i18n="endless_restart">Neu beginnen</button>
+    </div>
+  </div>
+
+  <!-- STATS panel -->
+  <div class="overlay" id="stats">
+    <div class="scrim"></div>
+    <div class="sect-title" data-i18n="stats_title">Aktuelle Werte</div>
+    <div class="sect-sub" id="statsClass">Der Büßer</div>
+    <div class="stat-grid" id="statGrid"></div>
+    <div class="stat-weapons" id="statWeapons"></div>
+    <div class="stat-weapons" id="statAbilities"></div>
+    <div class="menu-btns"><button class="mbtn" id="statsClose" data-i18n="stats_close">Zurück</button></div>
+  </div>
+
+  <!-- PROFILE (saved stats) -->
+  <div class="overlay" id="profile">
+    <div class="scrim"></div>
+    <div class="sect-title" data-i18n="prof_title">Pilgerbuch</div>
+    <div class="sect-sub" id="profileName">—</div>
+    <div class="stat-grid" id="profileGrid"></div>
+    <div class="menu-btns"><button class="mbtn" id="profileClose" data-i18n="prof_close">Zurück</button></div>
+  </div>
+
+  <!-- META / SOUL FORGE -->
+  <div class="overlay" id="meta">
+    <div class="scrim"></div>
+    <div class="sect-title" data-i18n="meta_title">Seelenschmiede</div>
+    <div class="sect-sub" id="metaSub"></div>
+    <div class="reward-cards" id="metaCards"></div>
+    <div class="menu-btns"><button class="mbtn" id="metaBack" data-i18n="meta_back">Zurück</button></div>
+  </div>
+
+  <!-- ACHIEVEMENTS -->
+  <div class="overlay" id="achievements">
+    <div class="scrim"></div>
+    <div class="sect-title" data-i18n="ach_title">Errungenschaften</div>
+    <div class="sect-sub" id="achSub"></div>
+    <div class="ach-grid" id="achGrid"></div>
+    <div class="menu-btns"><button class="mbtn" id="achBack" data-i18n="ach_back">Zurück</button></div>
+  </div>
+
+  <!-- PAUSE -->
+  <div class="overlay" id="pause">
+    <div class="scrim"></div>
+    <div class="sect-title" data-i18n="pause_title">Innehalten</div>
+    <div class="menu-btns">
+      <button class="mbtn" id="resumeBtn" data-i18n="pause_resume">Fortsetzen</button>
+      <button class="mbtn ghost" id="pauseStats" data-i18n="pause_stats">Werte ansehen</button>
+      <button class="mbtn ghost" id="pauseAdmin" data-i18n="pause_admin">Admin-Panel</button>
+      <button class="mbtn blood" id="quitBtn" data-i18n="pause_quit">Aufgeben</button>
+    </div>
+  </div>
+
+  <!-- GAME OVER -->
+  <div class="overlay" id="gameover">
+    <div class="scrim"></div>
+    <div class="title" style="font-size:clamp(40px,7vw,84px);color:var(--blood2)" data-i18n="go_title">GEFALLEN</div>
+    <div class="subtitle" id="goEpitaph">Der Weg endet hier</div>
+    <div class="gostat" id="goStats"></div>
+    <div class="menu-btns">
+      <button class="mbtn blood" id="retryBtn" data-i18n="go_retry">Erneut bereuen</button>
+      <button class="mbtn ghost" id="goMenu" data-i18n="go_menu">Hauptmenü</button>
+    </div>
+  </div>
+
+  <!-- VICTORY -->
+  <div class="overlay" id="victory">
+    <div class="scrim"></div>
+    <div class="title" style="color:var(--gold2)">GOLGOTHA</div>
+    <div class="subtitle" data-i18n="win_sub">Du hast den Gipfel erreicht</div>
+    <div class="gostat" id="winStats"></div>
+    <div class="menu-btns"><button class="mbtn" id="winMenu" data-i18n="win_menu">Hauptmenü</button></div>
+  </div>
+
+  <!-- ADMIN PASSWORD GATE -->
+  <div class="overlay" id="adminGate">
+    <div class="scrim"></div>
+    <div class="sect-title">Admin-Zugang</div>
+    <div class="login-box">
+      <div class="sect-sub" style="margin-bottom:12px">Geschützter Bereich.</div>
+      <input id="adminPass" type="password" placeholder="Passwort" maxlength="16" autocomplete="off">
+      <div class="login-err" id="adminErr"></div>
+      <div class="menu-btns" style="margin-top:12px">
+        <button class="mbtn" id="adminGateBtn">Bestätigen</button>
+        <button class="mbtn ghost" id="adminGateCancel">Zurück</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-scrim" id="adminScrim"></div>
+  <aside id="admin">
+    <div class="admin-head"><h2>Admin-Panel</h2><button class="amini" id="adminClose">✕</button></div>
+    <div class="admin-body">
+      <section class="asec">
+        <h3>Cheats (live)</h3>
+        <label class="asw">Gott-Modus (unverwundbar)<input type="checkbox" id="cGod"></label>
+        <label class="asw">Ein-Treffer-Tötungen<input type="checkbox" id="cOne"></label>
+        <label class="asw">Unendlicher Ausweichschritt<input type="checkbox" id="cDash"></label>
+        <label class="asw">Gegner schießen nicht<input type="checkbox" id="cNoFire"></label>
+        <label class="asw">Gegner-Spawns aus<input type="checkbox" id="cNoSpawn"></label>
+        <label class="asw">Keine Hindernisse<input type="checkbox" id="cNoObs"></label>
+        <div class="arow"><label>Schaden ×<span id="cDmgVal">1.0</span></label></div>
+        <input type="range" id="cDmg" min="1" max="20" step="0.5" value="1">
+        <div class="arow"><label>Glücks-Bonus ×<span id="cLuckVal">1.0</span></label></div>
+        <input type="range" id="cLuck" min="0" max="40" step="1" value="0">
+      </section>
+      <section class="asec">
+        <h3>Start-Einstellungen</h3>
+        <div class="arow"><label>Start-Station <span id="cStartVal">1</span></label></div>
+        <input type="range" id="cStart" min="1" max="50" value="1">
+        <div class="arow"><label>Start-Gold</label><input type="number" id="cCoins" value="0" min="0"></div>
+      </section>
+      <section class="asec">
+        <h3>Spieler (im Lauf)</h3>
+        <div class="arow">
+          <button class="amini" id="aHeal">Voll heilen</button>
+          <button class="amini" id="aHP">+50 Max-HP</button>
+          <button class="amini" id="aMoney">+1000 Gold</button>
+          <button class="amini" id="aXP">+5 Stufen</button>
+          <button class="amini" id="aCure">Status heilen</button>
+        </div>
+      </section>
+      <section class="asec">
+        <h3>Waffen geben</h3>
+        <div class="arow"><select id="aWeaponSel"></select><button class="amini" id="aWeaponGive">Geben</button></div>
+        <button class="amini full" id="aAllWeapons" style="margin-top:8px">Alle Waffen geben</button>
+      </section>
+      <section class="asec">
+        <h3>Verbesserung geben</h3>
+        <div class="arow"><select id="aItemSel"></select><button class="amini" id="aItemGive">Geben</button></div>
+      </section>
+      <section class="asec">
+        <h3>Welt (im Lauf)</h3>
+        <div class="arow">
+          <button class="amini" id="aClear">Raum leeren</button>
+          <button class="amini" id="aNext">Nächste Station</button>
+          <button class="amini" id="aBoss">Boss spawnen</button>
+        </div>
+      </section>
+      <p class="anote">Reiner Spaß-Prototyp. Passwort 321.</p>
+    </div>
+  </aside>
+  <div class="hint" id="bottomHint" style="display:none"></div>
+  <button id="langBtn" title="Sprache / Language">EN</button>
+  <div id="toast"></div>
+</div>
+</div>
+
+<script src="game.js?v=2"></script>
+</body>
+</html>
