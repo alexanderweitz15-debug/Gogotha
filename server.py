@@ -73,6 +73,59 @@ def session_user(tok):
     return row["name"] if row else None
 
 
+# ---------- Plausibilitätsprüfung beim Speichern (IST #3) ----------
+# Das Spiel läuft im Browser, also kann der Server einen Spielstand nie beweisen. Er lehnt aber ab, was
+# kein echter Lauf erzeugen kann: Zähler, die schrumpfen (alter Tab überschreibt neueren Stand), und Seelen,
+# die schneller wachsen als Tötungen/Bosse/Läufe hergeben. Die Grenzen sind absichtlich großzügig.
+COUNTERS = ("runs", "kills", "gold", "deaths", "wins", "bossKills", "playTime", "bestLevel", "bestCharLevel")
+META_MAX_LEVEL = 20
+
+
+def _num(v):
+    return isinstance(v, (int, float)) and not isinstance(v, bool) and v == v and abs(v) != float("inf")
+
+
+def soul_value(meta):
+    """Seelen inklusive der in Seelenschmiede-Stufen gebundenen (Kosten wie metaCost im Client: 10 + 8*Stufe)."""
+    meta = meta if isinstance(meta, dict) else {}
+    cur = meta.get("currency", 0)
+    v = cur if _num(cur) else 0
+    for lv in (meta.get("levels") or {}).values():
+        if _num(lv):
+            v += sum(10 + 8 * k for k in range(int(lv)))
+    return v
+
+
+def implausible(old, new):
+    st, ost = new.get("stats"), (old.get("stats") or {})
+    if not isinstance(st, dict):
+        return "stats"
+    for k in COUNTERS:
+        v, o = st.get(k, 0), ost.get(k, 0)
+        if not _num(v) or v < 0:
+            return k
+        if _num(o) and v < o:
+            return k + " sinkt"
+    meta = new.get("meta") or {}
+    if not isinstance(meta, dict) or not isinstance(meta.get("levels", {}), dict):
+        return "meta"
+    for lv in meta.get("levels", {}).values():
+        if not _num(lv) or lv < 0 or lv > META_MAX_LEVEL or lv != int(lv):
+            return "Stufe"
+    cur = meta.get("currency", 0)
+    if not _num(cur) or cur < 0:
+        return "Seelen"
+    d = lambda k: max(0, st.get(k, 0) - (ost.get(k, 0) if _num(ost.get(k, 0)) else 0))
+    runs = d("runs") + 1
+    if d("kills") > 50000 * runs or d("bossKills") > 100 * runs:
+        return "Zuwachs"
+    # Seelen je Lauf im Client: Tötungen/20 + 2 je Station + 15 je Boss + 50 für den Sieg, dazu 25 je Erfolg;
+    # 1000 je Lauf deckt auch lange Endlos-Läufe und mehrere Erfolge auf einmal
+    if soul_value(meta) - soul_value(old.get("meta")) > d("kills") / 20 + 15 * d("bossKills") + 1000 * runs + 5:
+        return "Seelen"
+    return None
+
+
 def profile_of(row):
     return {"name": row["display"], **json.loads(row["data"])}
 
@@ -197,6 +250,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         if not isinstance(data, dict):
             return {"error": "Keine Daten"}
         c = db()
+        row = c.execute("SELECT data FROM accounts WHERE name=?", (name,)).fetchone()
+        why = implausible(json.loads(row["data"]) if row else blank_data(), data)
+        if why:
+            c.close()
+            return {"error": "Spielstand unplausibel (" + why + ")"}
         c.execute("UPDATE accounts SET data=?, updated=? WHERE name=?",
                   (json.dumps(data), int(time.time()), name))
         c.commit()

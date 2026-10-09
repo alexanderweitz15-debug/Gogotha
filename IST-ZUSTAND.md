@@ -21,7 +21,8 @@ Im Test traten keine JavaScript-Fehler auf.
 | 12. Keine Bosse im Endlos-Modus | **Geändert:** Ab Station 55 kehren die Bosse alle 5 Stationen reihum zurück, je 50 Stationen mit +50% Leben, danach wieder Reliquienwahl. Falls das Endlos-Modus ohne Bosse Absicht war: eine Zeile in `buildLevel` (`lvl%5===0`) zurück auf `lvl%5===0 && lvl<=50`. |
 | Neu: Bosse 6–10 ohne eigenes Design | **Behoben.** Eigene Figuren und Muster für Choral der Asche, Mutter der Seuche, Eiserner Heiliger, Schlund von Golgotha, Letzter Gekreuzigter; neue Mechanik: angekündigte Gefahrenzonen (Warnkreise/-balken, Ausweichschritt hilft). |
 | 11. `victory()` toter Code | **Entfernt** (09.10.), samt Overlay. Der Abschluss nach Station 50 läuft über den Endlos-Bildschirm. |
-| 3, 4 | Offen |
+| 3. Spielstände ungeprüft | **Teilweise behoben** (09.10.). Der Server lehnt ab, was kein echter Lauf erzeugen kann: schrumpfende Zähler (auch: alter Tab überschreibt neueren Stand), falsche Typen, Seelenschmiede-Stufen über 20 und Seelen, die schneller wachsen als Tötungen/Bosse/Läufe hergeben (Seelen in gekauften Stufen zählen mit, Käufe und Erstattungen gehen also durch). Getestet: Seelen = 1 000 000, geschenkte Stufen und sinkende Läufe werden abgelehnt, echte Läufe, Käufe und Offline-Nachträge gehen durch. **Grenze:** Das Spiel läuft im Browser; wer Tötungen und Läufe passend mitfälscht, kommt durch. Ganz dicht wird das nur, wenn der Server die Läufe selbst berechnet. |
+| 4 | Offen |
 
 ## 1. Was das Spiel ist
 

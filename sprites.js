@@ -75,13 +75,13 @@ const HERO_ART={
     spLine(g,-s*0.15,-s*0.62,-s*0.05,-s*0.6,'#3a2a20',s*0.04); spLine(g,s*0.05,-s*0.6,s*0.15,-s*0.62,'#3a2a20',s*0.04);
     g.strokeStyle='#5a3a1a'; g.lineWidth=Math.max(1,s*0.07); g.beginPath(); g.ellipse(0,-s*1.22,s*0.4,s*0.13,0,0,TAU); g.stroke();
     for(let i=0;i<8;i++){ const a=i/8*TAU; spLine(g,Math.cos(a)*s*0.4,-s*1.22+Math.sin(a)*s*0.13,Math.cos(a)*s*0.52,-s*1.22+Math.sin(a)*s*0.17-s*0.06,'#5a3a1a',s*0.04); }
-    g.save(); g.globalAlpha=0.35+Math.sin(t*3)*0.15; g.strokeStyle=C.gold2; g.lineWidth=Math.max(1,s*0.05); g.beginPath(); g.ellipse(0,-s*1.22,s*0.5,s*0.18,0,0,TAU); g.stroke(); g.restore();
+    g.save(); g.globalAlpha*=0.35+Math.sin(t*3)*0.15; g.strokeStyle=C.gold2; g.lineWidth=Math.max(1,s*0.05); g.beginPath(); g.ellipse(0,-s*1.22,s*0.5,s*0.18,0,0,TAU); g.stroke(); g.restore();
     spAim(g,aim,()=>{ spLine(g,-s*0.3,s*0.1,s*1.35,s*0.1,'#8a6a3a',s*0.09);
       g.fillStyle=C.gold2; g.beginPath(); g.moveTo(s*1.35,-s*0.06); g.lineTo(s*1.65,s*0.1); g.lineTo(s*1.35,s*0.26); g.closePath(); g.fill(); });
   },
   /* Geheiligter: tiefblaue Robe mit Goldsaum, goldene Maske, strahlender Schein, Blitzstab */
   saint(g,s,t,sw,aim){
-    g.save(); g.globalAlpha=0.55+Math.sin(t*2)*0.15; g.strokeStyle=C.gold2; g.lineWidth=Math.max(1,s*0.05);
+    g.save(); g.globalAlpha*=0.55+Math.sin(t*2)*0.15; g.strokeStyle=C.gold2; g.lineWidth=Math.max(1,s*0.05);
     for(let i=0;i<10;i++){ const a=i/10*TAU+t*0.4; spLine(g,Math.cos(a)*s*0.55,-s*0.66+Math.sin(a)*s*0.55,Math.cos(a)*s*0.8,-s*0.66+Math.sin(a)*s*0.8,C.gold2,s*0.04); }
     g.beginPath(); g.arc(0,-s*0.66,s*0.55,0,TAU); g.stroke(); g.restore();
     spRobe(g,s,sw,'#1c1a3c',-0.45,0.45,0.8);
@@ -89,7 +89,7 @@ const HERO_ART={
     spCirc(g,0,-s*0.66,s*0.34,'#d8a838');
     g.fillStyle='#1a1206'; g.fillRect(-s*0.2,-s*0.72,s*0.14,s*0.05); g.fillRect(s*0.06,-s*0.72,s*0.14,s*0.05);
     spAim(g,aim,()=>{ spLine(g,s*0.2,s*0.1,s*1.05,s*0.1,'#cfc6b4',s*0.08);
-      g.save(); g.globalAlpha=0.5+Math.sin(t*9)*0.3; spCirc(g,s*1.12,s*0.1,s*0.24,'#9bbcff'); g.restore(); spCirc(g,s*1.12,s*0.1,s*0.12,'#eef4ff'); });
+      g.save(); g.globalAlpha*=0.5+Math.sin(t*9)*0.3; spCirc(g,s*1.12,s*0.1,s*0.24,'#9bbcff'); g.restore(); spCirc(g,s*1.12,s*0.1,s*0.12,'#eef4ff'); });
   },
   /* Revolverheld: breiter Hut, gestreifter Poncho, rotes Halstuch, zwei Revolver */
   gunslinger(g,s,t,sw,aim){
@@ -118,14 +118,14 @@ const HERO_ART={
   },
   /* Predigt-Echo: geisterhafter Prediger mit rotem Heiligenschein und aufgeschlagenem Buch */
   preacher_c(g,s,t,sw,aim){
-    g.save(); g.globalAlpha=0.82;
+    g.save(); g.globalAlpha*=0.82;
     g.fillStyle='#3a0a0e'; g.beginPath(); g.moveTo(-s*0.45,-s*0.4); g.lineTo(s*0.45,-s*0.4); g.lineTo(s*0.75,s*0.6);
     for(let i=0;i<=5;i++){ const xx=s*0.75-(s*1.5)*(i/5); g.lineTo(xx,s*0.85+Math.sin(t*5+i)*s*0.12); } g.lineTo(-s*0.75,s*0.6); g.closePath(); g.fill();
     spCirc(g,0,-s*0.62,s*0.36,'#24060a'); spCirc(g,-s*0.12,-s*0.62,s*0.06,'#f0e0d0'); spCirc(g,s*0.12,-s*0.62,s*0.06,'#f0e0d0');
     g.strokeStyle=C.blood2; g.lineWidth=Math.max(1,s*0.07); g.beginPath(); g.ellipse(0,-s*1.12,s*0.36,s*0.1,0,0,TAU); g.stroke();
     g.restore();
     spAim(g,aim,()=>{ g.fillStyle='#3a1a0a'; g.fillRect(s*0.3,-s*0.18,s*0.52,s*0.4); g.fillStyle='#e8dcc0'; g.fillRect(s*0.34,-s*0.15,s*0.21,s*0.34); g.fillRect(s*0.57,-s*0.15,s*0.21,s*0.34);
-      g.save(); g.globalAlpha=0.4+Math.sin(t*6)*0.2; spCirc(g,s*0.56,0,s*0.3,C.blood2); g.restore(); });
+      g.save(); g.globalAlpha*=0.4+Math.sin(t*6)*0.2; spCirc(g,s*0.56,0,s*0.3,C.blood2); g.restore(); });
   },
   /* Madenfürst: aufgedunsener Leib mit Ringen, Kapuze, kriechende Maden, Giftphiole */
   maggot_c(g,s,t,sw,aim){
@@ -134,11 +134,11 @@ const HERO_ART={
     for(let i=0;i<4;i++){ const a=t*1.5+i*1.6; spCirc(g,Math.cos(a)*s*0.55,s*0.2+Math.sin(a)*s*0.45,s*0.07,'#e8e0c0'); }
     g.fillStyle='#2a3410'; g.beginPath(); g.moveTo(-s*0.42,-s*0.3); g.quadraticCurveTo(-s*0.45,-s*1.1,0,-s*1.05); g.quadraticCurveTo(s*0.45,-s*1.1,s*0.42,-s*0.3); g.closePath(); g.fill();
     spCirc(g,0,-s*0.58,s*0.24,'#0e1406'); spCirc(g,-s*0.09,-s*0.6,s*0.05,C.sick); spCirc(g,s*0.09,-s*0.6,s*0.05,C.sick);
-    spAim(g,aim,()=>{ g.fillStyle='#3a4a1a'; g.fillRect(s*0.3,-s*0.05,s*0.18,s*0.2); g.save(); g.globalAlpha=0.85; spCirc(g,s*0.68,s*0.05,s*0.2,C.sick); g.restore(); spCirc(g,s*0.68,s*0.05,s*0.08,'#e8ffa0'); });
+    spAim(g,aim,()=>{ g.fillStyle='#3a4a1a'; g.fillRect(s*0.3,-s*0.05,s*0.18,s*0.2); g.save(); g.globalAlpha*=0.85; spCirc(g,s*0.68,s*0.05,s*0.2,C.sick); g.restore(); spCirc(g,s*0.68,s*0.05,s*0.08,'#e8ffa0'); });
   },
   /* Chirurgen-Schemen: blasse Schürze, weiße Maske, runde Brillengläser, Skalpellfächer */
   surgeon_c(g,s,t,sw,aim){
-    g.save(); g.globalAlpha=0.88;
+    g.save(); g.globalAlpha*=0.88;
     spRobe(g,s,sw,'#2a3440',-0.45,0.44,0.72);
     g.fillStyle='#c8d4dc'; g.beginPath(); g.moveTo(-s*0.3,-s*0.35); g.lineTo(s*0.3,-s*0.35); g.lineTo(s*0.45,s*0.85); g.lineTo(-s*0.45,s*0.85); g.closePath(); g.fill();
     g.fillStyle='rgba(120,20,24,.6)'; g.beginPath(); g.arc(s*0.1,s*0.35,s*0.16,0,TAU); g.arc(-s*0.15,s*0.6,s*0.1,0,TAU); g.fill();
@@ -168,7 +168,7 @@ const HERO_ART={
     spCirc(g,0,-s*0.66,s*0.28,'#c8a890');
     spLine(g,-s*0.14,-s*0.64,-s*0.04,-s*0.66,'#2a1810',s*0.04); spLine(g,s*0.04,-s*0.66,s*0.14,-s*0.64,'#2a1810',s*0.04);
     g.strokeStyle='#4a3018'; g.lineWidth=Math.max(1,s*0.07); g.beginPath(); g.ellipse(0,-s*0.88,s*0.3,s*0.09,0,0,TAU); g.stroke();
-    g.save(); g.globalAlpha=0.45+Math.sin(t*2.5)*0.15; g.strokeStyle=C.gold2; g.lineWidth=Math.max(1,s*0.06); g.beginPath(); g.arc(0,-s*0.7,s*0.48,0,TAU); g.stroke(); g.restore();
+    g.save(); g.globalAlpha*=0.45+Math.sin(t*2.5)*0.15; g.strokeStyle=C.gold2; g.lineWidth=Math.max(1,s*0.06); g.beginPath(); g.arc(0,-s*0.7,s*0.48,0,TAU); g.stroke(); g.restore();
     spAim(g,aim,()=>{ g.fillStyle=C.gold2; g.fillRect(s*0.55,-s*0.03,s*0.5,s*0.16); g.fillRect(s*0.72,-s*0.2,s*0.14,s*0.5); spLine(g,s*0.2,s*0.05,s*0.6,s*0.05,'#8a6a3a',s*0.08); });
   },
 };
@@ -184,7 +184,7 @@ Object.assign(HERO_ART,{
     g.fillStyle='#5a4028'; g.fillRect(-s*0.05,-s*0.3,s*0.1,s*0.34); g.fillRect(-s*0.14,-s*0.22,s*0.28,s*0.08);
     g.fillStyle='#17161c'; g.beginPath(); g.moveTo(-s*0.5,-s*0.3); g.quadraticCurveTo(-s*0.55,-s*1.12,s*0.08,-s*1.12); g.quadraticCurveTo(s*0.52,-s*1.0,s*0.5,-s*0.3); g.closePath(); g.fill();
     g.fillStyle='#050507'; g.beginPath(); g.ellipse(s*0.06,-s*0.55,s*0.3,s*0.32,0,0,TAU); g.fill();
-    spCirc(g,s*0.16,-s*0.58,s*0.08,C.blood2); g.save(); g.globalAlpha=0.35+Math.sin(t*3)*0.15; spCirc(g,s*0.16,-s*0.58,s*0.17,C.blood2); g.restore();
+    spCirc(g,s*0.16,-s*0.58,s*0.08,C.blood2); g.save(); g.globalAlpha*=0.35+Math.sin(t*3)*0.15; spCirc(g,s*0.16,-s*0.58,s*0.17,C.blood2); g.restore();
     spAim(g,aim,()=>{ g.fillStyle='#5a3a20'; g.beginPath(); g.moveTo(s*0.28,s*0.05); g.lineTo(s*0.48,s*0.05); g.lineTo(s*0.4,s*0.38); g.lineTo(s*0.26,s*0.36); g.closePath(); g.fill();
       g.fillStyle='#9aa0a8'; g.fillRect(s*0.4,-s*0.08,s*0.2,s*0.2); spLine(g,s*0.55,-s*0.02,s*1.08,-s*0.02,C.bone,s*0.12); });
   },
@@ -203,7 +203,7 @@ Object.assign(HERO_ART,{
   },
   /* Ketzerin: Hörner, langes Haar, zerrissenes Kleid mit grünen Runen, grünes Leuchten, Stab mit Giftkugel */
   heretic(g,s,t,sw,aim){
-    g.save(); g.globalAlpha=0.1+Math.sin(t*2.5)*0.05; spCirc(g,0,-s*0.1,s*0.85,C.sick); g.restore();
+    g.save(); g.globalAlpha*=0.1+Math.sin(t*2.5)*0.05; spCirc(g,0,-s*0.1,s*0.85,C.sick); g.restore();
     g.fillStyle='#191a14'; g.beginPath(); g.moveTo(-s*0.35,-s*0.4); g.lineTo(s*0.35,-s*0.4); g.lineTo(s*0.66-sw,s*0.55);
     for(let i=0;i<=6;i++){ const xx=s*0.66-(s*1.32)*(i/6); g.lineTo(xx,s+(i%2?-s*0.2:0)); } g.lineTo(-s*0.66+sw,s*0.55); g.closePath(); g.fill();
     g.strokeStyle='rgba(155,191,58,.75)'; g.lineWidth=Math.max(1,s*0.04);
@@ -214,7 +214,7 @@ Object.assign(HERO_ART,{
     g.beginPath(); g.moveTo(s*0.24,-s*0.78); g.quadraticCurveTo(s*0.55,-s*1.0,s*0.48,-s*1.28); g.lineTo(s*0.12,-s*0.84); g.closePath(); g.fill();
     spCirc(g,-s*0.12,-s*0.52,s*0.07,C.sick); spCirc(g,s*0.12,-s*0.52,s*0.07,C.sick);
     spAim(g,aim,()=>{ spLine(g,s*0.15,s*0.12,s*1.0,s*0.0,'#3a3a24',s*0.1);
-      g.save(); g.globalAlpha=0.5+Math.sin(t*5)*0.25; spCirc(g,s*1.08,0,s*0.24,C.sick); g.restore(); spCirc(g,s*1.08,0,s*0.12,'#e8ffa0'); });
+      g.save(); g.globalAlpha*=0.5+Math.sin(t*5)*0.25; spCirc(g,s*1.08,0,s*0.24,C.sick); g.restore(); spCirc(g,s*1.08,0,s*0.12,'#e8ffa0'); });
   },
   /* Pestpriester: Krempenhut, knöcherne Schnabelmaske mit Glasaugen, langer Mantel mit Knöpfen, Räucherfass */
   plaguepriest(g,s,t,sw,aim){
@@ -228,7 +228,7 @@ Object.assign(HERO_ART,{
     g.fillStyle='#0a0a06'; g.beginPath(); g.ellipse(0,-s*0.85,s*0.62,s*0.15,0,0,TAU); g.fill(); g.beginPath(); g.ellipse(0,-s*1.02,s*0.3,s*0.22,0,0,TAU); g.fill();
     g.fillStyle='#3a3a20'; g.fillRect(-s*0.3,-s*0.95,s*0.6,s*0.06);
     spAim(g,aim,()=>{ g.strokeStyle='#6a6a40'; g.lineWidth=Math.max(1,s*0.05); g.beginPath(); g.moveTo(s*0.3,s*0.05); g.lineTo(s*0.82,s*0.22); g.stroke();
-      spCirc(g,s*0.9,s*0.25,s*0.2,'#5a5a30'); g.save(); g.globalAlpha=0.4+Math.sin(t*4)*0.2; spCirc(g,s*0.95+Math.sin(t*2)*s*0.08,s*0.0,s*0.22,C.sick); g.restore(); });
+      spCirc(g,s*0.9,s*0.25,s*0.2,'#5a5a30'); g.save(); g.globalAlpha*=0.4+Math.sin(t*4)*0.2; spCirc(g,s*0.95+Math.sin(t*2)*s*0.08,s*0.0,s*0.22,C.sick); g.restore(); });
   },
 });
 
@@ -325,7 +325,7 @@ function enemySprite(type,r,col,frame,white){
 const BOSS_ART={
   /* Choral der Asche: drei Aschenmasken kreisen um eine dunkle Flamme */
   choir(g,e,col,t){ const s=e.r, fl=col==='#fff'?'#fff':'#5a5048';
-    g.save(); g.globalAlpha=0.5+Math.sin(t*4)*0.15; spCirc(g,0,0,s*0.9,'#2a2420'); g.restore();
+    g.save(); g.globalAlpha*=0.5+Math.sin(t*4)*0.15; spCirc(g,0,0,s*0.9,'#2a2420'); g.restore();
     g.fillStyle=fl; g.beginPath(); g.moveTo(0,-s*1.05); g.quadraticCurveTo(s*0.6,-s*0.2,s*0.35,s*0.5); g.quadraticCurveTo(0,s*0.75,-s*0.35,s*0.5); g.quadraticCurveTo(-s*0.6,-s*0.2,0,-s*1.05); g.fill();
     spCirc(g,0,s*0.05,s*0.18,'#e08a2f');
     for(let i=0;i<3;i++){ const a=t*1.2+i*TAU/3, x=Math.cos(a)*s*0.95, y=Math.sin(a)*s*0.7;
@@ -341,7 +341,7 @@ const BOSS_ART={
     for(let i=0;i<6;i++){ const a=-Math.PI*0.9+i*Math.PI*0.16, w=Math.sin(t*5+i)*s*0.05; spLine(g,Math.cos(a)*s*0.35,-s*0.75+Math.sin(a)*s*0.35,Math.cos(a)*s*0.55+w,-s*0.75+Math.sin(a)*s*0.55,'#e8e0c0',s*0.08); } },
   /* Der Eiserne Heilige: Plattenrüstung, Heiligenschein, Turmschild; leuchtet golden im Schildwall */
   ironsaint(g,e,col,t){ const s=e.r, steel=col==='#fff'?'#fff':'#6d727c';
-    if(e.shieldT>0){ g.save(); g.globalAlpha=0.35+Math.sin(t*10)*0.15; spCirc(g,0,0,s*1.35,C.gold2); g.restore(); }
+    if(e.shieldT>0){ g.save(); g.globalAlpha*=0.35+Math.sin(t*10)*0.15; spCirc(g,0,0,s*1.35,C.gold2); g.restore(); }
     g.fillStyle='#3a3e46'; g.fillRect(-s*0.45,s*0.45,s*0.3,s*0.55); g.fillRect(s*0.15,s*0.45,s*0.3,s*0.55);
     g.fillStyle=steel; g.beginPath(); g.moveTo(-s*0.75,-s*0.35); g.lineTo(s*0.75,-s*0.35); g.lineTo(s*0.55,s*0.6); g.lineTo(-s*0.55,s*0.6); g.closePath(); g.fill();
     g.fillStyle='#8a909a'; g.beginPath(); g.ellipse(-s*0.7,-s*0.32,s*0.3,s*0.2,0,0,TAU); g.ellipse(s*0.7,-s*0.32,s*0.3,s*0.2,0,0,TAU); g.fill();
@@ -355,15 +355,15 @@ const BOSS_ART={
     g.save(); g.rotate(t*0.6); g.fillStyle='#e8dcc0';
     for(let i=0;i<16;i++){ const a=i/16*TAU; g.save(); g.rotate(a); g.beginPath(); g.moveTo(s*0.78,-s*0.08); g.lineTo(s*0.5,0); g.lineTo(s*0.78,s*0.08); g.closePath(); g.fill(); g.restore(); }
     g.restore();
-    g.save(); g.globalAlpha=0.5+Math.sin(t*3)*0.2; spCirc(g,0,0,s*0.3,'#5a0a0e'); g.restore();
+    g.save(); g.globalAlpha*=0.5+Math.sin(t*3)*0.2; spCirc(g,0,0,s*0.3,'#5a0a0e'); g.restore();
     for(let i=0;i<6;i++){ const a=i/6*TAU+0.3, x=Math.cos(a)*s*0.95, y=Math.sin(a)*s*0.95; spCirc(g,x,y,s*0.13,'#e8dcc0'); spCirc(g,x+Math.cos(t+i)*s*0.04,y,s*0.06,C.blood2); } },
   /* Der Letzte Gekreuzigte: Gestalt am brennenden Kreuz, Aschenflügel, roter Schein */
   lastcross(g,e,col,t){ const s=e.r, p2=e.hp<e.maxHp*0.5;
-    g.save(); g.globalAlpha=0.4+Math.sin(t*2)*0.15; g.strokeStyle=p2?C.blood2:C.gold2; g.lineWidth=Math.max(1,s*0.08); g.beginPath(); g.arc(0,-s*0.85,s*0.5,0,TAU); g.stroke(); g.restore();
+    g.save(); g.globalAlpha*=0.4+Math.sin(t*2)*0.15; g.strokeStyle=p2?C.blood2:C.gold2; g.lineWidth=Math.max(1,s*0.08); g.beginPath(); g.arc(0,-s*0.85,s*0.5,0,TAU); g.stroke(); g.restore();
     for(const sd of [-1,1]){ g.fillStyle='#2a2420'; g.beginPath(); g.moveTo(sd*s*0.3,-s*0.4);
       for(let i=0;i<=4;i++){ g.lineTo(sd*s*(0.6+i*0.22),-s*0.7+i*s*0.3+Math.sin(t*3+i)*s*0.06); } g.lineTo(sd*s*0.3,s*0.4); g.closePath(); g.fill(); }
     g.fillStyle='#3a2414'; g.fillRect(-s*0.12,-s*1.3,s*0.24,s*2.4); g.fillRect(-s*0.9,-s*0.6,s*1.8,s*0.2);
-    if(p2) for(let i=0;i<5;i++){ const x=rand(-s*0.8,s*0.8), y=rand(-s*1.2,s*1.0); g.save(); g.globalAlpha=0.6; spCirc(g,x,y,s*0.08,i%2?C.candle:'#ffb040'); g.restore(); }
+    if(p2) for(let i=0;i<5;i++){ const x=rand(-s*0.8,s*0.8), y=rand(-s*1.2,s*1.0); g.save(); g.globalAlpha*=0.6; spCirc(g,x,y,s*0.08,i%2?C.candle:'#ffb040'); g.restore(); }
     g.fillStyle=col==='#fff'?'#fff':'#5a0c10'; g.beginPath(); g.moveTo(-s*0.3,-s*0.4); g.lineTo(s*0.3,-s*0.4); g.lineTo(s*0.45,s*0.9); g.lineTo(-s*0.45,s*0.9); g.closePath(); g.fill();
     spCirc(g,0,-s*0.68,s*0.26,'#c8a890'); g.strokeStyle='#4a3018'; g.lineWidth=Math.max(1,s*0.07); g.beginPath(); g.ellipse(0,-s*0.88,s*0.28,s*0.08,0,0,TAU); g.stroke();
     spCirc(g,-s*0.09,-s*0.68,s*0.04,'#1a0a0a'); spCirc(g,s*0.09,-s*0.68,s*0.04,'#1a0a0a'); },
@@ -459,4 +459,6 @@ function drawProjectile(g,b,time){ const shp=PROJ_SHAPE[b.wid];
   const spr=projSprite(shp,Math.max(2,Math.round(b.r)),b.color);
   if(PROJ_ROUND[shp]){ g.drawImage(spr,b.x-spr._ox,b.y-spr._oy); return; }
   const sp=PROJ_SPIN[shp], a=sp?time*sp+b.id:Math.atan2(b.vy,b.vx);
-  g.translate(b.x,b.y); g.rotate(a); g.drawImage(spr,-spr._ox,-spr._oy); g.rotate(-a); g.translate(-b.x,-b.y); }
+  /* lange Formen nach hinten versetzen: die Spitze sitzt am Rand der Trefferzone, nicht 2–3 r davor */
+  const back=sp?0:Math.max(0,(PROJ_EXT[shp][1]-1.2))*Math.max(2,Math.round(b.r));
+  g.translate(b.x,b.y); g.rotate(a); g.drawImage(spr,-spr._ox-back,-spr._oy); g.rotate(-a); g.translate(-b.x,-b.y); }

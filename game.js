@@ -116,6 +116,8 @@ function applyLang(){
   if(G.state==='meta') renderMeta();
   if(G.state==='achievements') renderAchievements();
   if(G.state==='stats') fillStats();
+  if(G.state==='gameover') renderGameOver();
+  if(G.state==='endless') renderEndless();
   if($('#profile')&&$('#profile').classList.contains('show')) fillProfile();
   if(DB.current) refreshProfile();
 }
@@ -1995,10 +1997,11 @@ function renderAbility(cards){
 /* ---------- ENDLESS ---------- */
 function openEndless(){
   G.state='endless'; $('#hud').classList.remove('show'); $('#bossBarWrap').classList.remove('show');
-  if(G.run){G.run.won=true;} const souls=finishRun(false,true);
-  $('#endlessStats').innerHTML=t('end_all50')+'<br>'+t('end_clvl')+': <b>'+player.level+'</b> · '+t('hud_kills')+': <b>'+G.kills+'</b><br>'+soulsLine(souls)+'<br>'+t('endless_q');
+  if(G.run){G.run.won=true;} G.endSouls=finishRun(false,true); renderEndless();
   Audio2.win(); $('#endless').classList.add('show');
 }
+/* Endbildschirme werden bei einem Sprachwechsel neu geschrieben (applyLang) */
+function renderEndless(){ $('#endlessStats').innerHTML=t('end_all50')+'<br>'+t('end_clvl')+': <b>'+player.level+'</b> · '+t('hud_kills')+': <b>'+G.kills+'</b><br>'+soulsLine(G.endSouls)+'<br>'+t('endless_q'); }
 $('#endlessGo').onclick=()=>{ G.endless=true; hideAllOverlays(); $('#hud').classList.add('show'); G.state='playing'; nextLevel(); };
 $('#endlessRestart').onclick=()=>{ G.state='menu'; hideAllOverlays(); refreshProfile(); show('menu'); };
 
@@ -2043,6 +2046,7 @@ $('#statsClose').onclick=closeStats;
 
 /* ---------- GAME OVER / VICTORY ---------- */
 const EPITAPHS=['Der Weg endet hier','Nicht alle Sünden lassen sich abtragen','Das Kreuz blieb leer','Asche zu Asche'];
+const EPITAPHS_EN=['The path ends here','Not every sin can be atoned','The cross stayed empty','Ashes to ashes'];
 function buildRunSnapshot(died,won){ return {kills:G.kills,gold:G.run?G.run.gold:G.coins,bossKills:G.run?G.run.bossKills:0,
   time:G.time,level:G.level,charLevel:players.length?Math.max.apply(null,players.map(p=>p.level)):1,died:!!died,won:!!won,
   weaponKills:G.run?Object.assign({},G.run.weaponKills):{},bossKinds:G.run?G.run.bossKinds:null,heresyWin:!!won&&G.diff&&G.diff.id==='heresy'}; }
@@ -2054,11 +2058,12 @@ function onPlayerDead(who){ const p=who||player; p.dead=true; p.hp=0;
 function gameOver(){
   if(G.state==='gameover')return;
   G.state='gameover'; $('#hud').classList.remove('show'); $('#bossBarWrap').classList.remove('show');
-  const souls=finishRun(true,false);
-  $('#goEpitaph').textContent=pick(EPITAPHS);
-  $('#goStats').innerHTML=t('end_station')+': <b>'+G.level+(G.level>50?' ('+t('hud_endless')+')':' / 50')+'</b><br>'+t('end_clvl')+': <b>'+player.level+'</b><br>'+t('hud_kills')+': <b>'+G.kills+'</b><br>'+t('hud_gold')+': <b>'+G.coins+'</b><br>'+t('end_class')+': <b>'+charById(G.charId).name+'</b><br>'+soulsLine(souls);
+  G.endSouls=finishRun(true,false); G.epitaph=randInt(0,EPITAPHS.length-1); renderGameOver();
   $('#gameover').classList.add('show');
 }
+function renderGameOver(){
+  $('#goEpitaph').textContent=(LANG==='en'?EPITAPHS_EN:EPITAPHS)[G.epitaph||0];
+  $('#goStats').innerHTML=t('end_station')+': <b>'+G.level+(G.level>50?' ('+t('hud_endless')+')':' / 50')+'</b><br>'+t('end_clvl')+': <b>'+player.level+'</b><br>'+t('hud_kills')+': <b>'+G.kills+'</b><br>'+t('hud_gold')+': <b>'+G.coins+'</b><br>'+t('end_class')+': <b>'+charById(G.charId).name+'</b><br>'+soulsLine(G.endSouls); }
 
 /* =========================================================================
    RENDER
