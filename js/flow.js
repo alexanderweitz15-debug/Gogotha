@@ -75,7 +75,7 @@ function buildLevel(lvl){
   const region=REGIONS[clamp(Math.floor((lvl-1)/10),0,4)];
   $('#stationLabel').textContent= lvl>50? t('hud_endless')+' '+(lvl-50) : t('hud_station')+' '+lvl+' / 50';
   $('#regionLabel').textContent=region.name;
-  buildDecor(region); buildObstacles();
+  buildDecor(region); buildMap(lvl,region);   // Raumaufbau, Boden, Hindernisse je Region (map.js)
   G.waveGoldMul=1; G.shrine=null;
   G.hazards=[];
   if(lvl%5===0) spawnBoss(lvl); else { spawnWave(lvl); maybeShrine(); }   // auch im Endlos-Modus alle 5 Stationen ein Boss

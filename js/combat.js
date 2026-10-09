@@ -132,7 +132,7 @@ function updateBullets(dt){
     let dead=false;
     if(b.life<=0){ runFx(b,'expire'); dead=true; }
     else if(b.x<ROOM.x||b.x>ROOM.x+ROOM.w||b.y<ROOM.y||b.y>ROOM.y+ROOM.h) dead=runFx(b,'wall')!=='keep';
-    if(!dead){ const ob=bulletHitsObstacle(b); if(ob && runFx(b,'obstacle',ob)!=='keep'){ for(let k=0;k<3;k++)spawnParticle(b.x,b.y,b.color,1.2,40); dead=true; } }
+    if(!dead){ const ob=bulletHitsObstacle(b); if(ob&&ob.brk)hitBreakable(ob,b); if(ob && runFx(b,'obstacle',ob)!=='keep'){ for(let k=0;k<3;k++)spawnParticle(b.x,b.y,b.color,1.2,40); dead=true; } }
     if(!dead){
       for(const e of enemies){
         if(b.hitIds.has(e.id))continue;

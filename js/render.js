@@ -19,28 +19,14 @@ function renderGame(){
   cx.fillStyle='#050507';cx.fillRect(0,0,W,H);
   cx.save();cx.translate(-cam.x+ox,-cam.y+oy);
   // floor
-  cx.fillStyle=reg.floor;cx.fillRect(ROOM.x,ROOM.y,ROOM.w,ROOM.h);
-  // grid (nur sichtbarer Bereich)
-  cx.strokeStyle='rgba(0,0,0,.32)';cx.lineWidth=1;
-  const gx0=Math.max(ROOM.x,Math.floor((cam.x-2)/48)*48), gx1=Math.min(ROOM.x+ROOM.w,cam.x+W+48);
-  const gy0=Math.max(ROOM.y,Math.floor((cam.y-2)/48)*48), gy1=Math.min(ROOM.y+ROOM.h,cam.y+H+48);
-  for(let x=gx0;x<=gx1;x+=48){cx.beginPath();cx.moveTo(x,ROOM.y);cx.lineTo(x,ROOM.y+ROOM.h);cx.stroke();}
-  for(let y=gy0;y<=gy1;y+=48){cx.beginPath();cx.moveTo(ROOM.x,y);cx.lineTo(ROOM.x+ROOM.w,y);cx.stroke();}
-  for(const d of decor){
-    if(d.x<cam.x-40||d.x>cam.x+W+40||d.y<cam.y-40||d.y>cam.y+H+40) continue;
-    if(d.type==='crack'){cx.strokeStyle='rgba(0,0,0,.4)';cx.lineWidth=1.2;cx.beginPath();cx.moveTo(d.x,d.y);cx.lineTo(d.x+Math.cos(d.r)*d.l,d.y+Math.sin(d.r)*d.l);cx.stroke();}
-    else if(d.type==='cross'){cx.save();cx.globalAlpha=d.a;cx.fillStyle=reg.tint;cx.translate(d.x,d.y);cx.scale(d.s,d.s);cx.fillRect(-4,-26,8,52);cx.fillRect(-16,-14,32,8);cx.restore();}
-    else if(d.type==='candle'){const fl=0.5+Math.sin(G.uiTime*8+d.x)*0.3;cx.fillStyle='rgba(224,138,47,'+(0.05*fl)+')';cx.beginPath();cx.arc(d.x,d.y,15,0,TAU);cx.fill();cx.fillStyle='rgba(224,138,47,.7)';cx.beginPath();cx.arc(d.x,d.y,1.7,0,TAU);cx.fill();}
-  }
-  cx.strokeStyle=C.gold;cx.lineWidth=3;cx.strokeRect(ROOM.x-2,ROOM.y-2,ROOM.w+4,ROOM.h+4);
-  cx.strokeStyle='rgba(184,137,59,.25)';cx.lineWidth=1;cx.strokeRect(ROOM.x-7,ROOM.y-7,ROOM.w+14,ROOM.h+14);
+  drawMapFloor(reg);   // Boden, Deko und Rand je Region, vorgezeichnet (map.js)
 
   // Laternenlicht um jeden Spieler: hebt die Umgebung des Spielers vom dunklen Boden ab
   for(const pl of players){ if(pl.dead)continue; const lg=cx.createRadialGradient(pl.x,pl.y,8,pl.x,pl.y,280); lg.addColorStop(0,'rgba(255,214,160,.11)'); lg.addColorStop(1,'rgba(255,214,160,0)'); cx.fillStyle=lg; cx.fillRect(pl.x-280,pl.y-280,560,560); }
   for(const pu of puddles){cx.save();cx.globalAlpha=clamp(pu.life,0,1)*0.5;cx.fillStyle=pu.effect==='fire'?'rgba(224,138,47,1)':pu.effect==='chill'?C.chill:C.sick;cx.beginPath();cx.arc(pu.x,pu.y,pu.r,0,TAU);cx.fill();
     if(pu.effect==='fire'){cx.globalAlpha=clamp(pu.life,0,1)*0.3;cx.fillStyle='#ffd27a';cx.beginPath();cx.arc(pu.x,pu.y,pu.r*0.6,0,TAU);cx.fill();}cx.restore();}
   for(const n of novaRings){cx.save();cx.globalAlpha=clamp(n.t/0.45,0,1)*0.6;cx.strokeStyle=n.color;cx.lineWidth=3;cx.beginPath();cx.arc(n.x,n.y,n.r,0,TAU);cx.stroke();cx.restore();}
-  for(const ob of obstacles) drawObstacle(ob);
+  drawMapObstacles();
   drawShrine(); drawHazards();
   for(const pk of pickups){const yy=pk.y+Math.sin(pk.bob)*2;
     if(pk.type==='coin'){cx.fillStyle=C.gold2;cx.beginPath();cx.arc(pk.x,yy,4,0,TAU);cx.fill();cx.fillStyle='rgba(255,255,255,.4)';cx.beginPath();cx.arc(pk.x-1,yy-1,1.5,0,TAU);cx.fill();}
@@ -96,7 +82,7 @@ function renderMinimap(){
   const offx=(MW-WORLD.w*sc)/2, offy=(MH-WORLD.h*sc)/2;
   m.fillStyle='rgba(8,7,10,.92)';m.fillRect(0,0,MW,MH);
   m.fillStyle='rgba(40,34,26,.9)';m.fillRect(offx+ROOM.x*sc,offy+ROOM.y*sc,ROOM.w*sc,ROOM.h*sc);
-  m.fillStyle='#3a342c';for(const ob of obstacles){m.fillRect(offx+ob.x*sc-1.5,offy+ob.y*sc-1.5,3,3);}
+  drawMapMinimap(m,sc,offx,offy);
   m.fillStyle='rgba(121,230,192,.7)';for(const pk of pickups){if(pk.type==='xp')m.fillRect(offx+pk.x*sc-0.5,offy+pk.y*sc-0.5,1.5,1.5);}
   for(const e of enemies){ m.fillStyle=e.isBoss?'#ff3b3b':'#c01f24'; const r=e.isBoss?3.2:1.6; m.beginPath();m.arc(offx+e.x*sc,offy+e.y*sc,r,0,TAU);m.fill(); }
   if(G.shrine&&!G.shrine.used){ m.fillStyle=SHRINES[G.shrine.kind].color; m.fillRect(offx+G.shrine.x*sc-2.5,offy+G.shrine.y*sc-2.5,5,5); }
