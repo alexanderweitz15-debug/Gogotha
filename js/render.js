@@ -54,7 +54,8 @@ function renderGame(){
   for(const bo of bolts){cx.save();cx.globalAlpha=clamp(bo.t/0.12,0,1);cx.strokeStyle=bo.color||'#cfe0ff';cx.lineWidth=2;cx.shadowColor=bo.color||'#9bbcff';cx.shadowBlur=10;cx.beginPath();cx.moveTo(bo.x1,bo.y1);const mx=(bo.x1+bo.x2)/2+rand(-10,10),my=(bo.y1+bo.y2)/2+rand(-10,10);cx.lineTo(mx,my);cx.lineTo(bo.x2,bo.y2);cx.stroke();cx.restore();}
   for(const bm of beams){cx.save();cx.globalAlpha=clamp(bm.t/0.09,0,1);cx.lineCap='round';cx.shadowColor=bm.color;cx.shadowBlur=14;cx.strokeStyle=bm.color;cx.lineWidth=bm.width||6;cx.beginPath();cx.moveTo(bm.x1,bm.y1);cx.lineTo(bm.x2,bm.y2);cx.stroke();cx.strokeStyle='#fff';cx.lineWidth=(bm.width||6)*0.35;cx.stroke();cx.restore();}
   drawLinkChain();
-  for(const pl of players){ if(pl.dead)continue; player=pl; drawPlayer(); } player=anchorPlayer();
+  { const cur=player;   // aktuellen Spieler behalten: im Koop zeichnet die Schleife auch, während Spieler 2 im Shop/Aufstieg wählt
+    for(const pl of players){ if(pl.dead)continue; player=pl; drawPlayer(); } player=cur; }
   // gegnerische Geschosse zuletzt und mit rotem Rand: Gefahr muss immer das Sichtbarste sein
   for(const b of ebullets){cx.fillStyle='rgba(12,0,0,.8)';cx.beginPath();cx.arc(b.x,b.y,b.r+2.4,0,TAU);cx.fill();cx.strokeStyle='rgba(255,70,60,.9)';cx.lineWidth=1.4;cx.stroke();
     cx.fillStyle=b.color;cx.beginPath();cx.arc(b.x,b.y,b.r,0,TAU);cx.fill();cx.fillStyle='rgba(255,255,255,.6)';cx.beginPath();cx.arc(b.x,b.y,b.r*0.42,0,TAU);cx.fill();}
