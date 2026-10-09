@@ -62,9 +62,11 @@ const HERO_ART={
     g.fillStyle='#0c0a0e'; g.beginPath(); g.ellipse(0,-s*0.9,s*0.72,s*0.15,0,0,TAU); g.fill();
     g.fillRect(-s*0.32,-s*1.35,s*0.64,s*0.48);
     g.fillStyle=C.gold; g.fillRect(-s*0.12,-s*1.0,s*0.24,s*0.12);
-    spAim(g,aim,()=>{ spLine(g,s*0.2,s*0.1,s*1.05,s*0.1,'#5a3a20',s*0.12);
-      g.strokeStyle='#8a6a3a'; g.lineWidth=Math.max(1,s*0.08); g.beginPath(); g.arc(s*0.8,s*0.1,s*0.32,-1.3,1.3); g.stroke();
-      spLine(g,s*0.9,-s*0.2,s*0.9,s*0.4,'#d8cdb8',s*0.03); });
+    // Dreifaltigkeits-Stab: Stab mit dreifachem Kreuz (Startwaffe Dreifaltigkeit)
+    spAim(g,aim,()=>{ spLine(g,s*0.15,s*0.1,s*1.0,s*0.1,'#4a3220',s*0.1);
+      g.save(); g.globalAlpha*=0.35+Math.sin(t*3)*0.12; spCirc(g,s*1.08,s*0.1,s*0.3,C.gold2); g.restore();
+      spLine(g,s*0.9,s*0.1,s*1.3,s*0.1,C.gold2,s*0.08);
+      for(const k of [0,1,2]) spLine(g,s*(0.98+k*0.11),s*(0.1-0.2+k*0.03),s*(0.98+k*0.11),s*(0.1+0.2-k*0.03),C.gold2,s*0.06); });
   },
   /* Märtyrerin: weißes, blutgetränktes Gewand, Schleier, Dornenkranz als Heiligenschein, Lanze */
   martyr(g,s,t,sw,aim){

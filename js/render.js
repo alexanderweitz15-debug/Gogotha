@@ -53,6 +53,7 @@ function renderGame(){
   for(const b of bullets){ if(b.x<cam.x-60||b.x>cam.x+W+60||b.y<cam.y-60||b.y>cam.y+H+60)continue; drawProjectile(cx,b,G.uiTime); }
   for(const bo of bolts){cx.save();cx.globalAlpha=clamp(bo.t/0.12,0,1);cx.strokeStyle=bo.color||'#cfe0ff';cx.lineWidth=2;cx.shadowColor=bo.color||'#9bbcff';cx.shadowBlur=10;cx.beginPath();cx.moveTo(bo.x1,bo.y1);const mx=(bo.x1+bo.x2)/2+rand(-10,10),my=(bo.y1+bo.y2)/2+rand(-10,10);cx.lineTo(mx,my);cx.lineTo(bo.x2,bo.y2);cx.stroke();cx.restore();}
   for(const bm of beams){cx.save();cx.globalAlpha=clamp(bm.t/0.09,0,1);cx.lineCap='round';cx.shadowColor=bm.color;cx.shadowBlur=14;cx.strokeStyle=bm.color;cx.lineWidth=bm.width||6;cx.beginPath();cx.moveTo(bm.x1,bm.y1);cx.lineTo(bm.x2,bm.y2);cx.stroke();cx.strokeStyle='#fff';cx.lineWidth=(bm.width||6)*0.35;cx.stroke();cx.restore();}
+  drawLinkChain();
   for(const pl of players){ if(pl.dead)continue; player=pl; drawPlayer(); } player=anchorPlayer();
   // gegnerische Geschosse zuletzt und mit rotem Rand: Gefahr muss immer das Sichtbarste sein
   for(const b of ebullets){cx.fillStyle='rgba(12,0,0,.8)';cx.beginPath();cx.arc(b.x,b.y,b.r+2.4,0,TAU);cx.fill();cx.strokeStyle='rgba(255,70,60,.9)';cx.lineWidth=1.4;cx.stroke();
@@ -160,6 +161,14 @@ function drawDeployables(){
     cx.restore();
   }
 }
+/* Koop-Gabe „Verbundene Kette“: Glieder zwischen den Spielern, rot glühend, solange sie in Reichweite sind */
+function drawLinkChain(){ const a=players.find(p=>p.linkDps>0&&!p.dead); if(!a)return; const b=players.find(q=>q!==a&&!q.dead); if(!b)return;
+  const d=Math.hypot(b.x-a.x,b.y-a.y), on=d<LINK_MAX, n=Math.max(2,Math.floor(d/13));
+  cx.save(); cx.globalAlpha=on?0.95:0.25; if(on){ cx.shadowColor=C.blood2; cx.shadowBlur=8; }
+  cx.strokeStyle=on?'#b8a890':'#6a6258'; cx.lineWidth=2;
+  for(let i=0;i<=n;i++){ const t=i/n, x=a.x+(b.x-a.x)*t, y=a.y+(b.y-a.y)*t+Math.sin(t*Math.PI)*(on?6:16);
+    cx.beginPath(); cx.ellipse(x,y,4.5,2.6,Math.atan2(b.y-a.y,b.x-a.x)+(i%2?Math.PI/2:0),0,TAU); cx.stroke(); }
+  cx.restore(); }
 function drawPlayer(){
   const p=player;
   // aura

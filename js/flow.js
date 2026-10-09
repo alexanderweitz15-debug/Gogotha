@@ -69,7 +69,7 @@ function buildLevel(lvl){
   enemies=[];bullets=[];ebullets=[];puddles=[];bolts=[];novaRings=[];pickups=[];deployables=[];beams=[];
   G.cleared=false; G.clearTimer=0;
   /* Koop: tote Spieler in der nächsten Runde wiederbeleben; alle Statuseffekte löschen + platzieren */
-  players.forEach((pl,i)=>{ clearStatuses(pl); pl.waveHit=false; if(pl.dead){ pl.dead=false; pl.hp=Math.round(pl.maxHP*0.6); } pl.invuln=0.9;
+  players.forEach((pl,i)=>{ clearStatuses(pl); pl.waveHit=false; if(pl.dead){ pl.dead=false; pl.hp=Math.round(pl.maxHP*0.6); } pl.bondKills=0; pl.invuln=0.9;
     pl.x=WORLD.w/2 + (players.length>1?(i===0?-44:44):0); pl.y=WORLD.h-160; });
   player=players[0];
   const region=REGIONS[clamp(Math.floor((lvl-1)/10),0,4)];
@@ -254,7 +254,7 @@ $('#shopSkip').onclick=()=>advancePost();
 
 /* ---------- UPGRADE (Stufenaufstieg) ---------- */
 let TRADE_CHANCE=0.25;   // Chance je Aufstieg, dass eine der drei Karten eine Tausch-Gabe ist
-const upAvail=u=>!(u.max && (player.taken[u.id]||0)>=u.max);   // Karten mit Limit nur bis zum Limit anbieten
+const upAvail=u=>!(u.max && (player.taken[u.id]||0)>=u.max) && (!u.coop || players.length>1);   // Karten mit Limit nur bis zum Limit anbieten
 function rollUpgrades(){
   const cards=[]; const usedIds=new Set();
   for(let n=0;n<3;n++){

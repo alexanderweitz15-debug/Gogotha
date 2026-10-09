@@ -186,6 +186,9 @@ const UPGRADE_DEFS=[
  {id:'m_rico',name:'Querschläger',ic:'arrow',minRank:2,max:1,mod:'ricochet',desc:r=>'Geschosse prallen 1× von Wänden und Hindernissen ab',apply:p=>p.fxMods.push('ricochet')},
  {id:'m_ghost',name:'Geisterhand',ic:'ghost',minRank:2,max:1,mod:'ghost',desc:r=>'Geschosse fliegen durch Hindernisse · −15% Schaden',apply:p=>p.fxMods.push('ghost')},
  {id:'m_heavy',name:'Schwere Kugeln',ic:'weight',minRank:2,max:1,mod:'heavy',desc:r=>'Größer & langsamer · nah +60% Schaden, ab 600 px −30%',apply:p=>p.fxMods.push('heavy')},
+ /* --- Koop-Gaben: nur im Koop angeboten --- */
+ {id:'c_chain',name:'Verbundene Kette',ic:'weight',coop:true,minRank:1,desc:r=>'Eine Kette zwischen euch (bis 520 px) verletzt Gegner: '+(20+r*8)+' Schaden/s',apply:(p,r)=>p.linkDps+=20+r*8},
+ {id:'c_bond',name:'Seelenband',ic:'wing',coop:true,minRank:2,max:1,desc:r=>'Fällt dein Gefährte, holen ihn 20 deiner Tötungen sofort zurück (50% LP)',apply:p=>{p.soulBond=true;}},
  {id:'m_split',name:'Splitterknochen',ic:'spread',minRank:4,max:1,mod:'split',desc:r=>'Treffer zersplittern in 3 Splitter (je 30% Schaden, erben Brand & Frost)',apply:p=>p.fxMods.push('split')},
 ];
 const upDefById=id=>UPGRADE_DEFS.find(u=>u.id===id);

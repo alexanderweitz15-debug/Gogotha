@@ -16,7 +16,7 @@ function makePlayer(charId,ctrl){
     invuln:0,dashCd:0,dashTime:0,dashDir:{x:1,y:0},aim:0,
     level:1,xp:0,xpNext:xpForLevel(1),items:[],abilities:[],taken:{},fxMods:[],magnet:1,priceMul:1,skull:false,relics:{},featherNext:{},mbloodT:0,waveHit:false,
     /* ability state */
-    orbitN:0,orbitDmg:0,orbitR:46,orbitAng:0,
+    orbitN:0,orbitDmg:0,orbitR:46,orbitAng:0,linkDps:0,soulBond:false,bondKills:0,
     novaDmg:0,novaCd:3,novaR:120,novaT:3,novaColor:C.gold2,
     shield:0,shieldMax:0,shieldRegT:0,
     execPct:0,frenzy:false,frenzyPow:0,frenzyActive:false,
@@ -30,6 +30,15 @@ function makePlayer(charId,ctrl){
   recalcClasses(p); return p;
 }
 /* Heilung läuft über healMul (Flagellant: −30%) */
+const LINK_MAX=520;
+function linkMate(p){ const o=players.find(q=>q!==p&&!q.dead); return o&&dist2(p.x,p.y,o.x,o.y)<LINK_MAX*LINK_MAX?o:null; }
+/* Seelenband: Tötungen des Überlebenden holen den gefallenen Gefährten zurück */
+function soulBondKill(o){ if(!o||!o.soulBond||o.dead)return; const fallen=players.find(q=>q!==o&&q.dead); if(!fallen)return;
+  o.bondKills=(o.bondKills||0)+1; spawnFloater(o.x,o.y-o.r-14,'✚ '+o.bondKills+'/20',false); if(o.bondKills<20)return;
+  o.bondKills=0; fallen.dead=false; fallen.hp=Math.round(fallen.maxHP*0.5); fallen.invuln=2.2; clearStatuses(fallen);
+  fallen.x=clamp(o.x+30,ROOM.x+fallen.r,ROOM.x+ROOM.w-fallen.r); fallen.y=clamp(o.y,ROOM.y+fallen.r,ROOM.y+ROOM.h-fallen.r);
+  for(let i=0;i<24;i++)spawnParticle(fallen.x,fallen.y,C.gold2,rand(1.5,3),rand(60,180)); Audio2.ability();
+  showToast(t('bond_t'),'<b>'+charById(fallen.charId).name+'</b> '+t('bond_d')); updateHP(); }
 function healPlayer(p,amt){ if(!p||p.dead)return; p.hp=clamp(p.hp+amt*(p.healMul||1),0,p.maxHP); updateHP(); }
 function giveWeapon(id){ if(!player)return;
   if(!player.weapons.includes(id)){player.weapons.push(id);player.wCd.push(0);}
@@ -255,6 +264,9 @@ function updateAbilities(dt){
       for(const e of enemies){ if(e._orbCd&&e._orbCd>0)continue; if(dist2(ox,oy,e.x,e.y)<(e.r+9)*(e.r+9)){ damageEnemy(e,p.orbitDmg,a,40,false,'orbit',p); e._orbCd=0.22; spawnFloater(e.x,e.y-e.r,Math.round(p.orbitDmg),false);} } }
   }
   for(const e of enemies){ if(e._orbCd>0)e._orbCd-=dt; }
+  /* Koop: Verbundene Kette zwischen diesem und dem anderen lebenden Spieler */
+  const mate=p.linkDps>0&&!p.dead?linkMate(p):null;
+  if(mate){ for(const e of enemies.slice()){ if(distToSeg(e.x,e.y,p.x,p.y,mate.x,mate.y)<e.r+5) hurtEnemyRaw(e,p.linkDps*dt,'link',p); } }
   if(p.puddleHeal&&p.hp<p.maxHP&&puddles.some(pu=>!pu.hostile&&pu.owner===p&&dist2(pu.x,pu.y,p.x,p.y)<pu.r*pu.r)) healPlayer(p,p.puddleHeal*dt);
   if(p.novaDmg>0){ p.novaT-=dt; if(p.novaT<=0){ p.novaT=p.novaCd; doNova(); } }
   if(p.shieldMax>0){ p.shieldRegT-=dt; if(p.shieldRegT<=0 && p.shield<p.shieldMax){ p.shield=clamp(p.shield+p.shieldMax*0.30,0,p.shieldMax); p.shieldRegT=1.1; updateHP(); } }

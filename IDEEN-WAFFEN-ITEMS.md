@@ -329,7 +329,7 @@ Werte sind Startwerte; sie sind nicht in echten Läufen gemessen.
 | Set-Verwandlungen | Mindestens 25 Gaben/Reliquien im Pool | M |
 | Nahkampf als Angriffsart | E3 | L |
 | Lebensregeneration (Fastenbrot) | Entscheidung, ob Heilung außer am Wellenende gewollt ist | S |
-| Koop-Gaben (Verbundene Kette, Wiedererweckung) | Koop-Bug 9 durch 3.3 behoben | M |
+| ~~Koop-Gaben~~ ✓ (09.10.) | Umgesetzt als Gaben, die nur im Koop erscheinen: **Verbundene Kette** (Kette zwischen beiden Spielern bis 520 px, 20+8×Seltenheit Schaden/s, stapelbar) und **Seelenband** (fällt der Gefährte, holen ihn 20 eigene Tötungen sofort mit 50 % LP zurück) | M |
 
 ---
 

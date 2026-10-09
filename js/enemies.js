@@ -140,7 +140,7 @@ function killEnemy(e,owner,src){
   if(Math.random()<0.8) spawnPickup(e.x,e.y,'coin',Math.max(1,Math.round(randInt(1,3)*gm*rm)));
   if(Math.random()<0.07) spawnPickup(e.x,e.y,'health',randInt(8,14));
   if(o&&!o.dead&&o.lifesteal>0) healPlayer(o,o.lifesteal);
-  spreadOnDeath(e); relicOnKill(e,o);
+  spreadOnDeath(e); relicOnKill(e,o); soulBondKill(o);
   removeEnemy(e);
 }
 function removeEnemy(e){ const i=enemies.indexOf(e); if(i>=0)enemies.splice(i,1); }
