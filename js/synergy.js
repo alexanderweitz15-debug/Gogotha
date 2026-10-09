@@ -53,13 +53,13 @@ function giveDuo(p,id){ const d=duoById(id); if(!p||!d||hasDuo(p,id))return; (p.
   p.items.push({ic:d.ic,color:C.gold2,relic:true}); updateItemPills(); Audio2.ability();
   showToast(t('duo_label'),'<b style="color:var(--gold2)">'+duoName(d)+'</b> · '+duoDesc(d)); }
 /* openRelic: Zusatzkarte nur nach einem Boss (nicht am Blutschrein) */
-function duoOffer(wrap,done,boss){ wrap.classList.remove('four'); if(!boss)return;
+function duoOffer(wrap,done,boss){ wrap.classList.remove('four'); const kh=$('#relic .key-hint'); if(kh)kh.textContent=t('hint_pick'); if(!boss)return;
   const ready=DUOS.filter(d=>duoReady(player,d)); if(!ready.length||Math.random()>=DUO_CHANCE)return;
   const d=pick(ready), el=document.createElement('div'); el.className='rcard duo'; el.dataset.key=wrap.children.length+1;
   el.style.setProperty('--ca',(d.a==='nahkampf'?MELEE_CLS:CLASSES[d.a]).color); el.style.setProperty('--cb',CLASSES[d.b].color);
   el.innerHTML='<div class="ic">'+svgIcon(d.ic,C.gold2,34)+'</div><div class="rk">✦ '+t('duo_label')+'</div><div class="rn">'+duoName(d)+'</div>'+
     '<div class="cls-row">'+duoClsChip(d.a,duoClsName(d.a)+' '+duoCount(player,d.a))+duoClsChip(d.b,duoClsName(d.b)+' '+duoCount(player,d.b))+'</div><div class="rd">'+duoDesc(d)+'</div>';
-  el.onclick=()=>{ giveDuo(player,d.id); done(); }; wrap.appendChild(el); wrap.classList.add('four'); }
+  el.onclick=()=>{ giveDuo(player,d.id); done(); }; wrap.appendChild(el); wrap.classList.add('four'); if(kh)kh.textContent=t('duo_hint'); }
 
 /* Duo-Schaden: eigene Quelle (Messung), Tiefe für die Auslöser-Bremse */
 function duoDmg(e,d,ang,kb,id,o){ G._duoD=(G._duoD||0)+1; try{ damageEnemy(e,d,ang,kb,false,'duo_'+id,o); } finally { G._duoD--; } }
@@ -155,13 +155,13 @@ function updateSynergy(dt){
 /* ---------- Merkmale an der Figur (aus drawPlayer, nach drawHero) ---------- */
 function drawSynergyMarks(p){ if(!p.sets)return; const s=p.r*1.3, tt=G.uiTime, bob=p.moving?Math.sin(tt*12)*0.14*s:Math.sin(tt*2.5)*0.07*s;
   cx.save(); cx.translate(p.x,p.y+bob); if(Math.cos(p.aim)<0) cx.scale(-1,1);
+  if(p.sets.headsman){ cx.fillStyle='#0b0a0c'; cx.strokeStyle='#5a1418'; cx.lineWidth=1.5; cx.beginPath(); cx.moveTo(-s*0.52,-s*0.22);
+    cx.quadraticCurveTo(-s*0.6,-s*1.0,s*0.05,-s*1.5); cx.quadraticCurveTo(s*0.6,-s*1.0,s*0.52,-s*0.22); cx.closePath(); cx.fill(); cx.stroke();
+    cx.fillStyle=C.blood2; cx.fillRect(-s*0.24,-s*0.68,s*0.16,s*0.07); cx.fillRect(s*0.1,-s*0.68,s*0.16,s*0.07); }
   if(p.sets.penitent){ if(p._penOn){ cx.save(); cx.globalAlpha=0.25+Math.sin(tt*10)*0.12; cx.fillStyle=C.blood2; cx.beginPath(); cx.arc(0,0,s*1.5,0,TAU); cx.fill(); cx.restore(); }
     cx.strokeStyle='#6a4a2a'; cx.lineWidth=2.2; cx.beginPath(); cx.ellipse(0,-s*1.05,s*0.42,s*0.13,0,0,TAU); cx.stroke();
     cx.strokeStyle='#a07850'; cx.lineWidth=1.4; for(let i=0;i<9;i++){ const a=i/9*TAU, x=Math.cos(a)*s*0.42, y=-s*1.05+Math.sin(a)*s*0.13; cx.beginPath(); cx.moveTo(x,y); cx.lineTo(x*1.25,y-s*0.16); cx.stroke(); }
     cx.fillStyle=C.blood2; cx.beginPath(); cx.arc(-s*0.2,-s*0.95,1.6,0,TAU); cx.arc(s*0.25,-s*0.98,1.4,0,TAU); cx.fill(); }
-  if(p.sets.headsman){ cx.fillStyle='#0b0a0c'; cx.strokeStyle='#5a1418'; cx.lineWidth=1.5; cx.beginPath(); cx.moveTo(-s*0.52,-s*0.22);
-    cx.quadraticCurveTo(-s*0.6,-s*1.0,s*0.05,-s*1.5); cx.quadraticCurveTo(s*0.6,-s*1.0,s*0.52,-s*0.22); cx.closePath(); cx.fill(); cx.stroke();
-    cx.fillStyle=C.blood2; cx.fillRect(-s*0.24,-s*0.68,s*0.16,s*0.07); cx.fillRect(s*0.1,-s*0.68,s*0.16,s*0.07); }
   if(p.sets.doctor){ cx.fillStyle='#d8cdb8'; cx.beginPath(); cx.ellipse(s*0.05,-s*0.58,s*0.3,s*0.26,0,0,TAU); cx.fill();
     cx.beginPath(); cx.moveTo(s*0.2,-s*0.72); cx.quadraticCurveTo(s*0.75,-s*0.6,s*1.0,-s*0.35); cx.quadraticCurveTo(s*0.6,-s*0.42,s*0.2,-s*0.44); cx.closePath(); cx.fill();
     cx.strokeStyle='#8a7a5a'; cx.lineWidth=1; cx.stroke(); cx.fillStyle='#1a1a10'; cx.beginPath(); cx.arc(-s*0.06,-s*0.64,s*0.09,0,TAU); cx.arc(s*0.18,-s*0.64,s*0.09,0,TAU); cx.fill();
@@ -184,13 +184,13 @@ function synStatsHtml(p){ let h='';
   return h; }
 
 Object.assign(I18N.de,{
-  duo_label:'Duo-Segen', duos_label:'Duo-Segen', sets_label:'Sets', set_toast:'✦ Verwandlung', set_part:'Teil von Set {name} ({n}/{m})',
+  duo_hint:'1–4 wählen', duo_label:'Duo-Segen', duos_label:'Duo-Segen', sets_label:'Sets', set_toast:'✦ Verwandlung', set_part:'Teil von Set {name} ({n}/{m})',
   s_regen:'Regeneration', regen_unit:'LP/s', regen_paused:'pausiert', set_k_item:'Gegenstand', set_k_gift:'Gabe', set_k_relic:'Reliquie',
   src_duo_sulfur:'Schwefel (Duo)', src_duo_plaguecarrier:'Seuchenträger (Duo)', src_duo_supercond:'Supraleiter (Duo)', src_duo_hellstorm:'Höllengewitter (Duo)',
   src_duo_thermal:'Thermoschock (Duo)', src_duo_tribunal:'Strafgericht (Duo)', src_duo_shrapnel:'Schrapnell (Duo)', src_duo_blades:'Wurfklingen (Duo)', src_set_doctor:'Pestdoktor (Set)',
 });
 Object.assign(I18N.en,{
-  duo_label:'Duo Boon', duos_label:'Duo boons', sets_label:'Sets', set_toast:'✦ Transformation', set_part:'Part of set {name} ({n}/{m})',
+  duo_hint:'1–4 choose', duo_label:'Duo Boon', duos_label:'Duo boons', sets_label:'Sets', set_toast:'✦ Transformation', set_part:'Part of set {name} ({n}/{m})',
   s_regen:'Regeneration', regen_unit:'HP/s', regen_paused:'paused', set_k_item:'Item', set_k_gift:'Boon', set_k_relic:'Relic',
   src_duo_sulfur:'Brimstone (duo)', src_duo_plaguecarrier:'Plague carrier (duo)', src_duo_supercond:'Superconductor (duo)', src_duo_hellstorm:'Hellstorm (duo)',
   src_duo_thermal:'Thermal shock (duo)', src_duo_tribunal:'Tribunal (duo)', src_duo_shrapnel:'Shrapnel (duo)', src_duo_blades:'Throwing blades (duo)', src_set_doctor:'Plague doctor (set)',
