@@ -173,6 +173,65 @@ const HERO_ART={
   },
 };
 
+/* ---------- DIE 4 START-CHARAKTERE (gleiche Identität wie vorher, mehr Details) ---------- */
+Object.assign(HERO_ART,{
+  /* Büßer: Kapuzenkutte mit Strickgürtel, ein rot glühendes Auge, Holzkreuz, Revolver */
+  penitent(g,s,t,sw,aim){
+    spRobe(g,s,sw,'#23222a',-0.45,0.48,0.8);
+    g.strokeStyle='rgba(216,205,184,.35)'; g.lineWidth=Math.max(1,s*0.06); g.beginPath(); g.moveTo(-s*0.8+sw,s*0.97); g.lineTo(s*0.8-sw,s*0.97); g.stroke();
+    g.strokeStyle='#8a7a4a'; g.lineWidth=Math.max(1,s*0.07); g.beginPath(); g.moveTo(-s*0.42,s*0.15); g.lineTo(s*0.42,s*0.15); g.stroke();
+    spLine(g,s*0.1,s*0.15,s*0.16,s*0.55,'#8a7a4a',s*0.05);
+    g.fillStyle='#5a4028'; g.fillRect(-s*0.05,-s*0.3,s*0.1,s*0.34); g.fillRect(-s*0.14,-s*0.22,s*0.28,s*0.08);
+    g.fillStyle='#17161c'; g.beginPath(); g.moveTo(-s*0.5,-s*0.3); g.quadraticCurveTo(-s*0.55,-s*1.12,s*0.08,-s*1.12); g.quadraticCurveTo(s*0.52,-s*1.0,s*0.5,-s*0.3); g.closePath(); g.fill();
+    g.fillStyle='#050507'; g.beginPath(); g.ellipse(s*0.06,-s*0.55,s*0.3,s*0.32,0,0,TAU); g.fill();
+    spCirc(g,s*0.16,-s*0.58,s*0.08,C.blood2); g.save(); g.globalAlpha=0.35+Math.sin(t*3)*0.15; spCirc(g,s*0.16,-s*0.58,s*0.17,C.blood2); g.restore();
+    spAim(g,aim,()=>{ g.fillStyle='#5a3a20'; g.beginPath(); g.moveTo(s*0.28,s*0.05); g.lineTo(s*0.48,s*0.05); g.lineTo(s*0.4,s*0.38); g.lineTo(s*0.26,s*0.36); g.closePath(); g.fill();
+      g.fillStyle='#9aa0a8'; g.fillRect(s*0.4,-s*0.08,s*0.2,s*0.2); spLine(g,s*0.55,-s*0.02,s*1.08,-s*0.02,C.bone,s*0.12); });
+  },
+  /* Henker: spitze schwarze Henkerskapuze, nackte Arme, Lederschürze, großes Beil */
+  executioner(g,s,t,sw,aim){ const ww=1.2;
+    spLine(g,-s*0.3,s*0.55,-s*0.38+sw,s*1.0,'#1a1214',s*0.22); spLine(g,s*0.3,s*0.55,s*0.38-sw,s*1.0,'#1a1214',s*0.22);
+    g.fillStyle='#8a6a58'; g.beginPath(); g.ellipse(0,-s*0.05,s*0.62*ww,s*0.55,0,0,TAU); g.fill();
+    g.fillStyle='#4a2418'; g.beginPath(); g.moveTo(-s*0.42,-s*0.25); g.lineTo(s*0.42,-s*0.25); g.lineTo(s*0.5,s*0.85); g.lineTo(-s*0.5,s*0.85); g.closePath(); g.fill();
+    g.strokeStyle='#2a140c'; g.lineWidth=Math.max(1,s*0.05); g.beginPath(); g.moveTo(-s*0.42,s*0.2); g.lineTo(s*0.42,s*0.2); g.stroke();
+    spCirc(g,-s*0.68*ww,-s*0.15,s*0.2,'#9a7a66');
+    g.fillStyle='#0f0c0e'; g.beginPath(); g.moveTo(-s*0.36,-s*0.32); g.lineTo(0,-s*1.35); g.lineTo(s*0.36,-s*0.32); g.closePath(); g.fill();
+    spCirc(g,-s*0.12,-s*0.62,s*0.07,C.blood2); spCirc(g,s*0.12,-s*0.62,s*0.07,C.blood2);
+    spAim(g,aim,()=>{ spLine(g,s*0.25,s*0.15,s*1.15,s*0.15,'#5a3a20',s*0.16);
+      g.fillStyle='#9aa0a8'; g.beginPath(); g.moveTo(s*0.85,s*0.15); g.quadraticCurveTo(s*1.0,-s*0.55,s*1.45,-s*0.35); g.quadraticCurveTo(s*1.25,s*0.15,s*1.45,s*0.62); g.quadraticCurveTo(s*1.0,s*0.75,s*0.85,s*0.15); g.fill();
+      g.strokeStyle='#d8dee4'; g.lineWidth=Math.max(1,s*0.05); g.beginPath(); g.moveTo(s*1.45,-s*0.35); g.quadraticCurveTo(s*1.25,s*0.15,s*1.45,s*0.62); g.stroke(); });
+  },
+  /* Ketzerin: Hörner, langes Haar, zerrissenes Kleid mit grünen Runen, grünes Leuchten, Stab mit Giftkugel */
+  heretic(g,s,t,sw,aim){
+    g.save(); g.globalAlpha=0.1+Math.sin(t*2.5)*0.05; spCirc(g,0,-s*0.1,s*0.85,C.sick); g.restore();
+    g.fillStyle='#191a14'; g.beginPath(); g.moveTo(-s*0.35,-s*0.4); g.lineTo(s*0.35,-s*0.4); g.lineTo(s*0.66-sw,s*0.55);
+    for(let i=0;i<=6;i++){ const xx=s*0.66-(s*1.32)*(i/6); g.lineTo(xx,s+(i%2?-s*0.2:0)); } g.lineTo(-s*0.66+sw,s*0.55); g.closePath(); g.fill();
+    g.strokeStyle='rgba(155,191,58,.75)'; g.lineWidth=Math.max(1,s*0.04);
+    for(let i=0;i<3;i++){ const y=s*(0.05+i*0.25); g.beginPath(); g.moveTo(-s*0.2,y); g.lineTo(-s*0.1,y-s*0.1); g.lineTo(0,y); g.lineTo(s*0.1,y-s*0.1); g.lineTo(s*0.2,y); g.stroke(); }
+    g.fillStyle='#24261a'; g.beginPath(); g.moveTo(-s*0.38,-s*0.6); g.quadraticCurveTo(-s*0.6,s*0.1,-s*0.32,s*0.2); g.lineTo(-s*0.2,-s*0.4); g.closePath(); g.fill();
+    spCirc(g,0,-s*0.52,s*0.34,'#14140f');
+    g.fillStyle='#0a0a08'; g.beginPath(); g.moveTo(-s*0.24,-s*0.78); g.quadraticCurveTo(-s*0.55,-s*1.0,-s*0.48,-s*1.28); g.lineTo(-s*0.12,-s*0.84); g.closePath(); g.fill();
+    g.beginPath(); g.moveTo(s*0.24,-s*0.78); g.quadraticCurveTo(s*0.55,-s*1.0,s*0.48,-s*1.28); g.lineTo(s*0.12,-s*0.84); g.closePath(); g.fill();
+    spCirc(g,-s*0.12,-s*0.52,s*0.07,C.sick); spCirc(g,s*0.12,-s*0.52,s*0.07,C.sick);
+    spAim(g,aim,()=>{ spLine(g,s*0.15,s*0.12,s*1.0,s*0.0,'#3a3a24',s*0.1);
+      g.save(); g.globalAlpha=0.5+Math.sin(t*5)*0.25; spCirc(g,s*1.08,0,s*0.24,C.sick); g.restore(); spCirc(g,s*1.08,0,s*0.12,'#e8ffa0'); });
+  },
+  /* Pestpriester: Krempenhut, knöcherne Schnabelmaske mit Glasaugen, langer Mantel mit Knöpfen, Räucherfass */
+  plaguepriest(g,s,t,sw,aim){
+    spRobe(g,s,sw,'#16160f',-0.35,0.4,0.66);
+    g.strokeStyle='#2a2a18'; g.lineWidth=Math.max(1,s*0.05); g.beginPath(); g.moveTo(0,-s*0.3); g.lineTo(0,s*0.95); g.stroke();
+    for(let i=0;i<4;i++) spCirc(g,s*0.08,-s*0.15+i*s*0.25,s*0.045,'#8a7a4a');
+    spCirc(g,0,-s*0.55,s*0.36,'#12120c');
+    g.fillStyle='#cdbf8a'; g.beginPath(); g.moveTo(s*0.1,-s*0.6); g.quadraticCurveTo(s*0.6,-s*0.5,s*0.85,-s*0.25); g.quadraticCurveTo(s*0.45,-s*0.32,s*0.1,-s*0.4); g.closePath(); g.fill();
+    g.strokeStyle='#8a7a4a'; g.lineWidth=Math.max(1,s*0.03); g.beginPath(); g.moveTo(s*0.15,-s*0.5); g.lineTo(s*0.7,-s*0.32); g.stroke();
+    spCirc(g,-s*0.1,-s*0.62,s*0.1,'#2a2a18'); spCirc(g,-s*0.1,-s*0.62,s*0.06,'rgba(155,191,58,.85)');
+    g.fillStyle='#0a0a06'; g.beginPath(); g.ellipse(0,-s*0.85,s*0.62,s*0.15,0,0,TAU); g.fill(); g.beginPath(); g.ellipse(0,-s*1.02,s*0.3,s*0.22,0,0,TAU); g.fill();
+    g.fillStyle='#3a3a20'; g.fillRect(-s*0.3,-s*0.95,s*0.6,s*0.06);
+    spAim(g,aim,()=>{ g.strokeStyle='#6a6a40'; g.lineWidth=Math.max(1,s*0.05); g.beginPath(); g.moveTo(s*0.3,s*0.05); g.lineTo(s*0.82,s*0.22); g.stroke();
+      spCirc(g,s*0.9,s*0.25,s*0.2,'#5a5a30'); g.save(); g.globalAlpha=0.4+Math.sin(t*4)*0.2; spCirc(g,s*0.95+Math.sin(t*2)*s*0.08,s*0.0,s*0.22,C.sick); g.restore(); });
+  },
+});
+
 /* ---------- GEGNER ---------- */
 const ENEMY_ART={
   /* Verdammter: gebückter Ghul, Kopf vorgestreckt, Krallenarm */

@@ -863,7 +863,7 @@ function updatePlayer(dt){
   let dx=(R?1:0)-(L?1:0);
   let dy=(D?1:0)-(U?1:0);
   if(TouchJoy.id!==null && !p2){ dx=TouchJoy.dx; dy=TouchJoy.dy; }
-  const mlen=Math.hypot(dx,dy);
+  const mlen=Math.hypot(dx,dy); p.moving=mlen>0||p.dashTime>0;
   const tgt=nearestEnemy(p.x,p.y);
   if(tgt) p.aim=Math.atan2(tgt.y-p.y,tgt.x-p.x);
   else if(mlen>0) p.aim=Math.atan2(dy,dx);
@@ -2134,7 +2134,8 @@ function drawPlayer(){
   const p=player;
   // aura
   if(p.auraDps>0){cx.save();cx.globalAlpha=0.12+Math.sin(G.uiTime*3)*0.03;cx.fillStyle=C.sick;cx.beginPath();cx.arc(p.x,p.y,p.auraR,0,TAU);cx.fill();cx.restore();}
-  const moving=(keys.KeyW||keys.KeyA||keys.KeyS||keys.KeyD||keys.ArrowUp||keys.ArrowDown||keys.ArrowLeft||keys.ArrowRight||TouchJoy.dx||TouchJoy.dy);
+  const moving=p.moving;   // je Spieler (früher: irgendeine Bewegungstaste beider Spieler)
+  if(p.dashTime>0){ for(let k=3;k>=1;k--){ cx.globalAlpha=0.12*(4-k); drawHero(cx,p.charId||G.charId,p.x-p.dashDir.x*k*14,p.y-p.dashDir.y*k*14,p.r*1.3,G.uiTime,true,p.aim); } cx.globalAlpha=1; }   // Nachbilder beim Ausweichen
   const flick=(p.invuln>0&&Math.floor(G.uiTime*20)%2===0);
   if(flick)cx.globalAlpha=0.5;
   cx.save();cx.strokeStyle=p===players[1]?'rgba(127,208,230,.75)':'rgba(224,178,90,.75)';cx.lineWidth=2;cx.beginPath();cx.ellipse(p.x,p.y+p.r*1.25,p.r*1.35,p.r*0.5,0,0,TAU);cx.stroke();cx.restore();
@@ -2228,6 +2229,9 @@ function drawHero(g,id,x,y,s,t,moving,aim){
   const sw=Math.sin(t*2.5)*0.06*s;
   g.save();g.translate(x,y+bob);
   g.fillStyle='rgba(0,0,0,.4)';g.beginPath();g.ellipse(0,s*1.0,s*0.85,s*0.32,0,0,TAU);g.fill();
+  if(Math.cos(aim)<0){ g.scale(-1,1); aim=Math.PI-aim; }   // Figur schaut in Schussrichtung
+  if(moving){ const st=Math.sin(t*12)*s*0.2;   // Schritte unter dem Saum
+    g.fillStyle='#0c0a08'; g.beginPath(); g.ellipse(-s*0.26+st,s*1.02,s*0.17,s*0.09,0,0,TAU); g.ellipse(s*0.26-st,s*1.02,s*0.17,s*0.09,0,0,TAU); g.fill(); }
   const W2=v=>Math.max(1,v);
   if(HERO_ART[id]){ HERO_ART[id](g,s,t,sw,aim); }   // eigene Figur (sprites.js)
   else if(sk==='penitent'){
