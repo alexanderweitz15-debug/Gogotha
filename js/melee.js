@@ -15,19 +15,19 @@ Object.assign(ICONS,{
   bell:'M6 17h12 M7 17c0-7 2-11 5-11s5 4 5 11 M12 6V4 M11 20h2', axe:'M5 20L15 10 M12 6c3-3 8-1 8 4-3 1-6 0-8-4z',
 });
 const MELEE_W=[
- {id:'scourge',     name:'Geißel',                 rk:'common',   ic:'whip',  cls:['eisen'],          dmg:13,fr:620, kb:60, color:'#c8a070',
+ {id:'scourge',     name:'Geißel',                 rk:'common',   ic:'whip',  cls:['eisen'],          dmg:19,fr:620, kb:60, color:'#c8a070',
    melee:{kind:'arc', reach:165,arc:1.2, dur:0.16,sp:'lash',maxHits:2}},
- {id:'ritualknife', name:'Opfermesser',            rk:'common',   ic:'knife', cls:['seuche'],         dmg:8, fr:240, kb:25, poison:true,color:'#b8c8a0',
+ {id:'ritualknife', name:'Opfermesser',            rk:'common',   ic:'knife', cls:['seuche'],         dmg:7, fr:240, kb:25, poison:true,color:'#b8c8a0',
    melee:{kind:'stab',reach:95, wd:9, dur:0.08,sp:'blood'}},
- {id:'pitchfork',   name:'Ketzergabel',            rk:'uncommon', ic:'fork',  cls:['feuer'],          dmg:26,fr:680, kb:170,pierce:1,burn:true,color:C.candle,
+ {id:'pitchfork',   name:'Ketzergabel',            rk:'uncommon', ic:'fork',  cls:['feuer'],          dmg:22,fr:680, kb:170,pierce:1,burn:true,color:C.candle,
    melee:{kind:'stab',reach:140,wd:13,dur:0.12,sp:'burnkb'}},
- {id:'penancechain',name:'Büßerkette',             rk:'rare',     ic:'flail', cls:['blitz','eisen'],  dmg:30,fr:420, kb:90, chain:true,color:'#9aa0a8',
+ {id:'penancechain',name:'Büßerkette',             rk:'rare',     ic:'flail', cls:['blitz','eisen'],  dmg:52,fr:420, kb:90, chain:true,color:'#9aa0a8',
    melee:{kind:'orbit',reach:86,ball:12,cw:4,spin:5.2,sp:'speed'}},
- {id:'bellclapper', name:'Glockenklöppel',         rk:'rare',     ic:'bell',  cls:['heilig'],         dmg:50,fr:2000,kb:120,color:C.gold2,
+ {id:'bellclapper', name:'Glockenklöppel',         rk:'rare',     ic:'bell',  cls:['heilig'],         dmg:84,fr:1800,kb:120,color:C.gold2,
    melee:{kind:'slam',reach:130,dur:0.28,sp:'stun'}},
- {id:'headsaxe',    name:'Henkersbeil',            rk:'ultrarare',ic:'axe',   cls:['eisen','heilig'], dmg:62,fr:1100,kb:230,color:'#c0c4cc',
+ {id:'headsaxe',    name:'Henkersbeil',            rk:'ultrarare',ic:'axe',   cls:['eisen','heilig'], dmg:104,fr:1100,kb:230,color:'#c0c4cc',
    melee:{kind:'arc', reach:130,arc:2.6, dur:0.24,sp:'exec',exec:0.15}},
- {id:'gravescythe', name:'Sense des Totengräbers', rk:'epic',     ic:'scythe',cls:['frost'],          dmg:52,fr:820, kb:110,slow:true,color:'#a8d8e0',
+ {id:'gravescythe', name:'Sense des Totengräbers', rk:'epic',     ic:'scythe',cls:['frost'],          dmg:78,fr:820, kb:110,slow:true,color:'#a8d8e0',
    melee:{kind:'arc', reach:150,arc:Math.PI,dur:0.22,sp:'souls'}},
 ];
 for(const w of MELEE_W){ Object.assign(w,{count:1,spread:0,spd:0,size:6,pierce:w.pierce||0}); WEAPON_CLS[w.id]=w.cls; WEAPONS.push(w); }
@@ -118,7 +118,7 @@ function drawSwing(sw){ const w=sw.w, fade=sw.done?clamp(1-(sw.t-sw.dur)/0.18,0,
   const col=sw.blood?C.blood2:glow?'#ff8a2a':w.color; cx.save(); cx.translate(sw.x,sw.y);
   if(glow){ cx.shadowColor='#ff6a1a'; cx.shadowBlur=12; if(Math.random()<0.3)spawnParticle(sw.x+rand(-sw.R,sw.R)*0.6,sw.y+rand(-sw.R,sw.R)*0.6,'#ffb050',1.2,40); }
   if(sw.kind==='arc'){ const lo=Math.min(sw.a0,sw.cur), hi=Math.max(sw.a0,sw.cur);
-    cx.globalAlpha=0.2*fade; cx.fillStyle=col; cx.beginPath(); cx.moveTo(0,0); cx.arc(0,0,sw.R,lo,hi); cx.closePath(); cx.fill();   // Trefferzone
+    cx.globalAlpha=0.15*fade; cx.fillStyle=col; cx.beginPath(); cx.moveTo(0,0); cx.arc(0,0,sw.R,lo,hi); cx.closePath(); cx.fill();   // Trefferzone
     cx.globalAlpha=0.85*fade; cx.strokeStyle=col; cx.lineWidth=3; cx.beginPath(); cx.arc(0,0,sw.R-1.5,lo,hi); cx.stroke();
     cx.rotate(sw.cur); cx.globalAlpha=fade; drawBlade(w,sw.R,col,sw.blood); }
   else if(sw.kind==='stab'){ cx.rotate(sw.aim); const L=sw.len;

@@ -176,12 +176,12 @@ function drawSynergyMarks(p){ if(!p.sets)return; const s=p.r*1.3, tt=G.uiTime, b
 /* ---------- Werte-Panel ---------- */
 function synStatRows(p){ const rg=regenRate(p)*(p.healMul||1);
   return [[t('s_regen'),rg>0?rg.toFixed(1)+' '+t('regen_unit')+(regenPaused(p)?' · '+t('regen_paused'):''):t('val_none')]]; }
-function synStatsHtml(p){ let h='';
+function synStatsHtml(p){ const h=[];
   const dl=DUOS.filter(d=>hasDuo(p,d.id)).map(d=>'<b style="color:var(--gold2)">'+duoName(d)+'</b>');
-  if(dl.length) h+='<br>'+t('duos_label')+': '+dl.join(' · ');
+  if(dl.length) h.push(t('duos_label')+': '+dl.join(' · '));
   const sl=SETS.map(s=>({s,n:setCount(p,s)})).filter(x=>x.n>0||hasSet(p,x.s.id)).map(x=>'<b style="color:'+x.s.color+'">'+setName(x.s)+'</b> '+(hasSet(p,x.s.id)?'✦':x.n+'/'+x.s.parts.length));
-  if(sl.length) h+='<br>'+t('sets_label')+': '+sl.join(' · ');
-  return h; }
+  if(sl.length) h.push(t('sets_label')+': '+sl.join(' · '));
+  return h.length?($('#statAbilities').innerHTML?'<br>':'')+h.join('<br>'):''; }
 
 Object.assign(I18N.de,{
   duo_hint:'1–4 wählen', duo_label:'Duo-Segen', duos_label:'Duo-Segen', sets_label:'Sets', set_toast:'✦ Verwandlung', set_part:'Teil von Set {name} ({n}/{m})',

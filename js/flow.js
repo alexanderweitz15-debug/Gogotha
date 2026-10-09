@@ -390,7 +390,8 @@ function fillStats(){
   $('#statWeapons').innerHTML=charPerkHtml(p.charId)+t('weapons_label')+': '+wlist+(act.length?'<div class="stat-cls">'+act.map(c=>clsChip(c,clsName(c)+' '+ROMAN[p.clsSt[c]])+' <span>'+clsDesc(c,p.clsSt[c])+'</span>').join('<br>')+'</div>':'');
   const rl=Object.keys(p.relics||{}).map(id=>'<b style="color:var(--gold2)">'+relicById(id).name+'</b>');
   const il=Object.keys(p.itemsOwned||{}).map(id=>{ const it=itemById(id); return '<b style="color:'+rarColor(it.rk)+'">'+it.name+'</b>'+(p.itemsOwned[id]>1?' ×'+p.itemsOwned[id]:''); });
-  $('#statAbilities').innerHTML=(il.length?t('items_label')+': '+il.join(' · ')+'<br>':'')+(rl.length?t('relics_label')+': '+rl.join(' · ')+'<br>':'')+(p.abilities.length?(t('abilities_label')+': '+p.abilities.map(a=>'<b style="color:'+rarColor(a.rk)+'">'+a.name+'</b>'+(a.level>1?' '+t('lvl_short')+a.level:'')).join(' · ')):'')+synStatsHtml(p);
+  $('#statAbilities').innerHTML=(il.length?t('items_label')+': '+il.join(' · ')+'<br>':'')+(rl.length?t('relics_label')+': '+rl.join(' · ')+'<br>':'')+(p.abilities.length?(t('abilities_label')+': '+p.abilities.map(a=>'<b style="color:'+rarColor(a.rk)+'">'+a.name+'</b>'+(a.level>1?' '+t('lvl_short')+a.level:'')).join(' · ')):'');
+  $('#statAbilities').innerHTML+=synStatsHtml(p);   // Duo-Segen, Set-Fortschritt (synergy.js)
 }
 $('#statsClose').onclick=closeStats;
 
