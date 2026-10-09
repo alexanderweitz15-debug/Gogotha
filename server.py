@@ -17,9 +17,9 @@ PORT = int(os.environ.get("PORT", "8731"))
 SESSION_TTL = 30 * 86400
 MAX_BODY = 256 * 1024
 
-# Seitenpasswort („Pforte“): wird hier geprüft, nicht mehr im Browser. Ohne gültiges Pforten-Cookie liefert der Server
-# weder den Spielcode noch die API aus. Setzen mit GOLGOTHA_SITE_PASS=...; leer = keine Pforte.
-SITE_PASS = os.environ.get("GOLGOTHA_SITE_PASS", "Alex")
+# Seitenpasswort („Pforte“): standardmäßig AUS. Mit GOLGOTHA_SITE_PASS=... eingeschaltet prüft der Server das Passwort
+# und liefert ohne gültiges Pforten-Cookie weder den Spielcode noch die API aus.
+SITE_PASS = os.environ.get("GOLGOTHA_SITE_PASS", "")
 GATE_COOKIE = "golgotha_gate"
 # Hinter einem Reverse-Proxy (nginx, Caddy …) GOLGOTHA_TRUST_PROXY=1 setzen, sonst teilen sich alle Besucher eine IP.
 TRUST_PROXY = os.environ.get("GOLGOTHA_TRUST_PROXY") == "1"

@@ -1,5 +1,5 @@
 "use strict";
-/* GOLGOTHA — Pforte (Seitenpasswort)
+/* GOLGOTHA — Pforte (Seitenpasswort, standardmäßig aus; der Server schaltet sie mit GOLGOTHA_SITE_PASS ein)
    Das Passwort prüft der Server (/api/gate) und setzt dafür ein HttpOnly-Cookie. Ohne dieses Cookie liefert er weder
    den Spielcode (sprites.js, js/*.js) noch die API aus. Deshalb lädt erst diese Datei das Spiel nach.
    Als Datei geöffnet (file://) gibt es keinen Server und keine Pforte: Der Code liegt dann ohnehin lokal vor. */
@@ -31,5 +31,6 @@
   $('#siteGatePass').addEventListener('keydown',e=>{ if(e.code==='Enter')tryPass(); });
   $('#langBtn').onclick=()=>{ lang=lang==='de'?'en':'de'; try{localStorage.setItem('golgotha_lang',lang);}catch(e){} texts(); };   // main.js übernimmt den Knopf danach
   if(location.protocol==='file:'){ loadGame(); return; }
-  ask({}).then(res=>{ if(res&&res.ok)loadGame(); }).catch(()=>{});
+  /* Pforte nur zeigen, wenn der Server eine verlangt (GOLGOTHA_SITE_PASS gesetzt) */
+  ask({}).then(res=>{ if(res&&res.ok)loadGame(); else $('#siteGate').classList.add('show'); }).catch(()=>$('#siteGate').classList.add('show'));
 })();

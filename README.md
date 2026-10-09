@@ -11,7 +11,7 @@ python3 server.py          # http://localhost:8731
 | Variable | Bedeutung | Standard |
 |---|---|---|
 | `PORT` | Port | `8731` |
-| `GOLGOTHA_SITE_PASS` | Seitenpasswort („Pforte“), leer = keine Pforte | `Alex` |
+| `GOLGOTHA_SITE_PASS` | Seitenpasswort („Pforte“); gesetzt = Server liefert Spiel und Konten erst nach dem Passwort aus | leer (keine Pforte) |
 | `GOLGOTHA_TRUST_PROXY` | `1`, wenn ein Reverse-Proxy davor steht (echte Besucher-IP aus `X-Forwarded-For` für die Sperre bei Fehlversuchen) | aus |
 
 Die Datenbank `golgotha.db` entsteht neben `server.py` und gehört nicht ins Repo.
