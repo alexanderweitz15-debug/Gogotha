@@ -295,7 +295,7 @@ Jeder Pool enthält mindestens ein Paar für eine Fähigkeits-Verschmelzung (orb
 ### 11.1 Ausbau zu Brotato-Profilen (09.10.2026, umgesetzt)
 
 Die Affinität allein war zu schwach, um eine Figur anders spielen zu lassen. Jetzt hat jede der 16 Figuren eine Spielweise mit Stärke und Schwäche,
-sichtbar auf der Karte (grün/rot) und im Werte-Panel. Daten in `CHAR_PROFILE` (`game.js`), Auswertung in `charDmgMul`, `charCdMul`, `charShots`, `charHitMul`.
+sichtbar auf der Karte (grün/rot) und im Werte-Panel. Daten in `CHAR_PROFILE` (`js/data.js`), Auswertung in `charDmgMul`, `charCdMul`, `charShots`, `charHitMul`.
 Die Shop-Neigung bietet zusätzlich die Klassen an, die die Figur mag.
 
 | Figur | Stärke | Schwäche |

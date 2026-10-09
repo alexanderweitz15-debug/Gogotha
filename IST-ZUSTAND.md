@@ -4,6 +4,9 @@ Grundlage: vollständiges Lesen des Codes (Commit `8422146`) und ein automatisie
 (Server lokal gestartet, Account angelegt, ca. 60 s gespielt bis Station 5, Endlos-Modus und Tod per Skript erzwungen).
 Im Test traten keine JavaScript-Fehler auf.
 
+> **Hinweis (09.10.2026):** `game.js` ist in neun Dateien unter `js/` aufgeteilt (core, data, io, player, enemies, combat, flow, render, main; Reihenfolge in `index.html`).
+> Zeilenangaben wie `game.js:1436` in diesem Dokument beziehen sich auf den Stand davor.
+
 ## Status der Korrekturen (08.10.2026)
 
 | Punkt | Status |
