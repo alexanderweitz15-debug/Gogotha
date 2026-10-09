@@ -9,6 +9,7 @@ const firing=()=>!Admin.noFire;
 const fireDiv=()=>diffMul('fireRate')*(G.curseFire||1);
 /* Abstand halten und seitlich umkreisen (Fernkämpfer) */
 function keepRange(e,dt,ang,d,sp,want,orbit){ const dir=e.wob>Math.PI?1:-1;
+  if(e._mLos===false){ e.x+=Math.cos(ang)*sp*0.8*dt; e.y+=Math.sin(ang)*sp*0.8*dt; return; }   // ohne Sichtlinie erst um die Wand (map.js)
   let mx=Math.cos(ang+Math.PI/2*dir)*(orbit||0.45), my=Math.sin(ang+Math.PI/2*dir)*(orbit||0.45);
   if(d<want-30){ mx-=Math.cos(ang); my-=Math.sin(ang); } else if(d>want+30){ mx+=Math.cos(ang); my+=Math.sin(ang); }
   const m=Math.hypot(mx,my)||1; e.x+=mx/m*sp*dt; e.y+=my/m*sp*dt; }

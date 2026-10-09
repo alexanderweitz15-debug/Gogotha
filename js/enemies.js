@@ -63,19 +63,23 @@ function updateEnemy(e,dt){
   if(e.rootT>0)e.rootT-=dt;
   const sp=e.speed*(e.slowT>0?(e.slowF||0.45):1)*(e.rootT>0?0:1)*(G.modEnemySpeed||1);
   const ang=mapSteer(e,p), d=Math.hypot(p.x-e.x,p.y-e.y);   // ohne Sichtlinie: Weg um Wände (map.js)
+  /* Fern-/Unterstützer ohne Sichtlinie: dem Weg folgen statt hinter der Wand Abstand zu halten (sonst Patt: beide schießen in die Wand) */
+  const sees=e._mLos!==false, aim=Math.atan2(p.y-e.y,p.x-e.x);
   if(e.isBoss){ updateBoss(e,dt,p); }
   else if(e.ranged){
     const want=220;
-    if(d<want-30){ e.x-=Math.cos(ang)*sp*dt; e.y-=Math.sin(ang)*sp*dt; }
+    if(!sees){ e.x+=Math.cos(ang)*sp*0.8*dt; e.y+=Math.sin(ang)*sp*0.8*dt; }
+    else if(d<want-30){ e.x-=Math.cos(aim)*sp*dt; e.y-=Math.sin(aim)*sp*dt; }
     else if(d>want+30){ e.x+=Math.cos(ang)*sp*0.6*dt; e.y+=Math.sin(ang)*sp*0.6*dt; }
     e.fireCd-=dt;
-    if(e.fireCd<=0 && !Admin.noFire){ e.fireCd=ETYPES[e.type].fireCd*rand(.8,1.2)/(diffMul('fireRate')*G.curseFire); enemyShoot(e,ang,p); }
+    if(e.fireCd<=0 && sees && !Admin.noFire){ e.fireCd=ETYPES[e.type].fireCd*rand(.8,1.2)/(diffMul('fireRate')*G.curseFire); enemyShoot(e,aim,p); }
   } else if(e.explode){
     e.x+=Math.cos(ang)*sp*dt; e.y+=Math.sin(ang)*sp*dt;
     if(d<e.r+p.r+4){ explodeEnemy(e); return; }
   } else if(e.support){
     const want=210;
-    if(d<want-30){ e.x-=Math.cos(ang)*sp*dt; e.y-=Math.sin(ang)*sp*dt; }
+    if(!sees){ e.x+=Math.cos(ang)*sp*0.8*dt; e.y+=Math.sin(ang)*sp*0.8*dt; }
+    else if(d<want-30){ e.x-=Math.cos(aim)*sp*dt; e.y-=Math.sin(aim)*sp*dt; }
     else if(d>want+40){ e.x+=Math.cos(ang)*sp*0.7*dt; e.y+=Math.sin(ang)*sp*0.7*dt; }
     e.fireCd-=dt;
     if(e.fireCd<=0 && !Admin.noFire){ e.fireCd=ETYPES[e.type].fireCd*rand(.8,1.2)/(diffMul('fireRate')*G.curseFire);
