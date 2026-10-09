@@ -45,7 +45,6 @@ function meleeDmg(p,w){ const lvl=p.wLevel[w.id]||0;
   let d=w.dmg*(1+lvl*0.22)*charDmgMul(p,w)*p.dmgMult*(p.frenzyActive?1+p.frenzyPow:1)*((p.curseMartyr&&p.hp<p.maxHP*0.5)?1.9:1)*bonusMul(p)*Admin.dmg;
   if(w.melee.sp==='blood') d*=1+clamp(1-p.hp/p.maxHP,0,1);   // Opfermesser: +1% je fehlendem Prozent Leben
   return d; }
-const angDiff=(a,b)=>{ let d=(a-b)%TAU; if(d>Math.PI)d-=TAU; if(d<-Math.PI)d+=TAU; return d; };
 /* Kreis (x,y,r) berührt den Sektor um (cx,cy), Radius R, zwischen den Winkeln a und b (genau) */
 function inSector(x,y,r,cx,cy,R,a,b){ const dx=x-cx, dy=y-cy, d=Math.hypot(dx,dy); if(d-r>R)return false; if(d<=r)return true;
   const lo=Math.min(a,b), hi=Math.max(a,b);

@@ -5,7 +5,6 @@
 const REGION_TYPES=[['rat','sapper'],['bonewall','ghost'],['plaguedoc','colossus'],['hook','bull'],['crossbearer','seraph']];
 const regionIdx=lvl=>clamp(Math.floor((lvl-1)/10),0,4);
 const R={room:null,mines:[],zones:[],envT:7,chk:0,runId:null,dirty:false};
-const angDiff=(a,b)=>{ let d=(a-b)%TAU; if(d>Math.PI)d-=TAU; if(d<-Math.PI)d+=TAU; return d; };
 const firing=()=>!Admin.noFire;
 const fireDiv=()=>diffMul('fireRate')*(G.curseFire||1);
 /* Abstand halten und seitlich umkreisen (Fernkämpfer) */

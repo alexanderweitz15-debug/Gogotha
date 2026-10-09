@@ -11,6 +11,8 @@ const head=document.getElementById('headCanvas'), hcx=head.getContext('2d');
 const $=s=>document.querySelector(s);
 const clamp=(v,a,b)=>v<a?a:v>b?b:v, rand=(a,b)=>a+Math.random()*(b-a), randInt=(a,b)=>Math.floor(rand(a,b+1));
 const pick=a=>a[Math.floor(Math.random()*a.length)], TAU=Math.PI*2;
+/* kleinster Winkelunterschied a−b im Bereich −π…π (Nahkampf-Bögen, Schild von vorn) */
+const angDiff=(a,b)=>{ let d=(a-b)%TAU; if(d>Math.PI)d-=TAU; if(d<-Math.PI)d+=TAU; return d; };
 const dist2=(ax,ay,bx,by)=>{const dx=ax-bx,dy=ay-by;return dx*dx+dy*dy;};
 const lerp=(a,b,t)=>a+(b-a)*t;
 function distToSeg(px,py,ax,ay,bx,by){ const dx=bx-ax,dy=by-ay, l2=dx*dx+dy*dy;
