@@ -43,22 +43,15 @@ function loop(now){
 function hideAllOverlays(){ document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('show')); }
 function show(id){ $('#'+id).classList.add('show'); }
 
-/* ---------- SITE GATE (Zugangswort vor der Seite) ---------- */
-const SITE_PASSWORD='Alex';
+/* ---------- SITE GATE ----------
+   Das Zugangswort prüft der Server (gate.js); diese Datei wird erst danach geladen, also geht es direkt zur Anmeldung. */
 function passSiteGate(){ hideAllOverlays(); show('login'); setTimeout(()=>$('#loginUser').focus(),50); }
-function trySiteGate(){
-  if($('#siteGatePass').value===SITE_PASSWORD){ try{sessionStorage.setItem('golgotha_site','1');}catch(e){} passSiteGate(); }
-  else { $('#siteGateErr').textContent=t('gate_err'); }
-}
-$('#siteGateBtn').onclick=()=>{ initAudio(); trySiteGate(); };
-$('#siteGatePass').addEventListener('keydown',e=>{ if(e.code==='Enter')$('#siteGateBtn').click(); });
-try{ if(sessionStorage.getItem('golgotha_site')==='1') passSiteGate(); }catch(e){}
 
 /* ---------- LOGIN ---------- */
 function refreshProfile(){
   const u=DB.current; if(!u){$('#profileBox').textContent='';return;}
   const s=u.stats;
-  $('#profileBox').innerHTML=t('prof_line',{name:u.name,runs:s.runs,best:s.bestLevel,kills:s.kills});
+  $('#profileBox').innerHTML=t('prof_line',{name:String(u.name).replace(/[<>&"']/g,ch=>'&#'+ch.charCodeAt(0)+';'),runs:s.runs,best:s.bestLevel,kills:s.kills});
 }
 $('#loginBtn').onclick=async ()=>{ initAudio(); $('#loginErr').textContent='…'; const err=await DB.login($('#loginUser').value,$('#loginPass').value);
   if(err){$('#loginErr').textContent=err;return;} $('#loginErr').textContent=''; $('#loginPass').value=''; if(DB.current.meta&&DB.current.meta.lang)LANG=DB.current.meta.lang; normalizeMeta(); applyLang(); refreshProfile(); hideAllOverlays(); G.state='menu'; show('menu');
@@ -267,5 +260,6 @@ $('#aBoss').onclick=()=>{if(G.state==='playing'){enemies.length=0;spawnBoss(Math
 
 $('#langBtn').onclick=toggleLang;
 applyLang();
+passSiteGate();
 
 requestAnimationFrame(loop);

@@ -6,7 +6,8 @@ One JSON `data` column per account holds stats/unlocks/achievements/meta so addi
 later phases needs no schema migration. Run:  python server.py   (listens on $PORT or 8731).
 The DB file golgotha.db lives next to this script and survives code edits + restarts.
 """
-import http.server, socketserver, json, sqlite3, hashlib, os, secrets, time
+import http.server, socketserver, json, sqlite3, hashlib, hmac, os, re, secrets, threading, time
+from http.cookies import SimpleCookie
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(ROOT, "golgotha.db")
@@ -15,6 +16,37 @@ PORT = int(os.environ.get("PORT", "8731"))
 # Sitzungen liegen in SQLite und überleben einen Neustart des Servers; sie laufen nach 30 Tagen ab.
 SESSION_TTL = 30 * 86400
 MAX_BODY = 256 * 1024
+
+# Seitenpasswort („Pforte“): wird hier geprüft, nicht mehr im Browser. Ohne gültiges Pforten-Cookie liefert der Server
+# weder den Spielcode noch die API aus. Setzen mit GOLGOTHA_SITE_PASS=...; leer = keine Pforte.
+SITE_PASS = os.environ.get("GOLGOTHA_SITE_PASS", "Alex")
+GATE_COOKIE = "golgotha_gate"
+# Hinter einem Reverse-Proxy (nginx, Caddy …) GOLGOTHA_TRUST_PROXY=1 setzen, sonst teilen sich alle Besucher eine IP.
+TRUST_PROXY = os.environ.get("GOLGOTHA_TRUST_PROXY") == "1"
+
+# Fehlversuche (Login, Pforte) je IP: höchstens FAIL_MAX in FAIL_WINDOW Sekunden
+FAIL_MAX, FAIL_WINDOW = 10, 600
+REG_MAX = 30   # neue Konten je IP im selben Zeitfenster
+_fails, _fails_lock = {}, threading.Lock()
+
+
+def too_many(key, limit=None):
+    now = time.time()
+    with _fails_lock:
+        recent = [t for t in _fails.get(key, []) if t > now - FAIL_WINDOW]
+        if recent:
+            _fails[key] = recent
+        else:
+            _fails.pop(key, None)
+        return len(recent) >= (limit or FAIL_MAX)
+
+
+def note_fail(key):
+    with _fails_lock:
+        _fails.setdefault(key, []).append(time.time())
+
+
+NAME_RE = re.compile(r"^[\w .\-]{2,16}$")   # Buchstaben (auch Umlaute), Ziffern, Leerzeichen, _ . -
 
 
 def db():
@@ -36,8 +68,19 @@ def init_db():
             updated INTEGER)"""
     )
     c.execute("CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY, name TEXT NOT NULL, created INTEGER)")
+    c.execute("CREATE TABLE IF NOT EXISTS kv(k TEXT PRIMARY KEY, v TEXT NOT NULL)")
+    if not c.execute("SELECT 1 FROM kv WHERE k='secret'").fetchone():
+        c.execute("INSERT INTO kv(k,v) VALUES('secret',?)", (secrets.token_hex(32),))
     c.commit()
     c.close()
+
+
+def gate_token():
+    """Wert des Pforten-Cookies; ändert sich mit dem Seitenpasswort, alte Cookies werden dann ungültig."""
+    c = db()
+    secret = c.execute("SELECT v FROM kv WHERE k='secret'").fetchone()["v"]
+    c.close()
+    return hmac.new(bytes.fromhex(secret), SITE_PASS.encode("utf-8"), hashlib.sha256).hexdigest()
 
 
 def hash_pw(pw, salt):
@@ -135,42 +178,84 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         super().__init__(*a, directory=ROOT, **k)
 
     # Nur diese Dateien sind öffentlich — golgotha.db und server.py bleiben unerreichbar.
-    PUBLIC = {"/": "/index.html", "/index.html": "/index.html", "/sprites.js": "/sprites.js", "/style.css": "/style.css",
-              **{"/js/%s.js" % n: "/js/%s.js" % n for n in
-                 ("core", "data", "io", "player", "enemies", "combat", "flow", "render", "main")}}
+    # OPEN ohne Pforte (Seite, Stil, Pforten-Skript), GATED erst mit gültigem Pforten-Cookie (der eigentliche Spielcode).
+    OPEN = {"/": "/index.html", "/index.html": "/index.html", "/style.css": "/style.css", "/gate.js": "/gate.js"}
+    GATED = {"/sprites.js": "/sprites.js",
+             **{"/js/%s.js" % n: "/js/%s.js" % n for n in
+                ("core", "data", "io", "player", "enemies", "combat", "flow", "render", "main")}}
 
-    def _public_path(self):
+    def _ip(self):
+        if TRUST_PROXY and self.headers.get("X-Forwarded-For"):
+            return self.headers["X-Forwarded-For"].split(",")[0].strip()
+        return self.client_address[0]
+
+    def _gate_ok(self):
+        if not SITE_PASS:
+            return True
+        ck = SimpleCookie()
+        try:
+            ck.load(self.headers.get("Cookie", ""))
+        except Exception:
+            return False
+        m = ck.get(GATE_COOKIE)
+        return bool(m) and secrets.compare_digest(m.value, gate_token())
+
+    def _serve(self, head):
         path = self.path.split("?", 1)[0].split("#", 1)[0]
-        return self.PUBLIC.get(path)
+        target = self.OPEN.get(path)
+        if not target and path in self.GATED:
+            if not self._gate_ok():
+                self.send_error(403)
+                return
+            target = self.GATED[path]
+        if not target:
+            self.send_error(404)
+            return
+        self.path = target
+        super().do_HEAD() if head else super().do_GET()
 
     def do_GET(self):
-        target = self._public_path()
-        if not target:
-            self.send_error(404)
-            return
-        self.path = target
-        super().do_GET()
+        self._serve(False)
 
     def do_HEAD(self):
-        target = self._public_path()
-        if not target:
-            self.send_error(404)
-            return
-        self.path = target
-        super().do_HEAD()
+        self._serve(True)
 
     def end_headers(self):
         # ponytail: kein Caching — Code-Änderungen sind nach Reload sofort sichtbar
         self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("X-Frame-Options", "DENY")
+        self.send_header("Referrer-Policy", "no-referrer")
+        self.send_header("Content-Security-Policy",
+                         "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+                         "font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'")
         super().end_headers()
 
-    def _json(self, obj, code=200):
+    def _json(self, obj, code=200, cookie=None):
         body = json.dumps(obj).encode("utf-8")
         self.send_response(code)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
+        if cookie:
+            self.send_header("Set-Cookie", cookie)
         self.end_headers()
         self.wfile.write(body)
+
+    def gate(self, req):
+        """Ohne Passwort: fragt nur, ob die Pforte schon offen ist. Mit Passwort: prüft es und setzt das Cookie."""
+        if self._gate_ok():
+            return self._json({"ok": True})
+        if "pass" not in req:
+            return self._json({"ok": False})
+        key = "gate:" + self._ip()
+        if too_many(key):
+            return self._json({"error": "Zu viele Versuche. Warte ein paar Minuten."}, 429)
+        if not secrets.compare_digest(str(req.get("pass") or "").encode("utf-8"), SITE_PASS.encode("utf-8")):
+            note_fail(key)
+            return self._json({"error": "Falsche Losung"})
+        secure = "; Secure" if self.headers.get("X-Forwarded-Proto") == "https" else ""
+        return self._json({"ok": True}, cookie="%s=%s; Path=/; Max-Age=%d; HttpOnly; SameSite=Strict%s"
+                          % (GATE_COOKIE, gate_token(), SESSION_TTL, secure))
 
     def do_POST(self):
         if not self.path.startswith("/api/"):
@@ -188,6 +273,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self._json({"error": "Ungültige Anfrage"}, 400)
             return
         route = self.path[5:]
+        if route == "gate":
+            return self.gate(req)
+        if not self._gate_ok():
+            self._json({"error": "Pforte verschlossen"}, 403)
+            return
         if route == "register":
             self._json(self.register(req))
         elif route == "login":
@@ -206,8 +296,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             return {"error": "Name zu kurz (min. 2)"}
         if len(user) > 16 or len(pw) > 128:
             return {"error": "Name oder Losungswort zu lang"}
+        if not NAME_RE.match(user):
+            return {"error": "Name: nur Buchstaben, Ziffern, Leerzeichen, _ . -"}
         if not pw:
             return {"error": "Losungswort fehlt"}
+        if too_many("reg:" + self._ip(), REG_MAX):
+            return {"error": "Zu viele neue Pilger von hier. Warte ein paar Minuten."}
+        note_fail("reg:" + self._ip())   # zählt Registrierungen: höchstens REG_MAX je IP und Zeitfenster
         c = db()
         if c.execute("SELECT 1 FROM accounts WHERE name=?", (user,)).fetchone():
             c.close()
@@ -226,12 +321,18 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def login(self, req):
         user = str(req.get("user") or "").strip()
-        pw = str(req.get("pass") or "")
+        pw = str(req.get("pass") or "")[:128]
+        key = "login:" + self._ip()
+        if too_many(key):
+            return {"error": "Zu viele Fehlversuche. Warte ein paar Minuten."}
         c = db()
         row = c.execute("SELECT * FROM accounts WHERE name=?", (user,)).fetchone()
-        if not row or not secrets.compare_digest(hash_pw(pw, row["salt"]), row["pass"]):
+        # gleiche Antwort und gleiche Rechenzeit, ob der Name existiert oder nicht — verrät keine Kontonamen
+        ok = secrets.compare_digest(hash_pw(pw, row["salt"] if row else "00" * 16), row["pass"] if row else "")
+        if not row or not ok:
             c.close()
-            return {"error": "Unbekannter Pilger" if not row else "Falsches Losungswort"}
+            note_fail(key)
+            return {"error": "Name oder Losungswort falsch"}
         tok = new_session(c, row["name"])
         c.close()
         return {"ok": True, "token": tok, "profile": profile_of(row)}
