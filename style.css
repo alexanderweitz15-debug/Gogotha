@@ -324,6 +324,7 @@ body.touch #hud.show ~ #touchUI{display:block}
 
 /* KODEX (js/codex.js): Reiter, Filter, scrollbares Raster; die Knöpfe unten bleiben sichtbar */
 #codex{justify-content:flex-start;overflow:hidden;padding-top:18px;padding-bottom:14px}
+#menu .hint{pointer-events:none}   /* mit dem zusätzlichen Menüknopf liegt der Hinweis über „Abmelden“ */
 .cdx-tabs{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:900px;margin-bottom:8px}
 .cdx-tab{padding:7px 12px;border:1px solid var(--line);border-radius:5px;background:#0d0b09;color:var(--bone-dim);font-family:'Cinzel',serif;font-weight:700;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;transition:.12s}
 .cdx-tab span{font-family:var(--mono);font-size:10px;color:#6e675a;letter-spacing:0;margin-left:3px}
@@ -331,7 +332,8 @@ body.touch #hud.show ~ #touchUI{display:block}
 .cdx-tab.on{color:#160f08;background:linear-gradient(180deg,var(--gold2),var(--gold));border-color:var(--gold2)}
 .cdx-tab.on span{color:#3a2a10}
 .cdx-filters{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;max-width:900px;margin-bottom:10px}
-.cdx-chip{padding:4px 10px;font-size:11px}
+.cdx-chip{padding:4px 10px;font-size:11px;flex-shrink:0}
+.cdx-sep{flex-basis:100%;height:0}
 #codex .cdx-grid{flex:1 1 auto;flex-shrink:1;min-height:0;overflow-y:auto;width:100%;max-width:960px;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px;align-content:start;padding:2px 6px 2px 2px;text-align:left}
 .cdx-head{grid-column:1/-1;font-family:'Cinzel',serif;font-weight:700;color:var(--gold2);letter-spacing:.1em;font-size:.85rem;margin:6px 0 0;border-bottom:1px solid var(--line);padding-bottom:3px}
 .cdx-head span{display:block;font-family:var(--mono);font-weight:500;font-size:10px;letter-spacing:.02em;color:var(--bone-dim);margin-top:2px}
@@ -354,5 +356,7 @@ body.touch #hud.show ~ #touchUI{display:block}
 .cdx-note{margin-top:4px;font-size:10.5px;color:var(--epic)}
 .cdx-empty{grid-column:1/-1;text-align:center;color:var(--bone-dim);padding:20px;font-style:italic}
 #codex .menu-btns{margin-top:10px;flex-shrink:0}
-@media (max-height:520px){ #codex{padding-top:8px;padding-bottom:6px} .cdx-tab{padding:4px 8px;font-size:.68rem} .cdx-chip{padding:3px 8px;font-size:10px} .cdx-filters{margin-bottom:6px}
+@media (max-height:520px){ #codex{padding-top:6px;padding-bottom:6px} #codex .sect-title{font-size:.9rem;margin-bottom:0} #cdxSub{margin-bottom:4px;font-size:11px}
+  .cdx-tabs,.cdx-filters{flex-wrap:nowrap;overflow-x:auto;max-width:100%;justify-content:flex-start;margin-bottom:5px;padding-bottom:2px} .cdx-sep{display:none}
+  .cdx-tab{padding:4px 8px;font-size:.66rem;flex-shrink:0;white-space:nowrap} .cdx-chip{padding:3px 8px;font-size:10px;white-space:nowrap}
   #codex .cdx-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px} .cdx-card{padding:6px 7px;gap:7px} #codex .menu-btns{margin-top:6px} }

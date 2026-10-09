@@ -114,7 +114,7 @@ const cdxEsc=s=>String(s).replace(/[<>&"]/g,ch=>'&#'+ch.charCodeAt(0)+';');
 /* kleines Bild: Figur auf eigener Leinwand, unentdeckt als dunkle Silhouette */
 function cdxCanvas(w,h,draw,seen){ const c=document.createElement('canvas'); c.width=w; c.height=h; c.className='cdx-cv'; const g=c.getContext('2d');
   try{ draw(g,w,h); }catch(e){}
-  if(!seen){ g.globalCompositeOperation='source-atop'; g.fillStyle='#231f1b'; g.fillRect(0,0,w,h); } return c; }
+  if(!seen){ g.setTransform(1,0,0,1,0,0); g.globalCompositeOperation='source-atop'; g.fillStyle='#231f1b'; g.fillRect(0,0,w,h); } return c; }
 function cdxEnemyImg(g,w,h,ty){ const t=ETYPES[ty], spr=enemySprite(ty,t.r,t.color,0,false), s=Math.min(2.2,(w-6)/spr.width);
   g.translate(w/2,h/2); g.scale(s,s); g.drawImage(spr,-spr._pad,-spr._pad); }
 /* Bosse 1–5 zeichnet render.js direkt auf die Spiel-Leinwand: dort kurz zeichnen und herauskopieren (das Menü übermalt sie im nächsten Bild) */
@@ -156,7 +156,7 @@ function renderCodex(){ const n=codexCount();
   const fw=$('#cdxFilters'); fw.innerHTML='';
   const chip=(label,on,fn,col)=>{ const b=document.createElement('button'); b.className='mod-chip cdx-chip'+(on?' on':''); b.innerHTML=label; if(col)b.style.color=col; b.onclick=fn; fw.appendChild(b); };
   for(const f of ['all','seen','miss']) chip(t('cdx_f_'+f),CDX.filter===f,()=>{ CDX.filter=f; renderCodex(); });
-  if(CDX.tab==='w'){ chip(t('cdx_cls_all'),!CDX.cls,()=>{ CDX.cls=null; renderCodex(); });
+  if(CDX.tab==='w'){ const br=document.createElement('i'); br.className='cdx-sep'; fw.appendChild(br); chip(t('cdx_cls_all'),!CDX.cls,()=>{ CDX.cls=null; renderCodex(); });
     for(const c in CLASSES) chip(svgIcon(CLASSES[c].ic,CLASSES[c].color,11).replace('display:block','display:inline-block;vertical-align:-1px')+' '+clsName(c),CDX.cls===c,()=>{ CDX.cls=CDX.cls===c?null:c; renderCodex(); }); }
   const grid=$('#cdxGrid'); grid.innerHTML=''; let shown=0, pendingHead=null;
   for(const x of cdxEntries(CDX.tab)){
