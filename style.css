@@ -345,4 +345,4 @@ body.touch #hud.show ~ #touchUI{display:block}
 .set-btns{margin-top:16px}
 .pad-focus{outline:2px solid var(--gold2) !important;outline-offset:3px;box-shadow:0 0 0 1px #000,0 0 18px rgba(224,178,90,.45) !important}
 .rcard.pad-focus,.char-card.pad-focus,.diff-card.pad-focus{transform:translateY(-3px)}
-@media (max-height:520px){ .set-wrap{gap:8px} .set-col{gap:8px} .set-sec{padding:8px 10px} .set-row{padding:2px 0;font-size:12px} .set-key{padding:4px 6px} .set-btns{margin-top:8px} }
+@media (max-height:520px){ #settings{padding-top:46px} .set-wrap{gap:8px} .set-col{gap:8px} .set-sec{padding:8px 10px} .set-row{padding:2px 0;font-size:12px} .set-key{padding:4px 6px} .set-btns{margin-top:8px} }

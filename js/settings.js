@@ -17,7 +17,7 @@ Object.assign(I18N.de,{
   set_title:'Einstellungen', set_btn:'Einstellungen', set_back:'Zurück', set_sound:'Klang', set_view:'Darstellung', set_keys:'Tastenbelegung',
   set_master:'Gesamt', set_music:'Musik', set_sfx:'Effekte', set_mute:'Stumm', set_shake:'Bildschirmwackeln', set_flash:'Blitz-Effekte reduzieren',
   set_on:'An', set_off:'Aus', set_p1:'Spieler 1', set_p2:'Spieler 2', set_up:'Hoch', set_down:'Runter', set_left:'Links', set_right:'Rechts',
-  set_dash:'Ausweichen', set_pause:'Pause', set_press:'Taste …', set_reset:'Standard', set_keyhint:'Feld wählen, dann Taste drücken · Esc bricht ab · Esc pausiert immer',
+  set_dash:'Ausweichen', set_pause:'Pause', set_press:'Taste …', set_reset:'Standard', set_keyhint:'Feld wählen, dann Taste drücken · Esc bricht ab (Esc bleibt immer Pause)',
   set_pads:'Gamepad', set_nopad:'Kein Gamepad verbunden — eine Taste am Pad drücken.', set_padhelp:'Stick/Steuerkreuz bewegen · A ausweichen / wählen · B zurück · Start Pause',
   key_space:'Leertaste',
 });
@@ -25,7 +25,7 @@ Object.assign(I18N.en,{
   set_title:'Settings', set_btn:'Settings', set_back:'Back', set_sound:'Sound', set_view:'Display', set_keys:'Key bindings',
   set_master:'Master', set_music:'Music', set_sfx:'Effects', set_mute:'Mute', set_shake:'Screen shake', set_flash:'Reduce flashing',
   set_on:'On', set_off:'Off', set_p1:'Player 1', set_p2:'Player 2', set_up:'Up', set_down:'Down', set_left:'Left', set_right:'Right',
-  set_dash:'Dodge', set_pause:'Pause', set_press:'Press …', set_reset:'Defaults', set_keyhint:'Pick a field, then press a key · Esc cancels · Esc always pauses',
+  set_dash:'Dodge', set_pause:'Pause', set_press:'Press …', set_reset:'Defaults', set_keyhint:'Pick a field, then press a key · Esc cancels (Esc always pauses too)',
   set_pads:'Gamepad', set_nopad:'No gamepad connected — press a button on the pad.', set_padhelp:'Stick/D-pad move · A dodge / select · B back · Start pause',
   key_space:'Space',
 });
