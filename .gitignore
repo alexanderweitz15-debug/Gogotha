@@ -1,2 +1,3 @@
 golgotha.db
 __pycache__/
+tools/*.json
