@@ -4,6 +4,9 @@ Grundlage: vollständiges Lesen des Codes (Commit `8422146`) und ein automatisie
 (Server lokal gestartet, Account angelegt, ca. 60 s gespielt bis Station 5, Endlos-Modus und Tod per Skript erzwungen).
 Im Test traten keine JavaScript-Fehler auf.
 
+> **Hinweis (09.10.2026):** `game.js` ist in neun Dateien unter `js/` aufgeteilt (core, data, io, player, enemies, combat, flow, render, main; Reihenfolge in `index.html`).
+> Zeilenangaben wie `game.js:1436` in diesem Dokument beziehen sich auf den Stand davor.
+
 ## Status der Korrekturen (08.10.2026)
 
 | Punkt | Status |
@@ -17,7 +20,15 @@ Im Test traten keine JavaScript-Fehler auf.
 | Mobil nicht spielbar | **Behoben, nur emuliert getestet.** Touch-Stick links, Ausweich-Knopf rechts, Pause-Knopf, Hinweis „quer halten“ im Hochformat, verdichtetes HUD bei niedriger Höhe. Auf einem echten Gerät nicht getestet. |
 | 9. Koop: Effekte beim falschen Spieler | **Behoben.** Lebensraub, Hinrichtung und Goldbonus gehören dem Spieler, dessen Geschoss/Fähigkeit getroffen hat; Begleiter folgen ihrem Besitzer; Bosse und Bogenschützen zielen auf den nächsten Spieler (getestet). Gold bleibt eine gemeinsame Kasse. |
 | Neu gefunden: Explosion blockierte Kettenblitz und Pfützen | **Behoben.** Mit explosiven Schüssen (Upgrade „Höllenfeuer“, Fähigkeit „Inferno“, Hand Gottes) lösten Kettenblitz und Seuchenpfützen nie aus, weil die Explosion das Geschoss vorher beendete. Die Explosion kommt jetzt zuletzt (getestet). |
-| 3, 4, 7, 11, 12 | Offen |
+| 7. Speicherfehler unbemerkt | **Behoben.** Sitzungen liegen in SQLite (überleben Neustarts, 30 Tage gültig), Abmelden macht das Token ungültig. Scheitert das Speichern, erscheint eine Meldung, der Stand bleibt lokal und wird beim nächsten Login hochgeladen, wenn er mindestens so viele Läufe hat wie der Server-Stand (getestet). Anfragen > 256 KB und Namen > 16 Zeichen werden abgelehnt. |
+| 12. Keine Bosse im Endlos-Modus | **Geändert:** Ab Station 55 kehren die Bosse alle 5 Stationen reihum zurück, je 50 Stationen mit +50% Leben, danach wieder Reliquienwahl. Falls das Endlos-Modus ohne Bosse Absicht war: eine Zeile in `buildLevel` (`lvl%5===0`) zurück auf `lvl%5===0 && lvl<=50`. |
+| Neu: Bosse 6–10 ohne eigenes Design | **Behoben.** Eigene Figuren und Muster für Choral der Asche, Mutter der Seuche, Eiserner Heiliger, Schlund von Golgotha, Letzter Gekreuzigter; neue Mechanik: angekündigte Gefahrenzonen (Warnkreise/-balken, Ausweichschritt hilft). |
+| 11. `victory()` toter Code | **Entfernt** (09.10.), samt Overlay. Der Abschluss nach Station 50 läuft über den Endlos-Bildschirm. |
+| 3. Spielstände ungeprüft | **Teilweise behoben** (09.10.). Der Server lehnt ab, was kein echter Lauf erzeugen kann: schrumpfende Zähler (auch: alter Tab überschreibt neueren Stand), falsche Typen, Seelenschmiede-Stufen über 20 und Seelen, die schneller wachsen als Tötungen/Bosse/Läufe hergeben (Seelen in gekauften Stufen zählen mit, Käufe und Erstattungen gehen also durch). Getestet: Seelen = 1 000 000, geschenkte Stufen und sinkende Läufe werden abgelehnt, echte Läufe, Käufe und Offline-Nachträge gehen durch. **Grenze:** Das Spiel läuft im Browser; wer Tötungen und Läufe passend mitfälscht, kommt durch. Ganz dicht wird das nur, wenn der Server die Läufe selbst berechnet. |
+| 4. Passwörter im Client | **Seitenpasswort behoben** (09.10.): Der Server prüft es (`/api/gate`) und setzt ein HttpOnly-Cookie; ohne Cookie liefert er weder Spielcode noch API aus (getestet: `js/*.js` → 403, API → „Pforte verschlossen“). Passwort per `GOLGOTHA_SITE_PASS`. **Seit 09.10. standardmäßig aus** (auf Wunsch): ohne die Variable kommt jeder direkt zur Anmeldung; mit gesetzter Variable greift die Pforte wie beschrieben. Ohne `server.py` (statisch gehostet oder als Datei) gibt es keine Pforte, der Code liegt dort ohnehin offen. **Admin-Passwort `321` bleibt im Client** – absichtlich: Die Admin-Schalter sind reine Client-Cheats, die man auch über die Konsole setzen kann; Läufe mit Admin zählen nicht (#6). Eine Server-Prüfung würde daran nichts ändern. |
+| Server-Härtung | (09.10.) Höchstens 10 Fehlversuche je IP in 10 Minuten bei Login und Pforte, höchstens 30 neue Konten je IP; Login verrät nicht mehr, ob ein Name existiert; Namen nur aus Buchstaben, Ziffern, Leerzeichen, `_ . -`; Sicherheits-Header (CSP, nosniff, kein Einbetten in fremde Seiten). |
+| 2. (Nachtrag 09.10.) | **Historie bereinigt:** `golgotha.db` mit `git filter-repo` aus allen Commits entfernt, `main` und der Arbeitsbranch per Force-Push ersetzt (alle Commit-Kennungen haben sich dabei geändert). **Bleibt:** Das Repo ist öffentlich; GitHub hält die alte Fassung über `refs/pull/1/head` (PR #1) weiter erreichbar, bis der GitHub-Support sie löscht, und jeder frühere Klon enthält sie. Das Passwort des Kontos gilt deshalb weiter als bekannt und muss geändert werden. |
+| Offen | `server.py` spricht kein HTTPS – öffentlich nur hinter einem Proxy mit TLS betreiben (dann `GOLGOTHA_TRUST_PROXY=1`). |
 
 ## 1. Was das Spiel ist
 
@@ -94,7 +105,7 @@ Ein Roguelite-Arena-Shooter im Stil von „Vampire Survivors / Brotato“ mit Gr
 
 - **Mobil nicht spielbar:** Es gibt keine Touch- oder Gamepad-Steuerung, nur Tastatur.
 - „Aufgeben“ zählt als Tod und gibt trotzdem Seelen.
-- Die 12 Zusatz-Charaktere haben keinen eigenen Fähigkeiten-Pool (Fallback auf den Büßer, `game.js:1347`) und kein eigenes Aussehen (sie verwenden das Design eines Basis-Charakters).
+- Die 12 Zusatz-Charaktere haben keinen eigenen Fähigkeiten-Pool (Fallback auf den Büßer, `game.js:1347`) ~~und kein eigenes Aussehen~~ – **behoben (08.10.):** eigene Figuren in `sprites.js`, ebenso neue Figuren für alle 9 Gegnertypen.
 - Server: keine Größenbegrenzung für Anfragen, kein Rate-Limit beim Login, Tokens laufen nie ab, Abmelden macht das Token serverseitig nicht ungültig.
 - Die Kollisionsprüfung vergleicht jedes Geschoss mit jedem Gegner. Bei bis zu 90 Gegnern plus Beschwörungen ist das in späten Stationen ein mögliches Performance-Problem. **Nicht gemessen.**
 

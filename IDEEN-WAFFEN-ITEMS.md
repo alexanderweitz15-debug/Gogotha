@@ -292,17 +292,122 @@ Das kostet nach Abschnitt 4 fast nichts und gibt jeder Figur eine Richtung.
 
 Jeder Pool enthält mindestens ein Paar für eine Fähigkeits-Verschmelzung (orbital+nova, aegis+frenzy oder exec+soulharvest).
 
+### 11.1 Ausbau zu Brotato-Profilen (09.10.2026, umgesetzt)
+
+Die Affinität allein war zu schwach, um eine Figur anders spielen zu lassen. Jetzt hat jede der 16 Figuren eine Spielweise mit Stärke und Schwäche,
+sichtbar auf der Karte (grün/rot) und im Werte-Panel. Daten in `CHAR_PROFILE` (`js/data.js`), Auswertung in `charDmgMul`, `charCdMul`, `charShots`, `charHitMul`.
+Die Shop-Neigung bietet zusätzlich die Klassen an, die die Figur mag.
+
+| Figur | Stärke | Schwäche |
+|---|---|---|
+| Büßer | +6 % Schaden je verschiedener Waffenklasse | – |
+| Henker | +35 % Schaden auf nahe Gegner (< 170 px) | −25 % auf große Entfernung (> 320 px) |
+| Ketzerin | Feuer/Seuche/Frost/Blitz +25 % | Pulver/Eisen −30 % |
+| Pestpriester | Seuche +25 %, Pfützen/Wolken +50 % Dauer | Pulver −20 % |
+| Kreuzritter | Pulver +20 %, Rückstoß +50 % | andere Waffen feuern 10 % langsamer |
+| Flagellant | Eisen +20 %, +0,6 % Schaden je 1 % fehlender LP | Heilung −30 % |
+| Inquisitor (Start jetzt Dreifaltigkeit) | Heilig +25 %, +30 % gegen Elite/Bosse | nur 4 Waffenplätze |
+| Märtyrerin | unter 50 % LP +35 % Schaden und Feuerrate | Max-LP −15 % |
+| Geheiligter | Blitz +30 %, Kettenblitz +1 Sprung | alle anderen −20 % |
+| Revolverheld (Start jetzt Revolver) | Pulver +1 Geschoss, 10 % schneller | alle anderen −25 % |
+| Scheiterhexe | Feuer +25 %, Brand +1 s, brennende Gegner +20 % Schaden | Frost −50 % |
+| Predigt-Echo | Waffen mit 3+ Geschossen +1 Geschoss | −15 % Schaden |
+| Madenfürst | Seuche +20 %, +2 LP/s in eigenen Pfützen | langsam |
+| Chirurgen-Schemen | +12 % Krit, +50 % Krit-Schaden, Krits verlangsamen | Max-LP −10 % |
+| Schlachtlamm | in Bewegung +20 % | im Stehen −20 % |
+| Gekreuzigtes Echo | steht einmal pro Lauf wieder auf, Heilig +15 % | Heilung −25 % |
+
+Werte sind Startwerte; sie sind nicht in echten Läufen gemessen.
+
+### 11.2 Gegenstände im Shop (09.10.2026, umgesetzt)
+
+Wie in Brotato: 21 Gegenstände (`ITEMS` in `js/data.js`), zwei Angebote je Shop-Besuch in einer eigenen Reihe, **beliebig viele Käufe** –
+der Besuch endet erst mit einem Waffenkauf oder „Weiter“ (Waffen bleiben bei einem Kauf pro Besuch). Stapelbar, Kelch und Waage höchstens 1×.
+Preis 55 % des Waffenpreises gleicher Seltenheit; Seltenheit gewürfelt wie bei Waffen (Glück wirkt), höchstens legendär.
+
+- Gewöhnlich: Fastenbrot, Rosenkranz, Altarkerze, Pilgersandalen, Silberling
+- Ungewöhnlich: je Klasse ein Gegenstand mit +10 % Schaden für Waffen dieser Klasse (passt zu den Charakter-Boni), Kettenhemd
+- Selten: Lupe des Inquisitors, Sanduhr, Blutphiole, Opferschale
+- Episch: Zerbrochener Heiligenschein, Waage des Gerichts · Legendär: Blutiger Kelch
+
+Ungemessen. Risiko: Gold war bisher knapp an Ausgaben gebunden (ein Kauf pro Besuch); mit Gegenständen wird überschüssiges Gold zu Stärke.
+Wenn Läufe dadurch zu leicht werden, zuerst `itemPrice` (Faktor 0,55) anheben.
+
 ---
 
 ## 12. Später, erst nach Messung
 
 | Idee | Voraussetzung | Aufwand |
 |---|---|---|
-| Duo-Segen (2+2 Waffen aus zwei Klassen → Angebot bei Boss-Reliquie) | Klassen laufen, Overlay zeigt, welche Paare gespielt werden | M |
-| Set-Verwandlungen | Mindestens 25 Gaben/Reliquien im Pool | M |
-| Nahkampf als Angriffsart | E3 | L |
-| Lebensregeneration (Fastenbrot) | Entscheidung, ob Heilung außer am Wellenende gewollt ist | S |
-| Koop-Gaben (Verbundene Kette, Wiedererweckung) | Koop-Bug 9 durch 3.3 behoben | M |
+| ~~Duo-Segen~~ ✓ (09.10.) | Umgesetzt, siehe 12.2 | M |
+| ~~Set-Verwandlungen~~ ✓ (09.10.) | Umgesetzt, siehe 12.3 | M |
+| ~~Nahkampf als Angriffsart~~ ✓ (09.10.) | Umgesetzt, siehe 12.1 | L |
+| ~~Lebensregeneration~~ ✓ (09.10.) | Umgesetzt als Weihwasserflasche + Gabe, siehe 12.4 | S |
+| ~~Koop-Gaben~~ ✓ (09.10.) | Umgesetzt als Gaben, die nur im Koop erscheinen: **Verbundene Kette** (Kette zwischen beiden Spielern bis 520 px, 20+8×Seltenheit Schaden/s, stapelbar) und **Seelenband** (fällt der Gefährte, holen ihn 20 eigene Tötungen sofort mit 50 % LP zurück) | M |
+
+### 12.1 Nahkampfwaffen (09.10.2026, umgesetzt) — `js/melee.js`
+
+Neue Angriffsart `w.melee`: **Schwung** (Kreissektor), **Stoß** (Kapsel), **Bodenschlag** (wachsende Scheibe), **Kette** (kreisende Kugel an einer Kette).
+Die Trefferzone ist genau die gezeichnete Fläche; geschwungen wird nur, wenn ein Gegner in Reichweite ist (sonst bleibt die Waffe bereit).
+Treffer laufen über `damageEnemy(src = Waffe, owner)`: Henker-Nähe, Klassenboni und Klassen-Gegenstände, Krit, Lebensraub, Brand/Frost/Höllenfeuer-Gaben,
+Hinrichtung, Reliquien (Hammer, Krähenfeder beim Stoß), F3-Messung und Waffen-Kills greifen. Zusatzgeschosse: breiterer Bogen / +Durchschlag / größerer Ring / mehr Kugeln;
+Projektilgröße: +halbe Größe als Reichweite. Geschoss-Modifikatoren (Pechfass, Splitter …) gelten nicht (kein Geschoss).
+
+Benchmark (`tools/balance-bench.js`, 30 s, Stufe 10, Faktor zum Median der Seltenheit). Im Einzelziel steht der Spieler in Reichweite und das Ziel wird nach Rückstoß zurückgesetzt;
+in der Welle kitet der Spieler im Kreis und hängt die Verfolger ab — das benachteiligt Nahkampf, daher sind die Wellenwerte bewusst niedriger.
+
+| Waffe | Seltenheit | Klassen | Art | Besonderheit | Welle L10 | Ziel L10 | × Welle | × Ziel |
+|---|---|---|---|---|---|---|---|---|
+| Geißel | gewöhnlich | Eisen | Schwung 69°, 165 px | trifft bis zu 2; jeder 3. Hieb doppelt, kostet 1 LP | 68 | 125 | 0,69 | 1,21 |
+| Opfermesser | gewöhnlich | Seuche | Stoß 95 px | +1 % Schaden je 1 % fehlender LP, Gift | 43 | 143 | 0,43 | 1,39 |
+| Ketzergabel | ungewöhnlich | Feuer | Stoß 140 px | durchbohrt 2, Brand, Brennende fliegen doppelt weit | 93 | 152 | 0,60 | 1,55 |
+| Büßerkette | selten | Blitz, Eisen | Kette 86 px | Radius wächst mit dem Tempo, 35 % Kettenblitz je Treffer | 131 | 134 | 0,65 | 0,94 |
+| Glockenklöppel | selten | Heilig | Bodenschlag 130 px | betäubt 0,5 s, Bosse nur verlangsamt | 167 | 142 | 0,82 | 1,00 |
+| Henkersbeil | ultraselten | Eisen, Heilig | Schwung 149°, 130 px | richtet unter 15 % LP hin (nicht Bosse) | 475 | 289 | 0,91 | 1,41 |
+| Sense des Totengräbers | episch | Frost | Schwung 180°, 150 px | verlangsamt; Kills geben Seelen, 10 Seelen heilen 6 LP | 300 | 279 | 0,88 | 1,35 |
+
+Einzelziel 0,94–1,55, Welle 0,43–0,91 (Opfermesser mit der kürzesten Reichweite am stärksten benachteiligt). Nebenwirkung: Die Nahkampfwaffen heben die
+Einzelziel-Mediane einiger Seltenheiten (gewöhnlich 87 → 103; ultraselten hat nur drei Waffen, dort sinkt Splittersturm auf 0,45). Ungemessen in echten Läufen.
+`tools/weapon-audit.js` prüft je Nahkampfwaffe 14–16 Punkte: trifft vorn, nicht dahinter (Bodenschlag: rundum), Reichweite innen/außen, Trefferzone gegen die
+gezeichnete Geometrie (50 zufällige Ziele, unabhängige Stichprobe), Besonderheit, Henker-Nähe (×1,35), Krit, Klassen-Gegenstand, Gaben, Lebensraub, Hinrichtung, Messung — 54/54 bestehen.
+
+### 12.2 Duo-Segen (09.10.2026, umgesetzt) — `DUOS` in `js/synergy.js`
+
+≥ 2 Waffen aus Klasse A und ≥ 2 aus Klasse B (`p.clsN`, Lieblingsklasse zählt mit; „Nahkampf“ zählt für zwei Duos wie eine Klasse): nach der nächsten
+Boss-Station erscheint mit 50 % der passende Segen als 4. Karte neben den Reliquien (nicht am Blutschrein). Wählen statt einer Reliquie.
+Auslöser-Bremse: Duo-Schaden läuft mit eigener Quelle (`duo_…`, im F3-Overlay sichtbar) und Tiefe `G._duoD`; Treffer-Effekte feuern nie aus Duo- oder Reliquien-Schaden,
+Schwefel-Explosionen aus Tiefe 1 nur mit 20 %, aus Tiefe 2 nie (gemessen: 40 brennend-vergiftete Gegner im Haufen → 2–3 Explosionen, kein Endlos-Kreislauf).
+
+| Klassen | Duo | Effekt |
+|---|---|---|
+| Feuer + Seuche | Schwefel | brennende und vergiftete Gegner explodieren beim Tod (85 px, 30 % ihres Lebens) |
+| Konstrukt + Seuche | Seuchenträger | Geschütze, Totems, Minen, Ratten, Begleiter vergiften bei jedem Treffer |
+| Frost + Blitz | Supraleiter | Blitz-Treffer auf Verlangsamte: +50 % Schaden, Frostwelle 70 px |
+| Feuer + Blitz | Höllengewitter | alle 1,2 s Blitz von oben in bis zu 3 eigene brennende Gegner |
+| Heilig + Eisen | Hammer der Hexen | jeder 8. Eisen-Treffer nagelt 0,6 s fest; Festgehaltene +40 % Schaden |
+| Pulver + Eisen | Schrapnell | Pulver-Kills zerplatzen in 5 Splitter (je 40 % des letzten Treffers) |
+| Frost + Feuer | Thermoschock | Treffer auf brennend + verlangsamt: Dampfstoß 75 px (80 %), betäubt 0,4 s, 2,5 s Abklingzeit je Gegner |
+| Heilig + Blitz | Strafgericht | jeder 7. Heilig/Blitz-Treffer ruft einen goldenen Blitz (120 %), gegen Elite/Bosse fast doppelt so oft |
+| Nahkampf + Feuer | Glühende Schneide | Nahkampf entzündet immer; Brennende +30 % Nahkampfschaden; Schwünge glühen |
+| Nahkampf + Eisen | Wurfklingen | jeder 3. Schwung wirft eine kreisende Klinge (70 %, durchbohrt 3) |
+
+### 12.3 Set-Verwandlungen (09.10.2026, umgesetzt) — `SETS` in `js/synergy.js`
+
+Drei Teile aus Gegenständen, Tausch-/Modifikator-Gaben und Reliquien. Shop-, Gaben- und Reliquienkarten zeigen „Teil von Set X (n/3)“,
+das Werte-Panel den Fortschritt; bei der Verwandlung erscheinen Toast, Partikel und ein Merkmal an der Figur.
+
+| Set | Teile | Verwandlung | Merkmal |
+|---|---|---|---|
+| Der Büßer | Bußgürtel (Gabe), Fastenbrot, Märtyrerblut (Reliquie) | unter 30 % LP: +50 % Schaden, +20 % Tempo | Dornenkrone, rote Aura wenn aktiv |
+| Der Henker | Schwarze Kapuze, Rostige Kette, Totenschädel (Gaben) | Hinrichtungs-Schwelle +10 % (bleibt auch nach Richtspruch erhalten), Hinrichtung heilt 2 LP | Henkerskapuze |
+| Der Pestdoktor | Giftphiole, Aschenurne (Reliquie), Almosenbeutel (Gabe) | vergiftete Gegner: doppelt Gold + Giftwolke beim Tod (Wolken-Tote erzeugen keine neue) | Schnabelmaske |
+| Der Pilger | Pilgerstab (Gabe), Pilgersandalen, Weihwasserflasche | +10 % Tempo, in Bewegung +1,5 LP/s, Ausweichen lädt 40 % schneller | Heiligenschein |
+| Der Scheiterhaufen | Lampenöl, Altarkerze, Pechfass (Gabe) | Brennende +25 % Schaden, Brand springt beim Tod auf 2 Nachbarn (höchstens 2 Generationen) | Flammenkrone |
+
+### 12.4 Lebensregeneration (09.10.2026, umgesetzt)
+
+Gegenstand **Weihwasserflasche** (ungewöhnlich, +0,4 LP/s) und Gabe **Gnadenquell** (+0,3 + 0,1 × Seltenheit LP/s). Heilt über `healPlayer` (Heilungsfaktor der Figur
+wirkt, Flagellant also 70 %), pausiert 2 s nach jedem erlittenen Treffer; das Werte-Panel zeigt LP/s. Gemessen: 0,4 LP/s, nach Treffer 2 s nichts, dann weiter.
 
 ---
 
@@ -316,10 +421,13 @@ Jeder Pool enthält mindestens ein Paar für eine Fähigkeits-Verschmelzung (orb
 | 4 ✓ | Entscheidungen E1–E4 – erledigt: Seelenschmiede Schaden/Leben max. St. 5 (+25 %, Überschuss wird erstattet), Fluch wird beim Laufstart angeboten | S × 2 | – |
 | 5 ✓ | Waffenklassen (4) – erledigt. Shop-Neigung greift auch auf niedrigere Seltenheiten zurück; gemessen: Pulver 51→61 %, Seuche 14→24 %, Feuer nur 3→7 %, weil es keine gewöhnliche Feuerwaffe gibt (Brandpfeil in Schritt 7 schließt die Lücke) | M | Shop zeigt Klassen, Boni im Werte-Panel sichtbar |
 | 6 ✓ | Geschoss-Modifikatoren (5) – erledigt als Gaben im Upgrade-Pool (je 1× pro Lauf); gelten nicht für den Laserstrahl (kein Geschoss) | S × 5 | Jeder einzeln per Admin-Panel testbar |
-| 7 | Gegner-Gift + 6 Waffen (6) | M | Jede Klasse im Shop bis Stufe 4 erreichbar |
-| 8 | Tausch-Gaben (7) | M | – |
-| 9 | Boss-Reliquien + 3 Rezepte (8) | M | – |
-| 10 | Fluch-Wahl, Pakte (9), Schreine (10), Charakter-Profile (11) | S / M / M | – |
+| 7 ✓ | Gegner-Gift + 6 Waffen (6) – erledigt. Shop-Neigung Feuer jetzt 11→27 % (vorher 3→7 %) | M | Jede Klasse im Shop bis Stufe 4 erreichbar |
+| 8 ✓ | Tausch-Gaben (7) – erledigt: 8 Karten, in 25 % der Aufstiege ersetzt eine davon eine normale Karte, je 1× pro Lauf | M | – |
+| 9 ✓ | Boss-Reliquien + 3 Rezepte (8) – erledigt: Auswahl nach jeder Boss-Station (vor dem Shop), Ketten-Bremse für Auslöser, Admin-Panel kann Reliquien geben | M | – |
+| 10 ✓ | Fluch-Wahl, Pakte (9), Schreine (10), Charakter-Profile (11) – erledigt; nebenbei behoben: Wellenende-Heilung bekam im Koop nur Spieler 1 | S / M / M | – |
+
+| 11 ✓ | Waffen-Eigenheiten + Balancing (09.10.) – Hexenfeuer (Hexenmal), Nagelkanzel (festnageln), Schienennagel (durch Deckung, wächst je Durchschlag), Jüngstes Gericht (Hinrichtung unter 25 %), Sturmrufer (Blitz von oben); Läuterungsstrahl trifft nur noch Durchschlag+1 Gegner; Litanei/Predigtkreis als echter Ring; Fächer ohne Mittelgeschoss behoben (Seraph, Kreuzsalve, Sturm der Engel). Messung mit `tools/balance-bench.js` (Spieler kitet), Funktion mit `tools/weapon-audit.js` | M | 47/47 Waffen bestehen die Funktionsprüfung |
+| 12 ✓ | Charakter-Profile im Brotato-Stil (11.1) | M | – |
 
 Nach den Schritten 5, 6, 7 und 9 jeweils 20 Läufe mit dem Overlay, dann nachjustieren.
 Das Admin-Panel braucht ab Schritt 5 eine Auswahl für Gaben und Reliquien, sonst ist das Testen mühsam.
