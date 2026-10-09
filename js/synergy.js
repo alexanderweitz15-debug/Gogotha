@@ -19,7 +19,7 @@ const regenPaused=p=>G.time-(p.hurtT!=null?p.hurtT:-99)<REGEN_PAUSE;
    'nahkampf' zählt hier wie eine Klasse (Anzahl Nahkampfwaffen). */
 const DUOS=[
  {id:'sulfur',       a:'feuer',   b:'seuche',   ic:'explosion',name:'Schwefel',         name_en:'Brimstone',
-   desc:'Brennende und vergiftete Gegner explodieren beim Tod (85 px, 30% ihres Lebens)', desc_en:'Burning and poisoned enemies explode on death (85 px, 30% of their health)'},
+   desc:'Brennende und vergiftete Gegner explodieren beim Tod (85 px, 22% ihres Lebens)', desc_en:'Burning and poisoned enemies explode on death (85 px, 22% of their health)'},
  {id:'plaguecarrier',a:'konstrukt',b:'seuche',  ic:'plague',   name:'Seuchenträger',    name_en:'Plague Carrier',
    desc:'Geschütze, Totems, Minen, Ratten und Begleiter vergiften bei jedem Treffer', desc_en:'Turrets, totems, mines, rats and familiars poison on every hit'},
  {id:'supercond',    a:'frost',   b:'blitz',    ic:'snow',     name:'Supraleiter',      name_en:'Superconductor',
@@ -29,15 +29,15 @@ const DUOS=[
  {id:'witchhammer',  a:'heilig',  b:'eisen',    ic:'nail',     name:'Hammer der Hexen', name_en:'Witch Hammer',
    desc:'Jeder 8. Eisen-Treffer am selben Gegner nagelt ihn 0,6 s fest; festgehaltene Gegner nehmen +40% Schaden', desc_en:'Every 8th iron hit on the same enemy pins it for 0.6 s; pinned enemies take +40% damage'},
  {id:'shrapnel',     a:'pulver',  b:'eisen',    ic:'spread',   name:'Schrapnell',       name_en:'Shrapnel',
-   desc:'Tötet eine Pulver-Waffe, zerplatzt der Gegner in 5 Splitter (je 40% des letzten Treffers)', desc_en:'Powder kills burst into 5 shards (40% of the last hit each)'},
+   desc:'Pulver-Treffer: 35% Chance auf 5 Splitter (je 60%); tötet eine Pulver-Waffe, zerplatzt der Gegner in 6 Splitter (je 60% des letzten Treffers)', desc_en:'Powder hits: 35% chance of 5 shards (60% each); powder kills burst into 6 shards (60% of the last hit each)'},
  {id:'thermal',      a:'frost',   b:'feuer',    ic:'nova',     name:'Thermoschock',     name_en:'Thermal Shock',
-   desc:'Treffer auf brennende und verlangsamte Gegner: Dampfstoß (75 px, 80% Schaden), betäubt 0,4 s', desc_en:'Hits on burning, slowed enemies: steam burst (75 px, 80% damage), stuns 0.4 s'},
+   desc:'Frost- oder Feuer-Treffer auf brennende oder verlangsamte Gegner: Dampfstoß (je Gegner alle 1,5 s) (75 px, 130% Schaden), betäubt 0,4 s', desc_en:'Frost or fire hits on burning or slowed enemies: steam burst (every 1.5 s per enemy) (75 px, 130% damage), stuns 0.4 s'},
  {id:'tribunal',     a:'heilig',  b:'blitz',    ic:'crown',    name:'Strafgericht',     name_en:'Tribunal',
    desc:'Jeder 7. Treffer deiner Heilig- oder Blitz-Waffen ruft einen goldenen Blitz (120%) — gegen Elite/Bosse fast doppelt so oft', desc_en:'Every 7th hit of your holy or lightning weapons calls a golden bolt (120%) — almost twice as often vs elites/bosses'},
  {id:'glowblade',    a:'nahkampf',b:'feuer',    ic:'sword',    name:'Glühende Schneide',name_en:'Glowing Edge',
-   desc:'Nahkampftreffer entzünden immer; brennende Gegner nehmen durch Nahkampf +30% Schaden', desc_en:'Melee hits always ignite; burning enemies take +30% melee damage'},
+   desc:'Nahkampftreffer entzünden immer; brennende Gegner nehmen durch Nahkampf +20% Schaden', desc_en:'Melee hits always ignite; burning enemies take +20% melee damage'},
  {id:'blades',       a:'nahkampf',b:'eisen',    ic:'scythe',   name:'Wurfklingen',      name_en:'Throwing Blades',
-   desc:'Jeder 3. Nahkampfschwung wirft eine kreisende Klinge (70% Schaden, durchbohrt 3)', desc_en:'Every 3rd melee swing throws a spinning blade (70% damage, pierces 3)'},
+   desc:'Jeder 2. Nahkampfschwung wirft eine kreisende Klinge (90% Schaden, durchbohrt 3)', desc_en:'Every 2nd melee swing throws a spinning blade (90% damage, pierces 3)'},
 ];
 let DUO_CHANCE=0.5;
 const MELEE_CLS={name:'Nahkampf',name_en:'Melee',color:'#d8a878',ic:'sword'};
@@ -72,21 +72,22 @@ function synDmgMul(e,src,o){ if(!o)return 1; let m=1;
   if(hasSet(o,'penitent')&&o.hp<o.maxHP*0.3) m*=1.5;
   if(hasSet(o,'pyre')&&e.burnT>0) m*=1.25;
   if(hasDuo(o,'witchhammer')&&e.rootT>0&&!e.isBoss) m*=1.4;
-  if(hasDuo(o,'glowblade')&&e.burnT>0&&isMelee(src)) m*=1.3;
+  if(hasDuo(o,'glowblade')&&e.burnT>0&&isMelee(src)) m*=1.2;
   return m; }
 /* nach dem Treffer (src = Waffe/Quelle, exec = Hinrichtung durch execPct) */
 function synOnHit(e,dmg,src,o,exec){ if(!o)return; if(exec) synExecuted(o,e);
   if(!o.duos||G._duoD||G._relicD)return; const w=weaponById(src); if(!w)return; const D=o.duos, alive=e.hp>0;
-  if(D.plaguecarrier&&w.deploy&&alive){ applyPoison(e,dmg*0.4+1,'duo_plaguecarrier',o,true); for(let k=0;k<3;k++)spawnParticle(e.x,e.y,C.sick,1.5,60); }
+  if(D.plaguecarrier&&w.deploy&&alive){ applyPoison(e,dmg*0.3+1,'duo_plaguecarrier',o,false); /* ein Stapel, nicht stapelnd: Minen treffen viele auf einmal */ for(let k=0;k<3;k++)spawnParticle(e.x,e.y,C.sick,1.5,60); }
   if(D.supercond&&w.cls.includes('blitz')&&e.slowT>0&&!(e._scT>G.time)){ e._scT=G.time+0.5;
     burst(e.x,e.y,70,C.chill,8); for(const n of near(e.x,e.y,70,e)) applySlow(n,o); if(alive) duoDmg(e,dmg*0.5,0,0,'supercond',o); }
-  if(D.thermal&&e.burnT>0&&e.slowT>0&&!(e._stT>G.time)){ e._stT=G.time+2.5; burst(e.x,e.y,75,'#e8eef0',14);
-    for(const n of near(e.x,e.y,75)){ if(!n.isBoss)n.rootT=Math.max(n.rootT||0,0.4); duoDmg(n,dmg*0.8,Math.atan2(n.y-e.y,n.x-e.x),60,'thermal',o); } }
+  if(D.thermal&&(w.cls.includes('frost')||w.cls.includes('feuer'))&&(e.burnT>0||e.slowT>0)&&!(e._stT>G.time)){ e._stT=G.time+1.5; burst(e.x,e.y,75,'#e8eef0',14);
+    for(const n of near(e.x,e.y,75)){ if(!n.isBoss)n.rootT=Math.max(n.rootT||0,0.4); duoDmg(n,dmg*1.3,Math.atan2(n.y-e.y,n.x-e.x),60,'thermal',o); } }
   if(D.witchhammer&&w.cls.includes('eisen')&&alive&&!e.isBoss){ e._whN=(e._whN||0)+1;
     if(e._whN%8===0){ e.rootT=Math.max(e.rootT||0,0.6); spawnFloater(e.x,e.y-e.r-10,'✚',true); burst(e.x,e.y,e.r+18,C.gold2,6); } }
   if(D.tribunal&&(w.cls.includes('heilig')||w.cls.includes('blitz'))){ o._trN=(o._trN||0)+((e.isBoss||e.elite)?1.75:1);
     if(o._trN>=7&&alive){ o._trN=0; skyBolt(e,C.gold2); duoDmg(e,dmg*1.2,-Math.PI/2,40,'tribunal',o); } }
-  if(D.glowblade&&w.melee&&alive) applyBurn(e,dmg*0.4+2,src,o); }
+  if(D.glowblade&&w.melee&&alive) applyBurn(e,dmg*0.4+2,src,o);
+  if(D.shrapnel&&alive&&w.cls.includes('pulver')&&Math.random()<0.35) shrapnelBurst(e,o,dmg*0.6,5); }
 /* Hinrichtung (execPct oder Henkersbeil) */
 function synExecuted(o,e){ if(hasSet(o,'headsman')){ healPlayer(o,2); spawnFloater(o.x,o.y-o.r-14,'+2',false); } }
 /* in killEnemy (nicht bei Bossen) */
@@ -97,14 +98,16 @@ function synOnKill(e,o,src){ if(!o)return; const depth=G._duoD||0;
   if(hasSet(o,'pyre')&&e.burnT>0&&(e.burnGen||0)<2){ for(const n of near(e.x,e.y,140,e).sort((a,b)=>dist2(e.x,e.y,a.x,a.y)-dist2(e.x,e.y,b.x,b.y)).slice(0,2)){
     applyBurn(n,e.burnDmg,e.burnSrc,o); n.burnGen=(e.burnGen||0)+1; bolts.push({x1:e.x,y1:e.y,x2:n.x,y2:n.y,t:0.14,color:C.candle}); } }
   if(!o.duos)return; const D=o.duos;
-  if(D.sulfur&&e.burnT>0&&e.poisonT>0&&depth<2&&(depth===0||Math.random()<0.2)){ const d=e.maxHp*0.3; G.shake=Math.max(G.shake,4); burst(e.x,e.y,85,'#d8d040',16);
+  if(D.sulfur&&e.burnT>0&&e.poisonT>0&&depth<2&&(depth===0||Math.random()<0.2)){ const d=e.maxHp*0.22; G.shake=Math.max(G.shake,4); burst(e.x,e.y,85,'#d8d040',16);
     for(const n of near(e.x,e.y,85,e)) duoDmg(n,d,Math.atan2(n.y-e.y,n.x-e.x),80,'sulfur',o); }
   const w=weaponById(src);
-  if(D.shrapnel&&w&&w.cls.includes('pulver')&&depth===0){ const d=Math.max(3,(e.lastHit||0)*0.4), a0=rand(0,TAU);
-    for(let k=0;k<5;k++){ const a=a0+k*TAU/5; bullets.push({id:uid++,x:e.x,y:e.y,vx:Math.cos(a)*520,vy:Math.sin(a)*520,dmg:d,r:3,pierce:0,life:0.35,kb:30,color:C.gold2,crit:false,fx:[],owner:o,depth:1,wid:'duo_shrapnel',hitIds:new Set([e.id])}); } } }
+  if(D.shrapnel&&w&&w.cls.includes('pulver')&&depth===0) shrapnelBurst(e,o,Math.max(3,(e.lastHit||0)*0.6),6); }
+/* Schrapnell: n Splitter ringsum (Splitter lösen selbst nichts aus: depth 1, keine fx) */
+function shrapnelBurst(e,o,d,n){ const a0=rand(0,TAU);
+  for(let k=0;k<n;k++){ const a=a0+k*TAU/n; bullets.push({id:uid++,x:e.x,y:e.y,vx:Math.cos(a)*520,vy:Math.sin(a)*520,dmg:d,r:3,pierce:0,life:0.35,kb:30,color:C.gold2,crit:false,fx:[],owner:o,depth:1,wid:'duo_shrapnel',hitIds:new Set([e.id])}); } }
 /* aus fireMelee: Wurfklingen */
-function synOnSwing(p,w,ang,dmg){ if(!hasDuo(p,'blades'))return; p._bladeN=(p._bladeN||0)+1; if(p._bladeN%3)return;
-  bullets.push({id:uid++,x:p.x+Math.cos(ang)*16,y:p.y+Math.sin(ang)*16,vx:Math.cos(ang)*620,vy:Math.sin(ang)*620,dmg:dmg*0.7,r:7,pierce:3,life:0.7,kb:80,color:'#cfd6d0',crit:false,fx:[],owner:p,depth:1,wid:'duo_blades',hitIds:new Set()}); }
+function synOnSwing(p,w,ang,dmg){ if(!hasDuo(p,'blades'))return; p._bladeN=(p._bladeN||0)+1; if(p._bladeN%2)return;
+  bullets.push({id:uid++,x:p.x+Math.cos(ang)*16,y:p.y+Math.sin(ang)*16,vx:Math.cos(ang)*620,vy:Math.sin(ang)*620,dmg:dmg*0.9,r:7,pierce:3,life:0.7,kb:80,color:'#cfd6d0',crit:false,fx:[],owner:p,depth:1,wid:'duo_blades',hitIds:new Set()}); }
 PROJ_SHAPE.duo_blades='scythe'; PROJ_SHAPE.duo_shrapnel='pellet';
 
 /* ---------- SET-VERWANDLUNGEN (Isaac): 3 Teile aus Gegenständen, Gaben und Reliquien → dauerhafte Verwandlung + Merkmal an der Figur ---------- */
