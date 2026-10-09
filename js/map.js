@@ -361,7 +361,8 @@ function mapBake(g){ let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; for(const o of g.obs){ x
 /* Ersatz für die Zeile in renderGame: Gruppenbilder (nur sichtbare), dann übrige Hindernisse */
 function drawMapObstacles(){ const own=MAP.obsRef===obstacles, x0=cam.x-80, x1=cam.x+W+80, y0=cam.y-80, y1=cam.y+H+80, m=cx.getTransform(), al=m.a===1&&m.d===1;
   const fx=al?m.e-Math.round(m.e):0, fy=al?m.f-Math.round(m.f):0;   // auf ganze Bildschirmpixel ausrichten (kein Resampling)
-  if(own) for(const g of MAP.groups){ if(!g.img||g.bx>x1||g.by>y1||g.bx+g.bw<x0||g.by+g.bh<y0)continue; cx.drawImage(g.img,g.bx-fx,g.by-fy); if(g.style==='cauldron')mapCauldronLive(g); }
+  if(own) for(const g of MAP.groups){ if(!g.img||g.bx>x1||g.by>y1||g.bx+g.bw<x0||g.by+g.bh<y0)continue; const ix0=Math.max(g.bx,Math.floor(cam.x-30)), iy0=Math.max(g.by,Math.floor(cam.y-30)), iw=Math.min(g.bx+g.bw,Math.ceil(cam.x+W+30))-ix0, ih=Math.min(g.by+g.bh,Math.ceil(cam.y+H+30))-iy0;
+    if(iw>0&&ih>0) cx.drawImage(g.img,ix0-g.bx,iy0-g.by,iw,ih,ix0-fx,iy0-fy,iw,ih); if(g.style==='cauldron')mapCauldronLive(g); }
   for(const ob of obstacles){ if(own&&ob.grp!=null)continue; if(ob.x<x0||ob.x>x1||ob.y<y0||ob.y>y1)continue; if(ob.brk)drawBreakable(ob); else drawObstacle(ob); } }
 function mapCauldronLive(g){ const t=G.uiTime, f=0.5+Math.sin(t*9+g.x)*0.25+Math.sin(t*23+g.y)*0.15;
   cx.save(); cx.globalAlpha=0.16+f*0.12; cx.fillStyle='#e07a2f'; cx.beginPath(); cx.ellipse(g.x,g.y+g.r*0.85,g.r*1.05,g.r*0.35,0,0,TAU); cx.fill();
