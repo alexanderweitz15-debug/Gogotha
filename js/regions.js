@@ -35,6 +35,7 @@ function updateMines(dt){ for(let i=R.mines.length-1;i>=0;i--){ const m=R.mines[
 /* ---------- KATAKOMBEN ---------- */
 /* Knochenwand: stellt sich zwischen dich und ihre Verbündeten; Schüsse bleiben in ihr stecken (kein Durchschlag) */
 function aiWall(e,dt,p,ang,d,sp){ e.reT=(e.reT||0)-dt;
+  if(e._mLos===false){ e.x+=Math.cos(ang)*sp*dt; e.y+=Math.sin(ang)*sp*dt; return; }   // ohne Sichtlinie erst um die Kartenwand (map.js)
   if(e.reT<=0){ e.reT=0.5; let ax=0,ay=0,n=0; for(const o of enemies){ if(o===e||o.type==='bonewall'||dist2(o.x,o.y,p.x,p.y)>450*450)continue; ax+=o.x; ay+=o.y; n++; }
     const ca=n?Math.atan2(ay/n-p.y,ax/n-p.x):Math.atan2(e.y-p.y,e.x-p.x); e.tx=p.x+Math.cos(ca)*120; e.ty=p.y+Math.sin(ca)*120; }
   let dx=e.tx-e.x, dy=e.ty-e.y; const m=Math.hypot(dx,dy); if(m<=6)return; dx/=m; dy/=m;
