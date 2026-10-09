@@ -51,7 +51,7 @@ function guardGhost(e){ return e.phased?'pass':null; }
 /* ---------- LAZARETT ---------- */
 /* Pestarzt: umkreist dich und hinterlässt eine Spur vergifteten Bodens */
 function aiDoc(e,dt,p,ang,d,sp){ keepRange(e,dt,ang,d,sp,150,1.1); e.dropT=(e.dropT||0)-dt;
-  if(e.dropT<=0 && firing()){ e.dropT=0.6/fireDiv(); spawnPuddle(e.x,e.y,e.bdmg*0.35,{hostile:true,effect:'poison',life:3.2}); } }
+  if(e.dropT<=0 && firing()){ e.dropT=0.75/fireDiv(); spawnPuddle(e.x,e.y,e.bdmg*0.35,{hostile:true,effect:'poison',life:3.2}); } }
 /* Fleischkoloss: teilt sich beim Tod in zwei kleinere (zweimal) */
 function splitColossus(e){ const gen=e.gen||0; if(gen>=2)return;
   for(const s of [-1,1]){ const a=rand(0,TAU), x=clamp(e.x+Math.cos(a)*e.r*0.7*s,ROOM.x+12,ROOM.x+ROOM.w-12), y=clamp(e.y+Math.sin(a)*e.r*0.7*s,ROOM.y+12,ROOM.y+ROOM.h-12);
@@ -188,9 +188,11 @@ function drawZone(z){ const pr=clamp(z.t/z.warn,0,1), end=clamp((z.warn+z.life-z
   else if(z.kind==='gas'){ for(let i=0;i<5;i++){ const a=z.seed+i*1.3+G.uiTime*0.4, o=z.r*0.32;
       cx.globalAlpha=end*0.2; cx.fillStyle=i%2?C.sick:'#6a8a2a'; cx.beginPath(); cx.arc(z.x+Math.cos(a)*o,z.y+Math.sin(a*1.3)*o,z.r*0.68,0,TAU); cx.fill(); }
     cx.globalAlpha=end*0.6; cx.strokeStyle=C.sick; cx.lineWidth=1.5; cx.beginPath(); cx.arc(z.x,z.y,z.r,0,TAU); cx.stroke(); }
-  else { cx.fillStyle='#4a0608'; cx.globalAlpha=end*0.8; cx.beginPath(); cx.ellipse(z.x,z.y,z.r,z.r*0.92,z.seed,0,TAU); cx.fill();
-    cx.fillStyle='#6a0a0e'; cx.beginPath(); cx.ellipse(z.x-z.r*0.15,z.y-z.r*0.1,z.r*0.7,z.r*0.55,z.seed,0,TAU); cx.fill();
-    cx.fillStyle='rgba(255,200,200,.18)'; cx.beginPath(); cx.ellipse(z.x-z.r*0.35,z.y-z.r*0.35,z.r*0.25,z.r*0.08,-0.5,0,TAU); cx.fill(); }
+  else { cx.fillStyle='#3a0406'; cx.globalAlpha=end*0.6;
+    for(let i=0;i<4;i++){ const a=z.seed+i*1.7, o=z.r*0.25; cx.beginPath(); cx.ellipse(z.x+Math.cos(a)*o,z.y+Math.sin(a)*o*0.8,z.r*0.74,z.r*0.6,a,0,TAU); cx.fill(); }
+    cx.fillStyle='#5a0a0d'; cx.beginPath(); cx.ellipse(z.x,z.y,z.r*0.5,z.r*0.38,z.seed,0,TAU); cx.fill();
+    cx.globalAlpha=end*0.35; cx.fillStyle='#ffd0d0'; for(let i=0;i<3;i++){ const a=z.seed*3+i*2.1; cx.beginPath(); cx.ellipse(z.x+Math.cos(a)*z.r*0.45,z.y+Math.sin(a)*z.r*0.35,z.r*0.12,z.r*0.03,-0.4,0,TAU); cx.fill(); }
+    cx.globalAlpha=end*0.5; cx.strokeStyle='#8a1418'; cx.lineWidth=1.5; cx.setLineDash([5,6]); cx.beginPath(); cx.arc(z.x,z.y,z.r,0,TAU); cx.stroke(); cx.setLineDash([]); }
   cx.restore(); }
 function drawMine(m){ const fl=clamp(m.t/0.6,0,1), x=m.sx+(m.x-m.sx)*fl, y=m.sy+(m.y-m.sy)*fl-Math.sin(fl*Math.PI)*40, armed=m.t>=1.4;
   cx.save();
