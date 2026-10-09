@@ -142,6 +142,39 @@ const RELICS=[
 ];
 const relicById=id=>RELICS.find(r=>r.id===id);
 const hasRelic=(p,id)=>!!(p&&p.relics&&p.relics[id]);
+
+/* ---------- GEGENSTÄNDE (wie Brotato): im Shop für Gold, stapelbar, beliebig viele Käufe pro Besuch ----------
+   up/down = Text für die Karte; cls = Klassen-Gegenstand (+Schaden für Waffen dieser Klasse); max = höchstens so oft */
+const addClsDmg=(p,c,v)=>{ p.clsDmg=p.clsDmg||{}; p.clsDmg[c]=(p.clsDmg[c]||0)+v; };
+const capHP=p=>{ p.maxHP=Math.max(1,Math.round(p.maxHP)); p.hp=Math.min(p.hp,p.maxHP); };
+const ITEMS=[
+ {id:'i_bread',    name:'Fastenbrot',          rk:'common',   ic:'heart',    up:'+12 Max-LP', down:'−3% Tempo', apply:p=>{p.maxHP+=12;p.hp+=12;p.speed*=0.97;}},
+ {id:'i_rosary',   name:'Rosenkranz',          rk:'common',   ic:'star',     up:'+4% Krit-Chance', apply:p=>{p.crit+=0.04;}},
+ {id:'i_candle',   name:'Altarkerze',          rk:'common',   ic:'flame',    up:'+7% Schaden', down:'−6 Max-LP', apply:p=>{p.dmgMult+=0.07;p.maxHP-=6;capHP(p);}},
+ {id:'i_sandals',  name:'Pilgersandalen',      rk:'common',   ic:'boot',     up:'+5% Tempo', apply:p=>{p.speed*=1.05;}},
+ {id:'i_silver',   name:'Silberling',          rk:'common',   ic:'crown',    up:'+15% Gold', down:'−3% Schaden', apply:p=>{p.goldMult+=0.15;p.dmgMult-=0.03;}},
+ {id:'i_powder',   name:'Pulverhorn',          rk:'uncommon', ic:'bullet',   cls:'pulver',   apply:p=>addClsDmg(p,'pulver',0.10)},
+ {id:'i_whet',     name:'Wetzstein',           rk:'uncommon', ic:'sword',    cls:'eisen',    apply:p=>addClsDmg(p,'eisen',0.10)},
+ {id:'i_oil',      name:'Lampenöl',            rk:'uncommon', ic:'flame',    cls:'feuer',    apply:p=>addClsDmg(p,'feuer',0.10)},
+ {id:'i_vial',     name:'Giftphiole',          rk:'uncommon', ic:'plague',   cls:'seuche',   apply:p=>addClsDmg(p,'seuche',0.10)},
+ {id:'i_salt',     name:'Gletschersalz',       rk:'uncommon', ic:'snow',     cls:'frost',    apply:p=>addClsDmg(p,'frost',0.10)},
+ {id:'i_rod',      name:'Blitzableiter',       rk:'uncommon', ic:'lightning',cls:'blitz',    apply:p=>addClsDmg(p,'blitz',0.10)},
+ {id:'i_reliquary',name:'Reliquiar',           rk:'uncommon', ic:'trinity',  cls:'heilig',   apply:p=>addClsDmg(p,'heilig',0.10)},
+ {id:'i_cog',      name:'Messingzahnrad',      rk:'uncommon', ic:'gatling',  cls:'konstrukt',apply:p=>addClsDmg(p,'konstrukt',0.10)},
+ {id:'i_mail',     name:'Kettenhemd',          rk:'uncommon', ic:'shield',   up:'+2 Rüstung', down:'−4% Tempo', apply:p=>{p.armor+=2;p.speed*=0.96;}},
+ {id:'i_lens',     name:'Lupe des Inquisitors',rk:'rare',     ic:'eye',      up:'+1 Durchschlag', down:'−6% Feuerrate', apply:p=>{p.pierce+=1;p.frMult*=1.06;}},
+ {id:'i_hourglass',name:'Sanduhr',             rk:'rare',     ic:'clock',    up:'+10% Feuerrate', down:'−10 Max-LP', apply:p=>{p.frMult*=0.9;p.maxHP-=10;capHP(p);}},
+ {id:'i_bloodvial',name:'Blutphiole',          rk:'rare',     ic:'leech',    up:'+1 LP je Tötung', down:'−1 Rüstung', apply:p=>{p.lifesteal+=1;p.armor-=1;}},
+ {id:'i_bowl',     name:'Opferschale',         rk:'rare',     ic:'orbit',    up:'+40% Sammelradius, +10% XP', apply:p=>{p.magnet=(p.magnet||1)*1.4;p.xpMult=(p.xpMult||1)+0.1;}},
+ {id:'i_halo',     name:'Zerbrochener Heiligenschein',rk:'epic',ic:'wing',   up:'+18% Schaden', down:'Heilung −20%', apply:p=>{p.dmgMult+=0.18;p.healMul=(p.healMul||1)*0.8;}},
+ {id:'i_scales',   name:'Waage des Gerichts',  rk:'epic',     ic:'weight',   max:1, up:'+0,5× Krit-Schaden', down:'−3% Krit-Chance', apply:p=>{p.critMult+=0.5;p.crit-=0.03;}},
+ {id:'i_grail',    name:'Blutiger Kelch',      rk:'legendary',ic:'crown',    max:1, up:'+20% Schaden, +20 Max-LP', down:'Shop-Preise +15%', apply:p=>{p.dmgMult+=0.2;p.maxHP+=20;p.hp+=20;p.priceMul*=1.15;}},
+];
+const itemById=id=>ITEMS.find(i=>i.id===id);
+const itemUp=it=>it.cls?   // Klassen-Text aus clsName, damit er übersetzt wird
+  clsName(it.cls)+': +10% '+(LANG==='en'?'damage':'Schaden'):it.up;
+function itemPrice(it){ return Math.round(RARITY_PRICE[rarRank(it.rk)]*0.55*(1+G.level*0.03)*priceMul()); }
+const itemOwned=(p,id)=>(p&&p.itemsOwned&&p.itemsOwned[id])||0;
 const priceMul=()=>(player&&player.priceMul)||1;
 function weaponPrice(w){ return Math.round(RARITY_PRICE[rarRank(w.rk)]*(1+G.level*0.03)*priceMul()); }
 const rerollCost=()=>player&&player.freeReroll?0:Math.round((15+G.level*2)*priceMul());
@@ -286,7 +319,10 @@ function charWB(p,w,k){ const pr=charProf(p); if(!pr||!pr.wb||!w)return 0; let v
   for(const c in pr.wb){ if(c!=='*'&&w.cls.includes(c)){ hit=true; v+=pr.wb[c][k]||0; } }
   if(!hit&&pr.wb['*']) v+=pr.wb['*'][k]||0; return v; }
 /* Schadensfaktor der Figur beim Abfeuern (Klasse + zustandsabhängige Sonderregeln) */
-function charDmgMul(p,w){ const pr=charProf(p); if(!pr)return 1; let m=Math.max(0.1,1+charWB(p,w,'dmg'));
+/* Klassen-Gegenstände: +Schaden für Waffen ihrer Klasse (Summe über die Klassen der Waffe) */
+function itemClsMul(p,w){ if(!p||!p.clsDmg||!w)return 1; let v=0; for(const c of w.cls) v+=p.clsDmg[c]||0; return 1+v; }
+function charDmgMul(p,w){ return charProfMul(p,w)*itemClsMul(p,w); }
+function charProfMul(p,w){ const pr=charProf(p); if(!pr)return 1; let m=Math.max(0.1,1+charWB(p,w,'dmg'));
   switch(pr.perk){
    case 'allround': m*=1+0.06*(p.clsDistinct||0); break;
    case 'scourge': m*=1+0.6*clamp(1-p.hp/p.maxHP,0,1); break;

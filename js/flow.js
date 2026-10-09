@@ -198,10 +198,20 @@ function rollShop(){
   }
   return offer;
 }
+/* zwei Gegenstände je Besuch; Seltenheit wie bei Waffen gewürfelt, höchstens legendär */
+let shopItems=[];
+function rollShopItems(){ const out=[], used=new Set();
+  for(let n=0;n<2;n++){ const r=Math.min(4,rarRank(rollRarity(currentLuck())));
+    let pool=[]; for(let k=r;k>=0&&!pool.length;k--) pool=ITEMS.filter(it=>rarRank(it.rk)===k&&!used.has(it.id)&&!(it.max&&itemOwned(player,it.id)>=it.max));
+    if(!pool.length)break; const it=pick(pool); used.add(it.id); out.push({item:it}); }
+  return out; }
+function buyItem(o){ const it=o.item, price=itemPrice(it); if(o.sold||G.coins<price)return;
+  G.coins-=price; $('#coinTag').textContent=G.coins; it.apply(player); player.itemsOwned=player.itemsOwned||{}; player.itemsOwned[it.id]=itemOwned(player,it.id)+1;
+  player.items.push({ic:it.ic,color:rarColor(it.rk)}); updateItemPills(); updateHP(); o.sold=true; Audio2.buy(); renderShop(); }
 function openShop(){
   G.state='shop'; G.menuAt=performance.now(); $('#hud').classList.remove('show');
   player.freeReroll=hasRelic(player,'dice');
-  shopOffer=rollShop(); Audio2.lvl(); renderShop();
+  shopOffer=rollShop(); shopItems=rollShopItems(); Audio2.lvl(); renderShop();
   $('#shop').classList.add('show');
 }
 function renderShop(){
@@ -240,16 +250,25 @@ function renderShop(){
     }
     wrap.appendChild(el);
   });
+  renderShopItems();
   $('#shopReroll').textContent=t('shop_reroll',{cost:rerollCost()});
   $('#shopReroll').style.opacity=G.coins<rerollCost()?0.45:1;
 }
+function renderShopItems(){ const wrap=$('#shopItems'); wrap.innerHTML=''; $('#shopItemsTitle').style.display=shopItems.length?'':'none';
+  for(const o of shopItems){ const it=o.item, price=itemPrice(it), can=!o.sold&&G.coins>=price, own=itemOwned(player,it.id);
+    const el=document.createElement('div'); el.className='rcard item'+(can?'':' locked')+(o.sold?' sold':''); el.style.borderColor=rarColor(it.rk);
+    el.innerHTML='<div class="ic">'+svgIcon(it.ic,rarColor(it.rk),26)+'</div><div class="rk '+it.rk+'">'+rarName(it.rk)+(own?' · '+t('shop_owned',{n:own}):'')+'</div>'+
+      '<div class="rn">'+it.name+'</div><div class="rd"><span class="up">'+itemUp(it)+'</span>'+(it.down?'<br><span class="down">'+it.down+'</span>':'')+'</div>'+
+      (o.sold?'<div class="owned">'+t('shop_sold')+'</div>':'<div class="price'+(can?'':' cant')+'">'+price+' '+t('hud_gold')+'</div>');
+    if(can) el.onclick=()=>buyItem(o);
+    wrap.appendChild(el); } }
 function weaponMeta(w,dmgTxt){ return t('dbg_dmg')+' '+dmgTxt+' · '+(w.count>1?t('w_proj',{n:w.count}):t('w_single'))+(w.pierce>2?' · '+t('w_pierce'):'')+(w.chain?' · '+t('w_chain'):'')+(w.burn?' · '+t('ammo_burn'):'')+(w.explosive?' · '+t('w_explosive'):'')+(w.deploy?' · '+t('w_deploy'):'')+(w.poison?' · '+t('w_poison'):'')+(w.bounce?' · '+t('w_bounce'):'')+(w.contagion||w.ignite?' · '+t('w_spread'):'')+(w.frostpool?' · '+t('w_frostpool'):'')+(w.hex?' · '+t('w_hex'):'')+(w.nail?' · '+t('w_nail'):'')+(w.rail?' · '+t('w_rail'):'')+(w.verdict?' · '+t('w_verdict'):'')+(w.strike?' · '+t('w_strike'):''); }
 function buyWeapon(w,price){
   if(G.coins<price)return;
   G.coins-=price; $('#coinTag').textContent=G.coins; giveWeapon(w.id); Audio2.buy();
   advancePost();   // nur EIN Kauf pro Markt
 }
-$('#shopReroll').onclick=()=>{ const cost=rerollCost(); if(G.coins<cost)return; G.coins-=cost; player.freeReroll=false; $('#coinTag').textContent=G.coins; shopOffer=rollShop(); renderShop(); };
+$('#shopReroll').onclick=()=>{ const cost=rerollCost(); if(G.coins<cost)return; G.coins-=cost; player.freeReroll=false; $('#coinTag').textContent=G.coins; shopOffer=rollShop(); shopItems=rollShopItems(); renderShop(); };
 $('#shopSkip').onclick=()=>advancePost();
 
 /* ---------- UPGRADE (Stufenaufstieg) ---------- */
@@ -367,7 +386,8 @@ function fillStats(){
   const act=Object.keys(p.clsSt||{}).filter(c=>p.clsSt[c]>0);
   $('#statWeapons').innerHTML=charPerkHtml(p.charId)+t('weapons_label')+': '+wlist+(act.length?'<div class="stat-cls">'+act.map(c=>clsChip(c,clsName(c)+' '+ROMAN[p.clsSt[c]])+' <span>'+clsDesc(c,p.clsSt[c])+'</span>').join('<br>')+'</div>':'');
   const rl=Object.keys(p.relics||{}).map(id=>'<b style="color:var(--gold2)">'+relicById(id).name+'</b>');
-  $('#statAbilities').innerHTML=(rl.length?t('relics_label')+': '+rl.join(' · ')+'<br>':'')+(p.abilities.length?(t('abilities_label')+': '+p.abilities.map(a=>'<b style="color:'+rarColor(a.rk)+'">'+a.name+'</b>'+(a.level>1?' '+t('lvl_short')+a.level:'')).join(' · ')):'');
+  const il=Object.keys(p.itemsOwned||{}).map(id=>{ const it=itemById(id); return '<b style="color:'+rarColor(it.rk)+'">'+it.name+'</b>'+(p.itemsOwned[id]>1?' ×'+p.itemsOwned[id]:''); });
+  $('#statAbilities').innerHTML=(il.length?t('items_label')+': '+il.join(' · ')+'<br>':'')+(rl.length?t('relics_label')+': '+rl.join(' · ')+'<br>':'')+(p.abilities.length?(t('abilities_label')+': '+p.abilities.map(a=>'<b style="color:'+rarColor(a.rk)+'">'+a.name+'</b>'+(a.level>1?' '+t('lvl_short')+a.level:'')).join(' · ')):'');
 }
 $('#statsClose').onclick=closeStats;
 

@@ -319,6 +319,20 @@ Die Shop-Neigung bietet zusätzlich die Klassen an, die die Figur mag.
 
 Werte sind Startwerte; sie sind nicht in echten Läufen gemessen.
 
+### 11.2 Gegenstände im Shop (09.10.2026, umgesetzt)
+
+Wie in Brotato: 21 Gegenstände (`ITEMS` in `js/data.js`), zwei Angebote je Shop-Besuch in einer eigenen Reihe, **beliebig viele Käufe** –
+der Besuch endet erst mit einem Waffenkauf oder „Weiter“ (Waffen bleiben bei einem Kauf pro Besuch). Stapelbar, Kelch und Waage höchstens 1×.
+Preis 55 % des Waffenpreises gleicher Seltenheit; Seltenheit gewürfelt wie bei Waffen (Glück wirkt), höchstens legendär.
+
+- Gewöhnlich: Fastenbrot, Rosenkranz, Altarkerze, Pilgersandalen, Silberling
+- Ungewöhnlich: je Klasse ein Gegenstand mit +10 % Schaden für Waffen dieser Klasse (passt zu den Charakter-Boni), Kettenhemd
+- Selten: Lupe des Inquisitors, Sanduhr, Blutphiole, Opferschale
+- Episch: Zerbrochener Heiligenschein, Waage des Gerichts · Legendär: Blutiger Kelch
+
+Ungemessen. Risiko: Gold war bisher knapp an Ausgaben gebunden (ein Kauf pro Besuch); mit Gegenständen wird überschüssiges Gold zu Stärke.
+Wenn Läufe dadurch zu leicht werden, zuerst `itemPrice` (Faktor 0,55) anheben.
+
 ---
 
 ## 12. Später, erst nach Messung

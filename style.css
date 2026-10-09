@@ -311,3 +311,13 @@ body.touch #hud.show ~ #touchUI{display:block}
   .rcard{padding:10px 8px} .rcard .ic{height:26px;margin-bottom:4px} .reward-cards{margin-bottom:8px}
   #dashBtn{width:60px;height:60px;bottom:30px}
 }
+
+/* GEGENSTÄNDE im Shop (Brotato-Stil): kleinere Karten, eigene Reihe */
+.shop-items-title{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--bone-dim);margin:-6px 0 8px}
+.reward-cards.items{grid-template-columns:repeat(2,minmax(0,220px));justify-content:center;gap:12px}
+.rcard.item{padding:10px 10px 12px}
+.rcard.item .ic{height:28px;margin-bottom:6px}
+.rcard.item .rn{font-size:.85rem;margin-bottom:4px}
+.rcard.item .rd .up{color:#7fcf6a}
+.rcard.item .rd .down{color:#e0405f}
+.rcard.item.sold{opacity:.4}

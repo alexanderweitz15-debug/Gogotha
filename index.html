@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Cinzel:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=6">
+<link rel="stylesheet" href="style.css?v=7">
 </head>
 <body>
 <div id="wrap">
@@ -180,6 +180,8 @@
     <div class="sect-sub" id="shopSub">Welle überstanden. Kaufe mit Gold — oder ziehe weiter.</div>
     <div class="shop-bar"><span data-i18n="shop_gold">Gold:</span> <b id="shopGold">0</b></div>
     <div class="reward-cards" id="shopCards"></div>
+    <div class="shop-items-title" id="shopItemsTitle" data-i18n="shop_items">Gegenstände — beliebig viele Käufe, der Besuch geht weiter</div>
+    <div class="reward-cards items" id="shopItems"></div>
     <div class="post-btns">
       <button class="amini" id="shopReroll">Neu würfeln</button>
       <button class="mbtn ghost" id="shopSkip" data-i18n="shop_skip">Weiter</button>
@@ -370,6 +372,6 @@
 </div>
 
 <!-- Spielcode lädt gate.js nach bestandener Pforte (Reihenfolge dort; frühere Dateien dürfen beim Laden nichts aus späteren aufrufen) -->
-<script src="gate.js?v=2"></script>
+<script src="gate.js?v=3"></script>
 </body>
 </html>
