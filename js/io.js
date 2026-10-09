@@ -60,6 +60,16 @@ const DB=(()=>{
 
 /* ---------- INPUT ---------- */
 const keys={};
+/* Tastenbelegung als Indirektion (settings.js lädt die gespeicherte Belegung hinein); Standard = ursprüngliche Tasten */
+const KEYBIND={up1:'KeyW',down1:'KeyS',left1:'KeyA',right1:'KeyD',up2:'ArrowUp',down2:'ArrowDown',left2:'ArrowLeft',right2:'ArrowRight',dash1:'Space',dash2:'ShiftRight',pause:'KeyP'};
+/* Bewegungsrichtung eines Spielers: p1=Belegung 1, p2=Belegung 2, solo=beide; Touch-Stick bzw. Gamepad (gamepad.js) übersteuern */
+function moveInput(p){ const solo=p.ctrl==='solo', p2=p.ctrl==='p2', k=a=>keys[KEYBIND[a]];
+  const R=(!p2&&k('right1'))||((p2||solo)&&k('right2')), L=(!p2&&k('left1'))||((p2||solo)&&k('left2'));
+  const D=(!p2&&k('down1'))||((p2||solo)&&k('down2')), U=(!p2&&k('up1'))||((p2||solo)&&k('up2'));
+  let dx=(R?1:0)-(L?1:0), dy=(D?1:0)-(U?1:0);
+  if(TouchJoy.id!==null && !p2){ dx=TouchJoy.dx; dy=TouchJoy.dy; }
+  else if(!dx&&!dy&&typeof Pads!=='undefined'){ const a=Pads.axis(p2?1:0); if(a){ dx=a.x; dy=a.y; } }
+  return {x:dx,y:dy}; }
 addEventListener('keydown',e=>{
   if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)) {
     if(document.activeElement && document.activeElement.tagName==='INPUT') {} else e.preventDefault();
@@ -73,9 +83,9 @@ addEventListener('keydown',e=>{
     if(G.state==='shop'&&e.code==='KeyR'){ $('#shopReroll').click(); return; }
     if(G.state==='shop'&&e.code==='Enter'){ $('#shopSkip').click(); return; }
   }
-  if(e.code==='KeyP'){ if(G.state==='playing')togglePause(true); else if(G.state==='paused')togglePause(false); }
-  if(e.code==='Space') tryDash(players[0]);
-  if((e.code==='ShiftRight'||e.code==='Enter'||e.code==='Numpad0') && G.coop && players[1]) tryDash(players[1]);   // P2 Ausweichen
+  if(e.code===KEYBIND.pause){ if(G.state==='playing')togglePause(true); else if(G.state==='paused')togglePause(false); }
+  if(e.code===KEYBIND.dash1) tryDash(players[0]);
+  if((e.code===KEYBIND.dash2||e.code==='Enter'||e.code==='Numpad0') && G.coop && players[1]) tryDash(players[1]);   // P2 Ausweichen
   if(e.code==='F3'){ e.preventDefault(); toggleDbg(); return; }
   if(e.code==='Escape'){ if(G.state==='playing')togglePause(true); else if(G.state==='paused')togglePause(false); else if(G.state==='stats')closeStats(); }
 });
@@ -102,9 +112,14 @@ if(matchMedia('(pointer:coarse)').matches) document.body.classList.add('touch');
 })();
 
 /* ---------- AUDIO ---------- */
-const Audio2=(()=>{let ctx=null;const ac=()=>{if(!ctx)try{ctx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}return ctx;};
-  function s(f,d,t='square',g=0.03){const c=ac();if(!c)return;const o=c.createOscillator(),gn=c.createGain();o.type=t;o.frequency.value=f;o.connect(gn);gn.connect(c.destination);const n=c.currentTime;gn.gain.setValueAtTime(g,n);gn.gain.exponentialRampToValueAtTime(0.0001,n+d);o.start(n);o.stop(n+d);}
-  return{init:ac,shoot:()=>s(150+Math.random()*40,0.05,'square',0.010),hit:()=>s(90,0.04,'sawtooth',0.018),
+/* Busse: Effekte und Musik (music.js) laufen getrennt in einen Gesamtregler; Lautstärken setzt settings.js */
+const Audio2=(()=>{let ctx=null,bus=null;const vol={master:1,sfx:1,music:1,mute:false};
+  const ac=()=>{if(!ctx)try{ctx=new (window.AudioContext||window.webkitAudioContext)();
+    bus={master:ctx.createGain(),sfx:ctx.createGain(),music:ctx.createGain()}; bus.sfx.connect(bus.master); bus.music.connect(bus.master); bus.master.connect(ctx.destination); setVol();}catch(e){}
+    if(ctx&&ctx.state==='suspended')ctx.resume().catch(()=>{}); return ctx;};
+  function setVol(){ if(!bus)return; const n=ctx.currentTime; bus.master.gain.setTargetAtTime(vol.mute?0:vol.master,n,0.03); bus.sfx.gain.setTargetAtTime(vol.sfx,n,0.03); bus.music.gain.setTargetAtTime(vol.music,n,0.03); }
+  function s(f,d,t='square',g=0.03){if(vol.mute||!vol.sfx||!vol.master)return;const c=ac();if(!c)return;const o=c.createOscillator(),gn=c.createGain();o.type=t;o.frequency.value=f;o.connect(gn);gn.connect(bus?bus.sfx:c.destination);const n=c.currentTime;gn.gain.setValueAtTime(g,n);gn.gain.exponentialRampToValueAtTime(0.0001,n+d);o.start(n);o.stop(n+d);}
+  return{init:ac,ctx:()=>ctx,musicOut:()=>bus&&bus.music,volume(v){Object.assign(vol,v);setVol();},get muted(){return vol.mute||!vol.master;},shoot:()=>s(150+Math.random()*40,0.05,'square',0.010),hit:()=>s(90,0.04,'sawtooth',0.018),
     hurt:()=>s(70,0.18,'sawtooth',0.05),kill:()=>s(120,0.08,'triangle',0.028),dash:()=>s(280,0.12,'sine',0.03),
     boss:()=>s(50,0.5,'sawtooth',0.05),buy:()=>[0,7].forEach((x,i)=>setTimeout(()=>s(520*Math.pow(2,x/12),0.1,'triangle',0.04),i*60)),
     lvl:()=>[0,4,7].forEach((x,i)=>setTimeout(()=>s(440*Math.pow(2,x/12),0.14,'triangle',0.04),i*70)),

@@ -90,11 +90,7 @@ const DASH_SPEED=430, DASH_TIME=0.14, DASH_CD=2.4;
 function tryDash(who){
   const p=who||players[0]; if(G.state!=='playing'||!p||p.dead)return;
   if(p.dashCd>0 && !Admin.dash)return;
-  const solo=p.ctrl==='solo', p2=p.ctrl==='p2';
-  const R=(!p2&&keys.KeyD)||((p2||solo)&&keys.ArrowRight), L=(!p2&&keys.KeyA)||((p2||solo)&&keys.ArrowLeft);
-  const D=(!p2&&keys.KeyS)||((p2||solo)&&keys.ArrowDown), U=(!p2&&keys.KeyW)||((p2||solo)&&keys.ArrowUp);
-  let dx=(R?1:0)-(L?1:0), dy=(D?1:0)-(U?1:0);
-  if(TouchJoy.id!==null && !p2){ dx=TouchJoy.dx; dy=TouchJoy.dy; }
+  let {x:dx,y:dy}=moveInput(p);
   if(dx===0&&dy===0){ dx=Math.cos(p.aim); dy=Math.sin(p.aim); }
   const m=Math.hypot(dx,dy)||1; p.dashDir={x:dx/m,y:dy/m};
   p.dashTime=DASH_TIME; p.invuln=Math.max(p.invuln,0.22); p.dashCd=DASH_CD;
@@ -103,12 +99,7 @@ function tryDash(who){
 }
 function updatePlayer(dt){
   const p=player;
-  const solo=p.ctrl==='solo', p2=p.ctrl==='p2';                 // p1=WASD, p2=Pfeile, solo=beides
-  const R=(!p2&&keys.KeyD)||((p2||solo)&&keys.ArrowRight), L=(!p2&&keys.KeyA)||((p2||solo)&&keys.ArrowLeft);
-  const D=(!p2&&keys.KeyS)||((p2||solo)&&keys.ArrowDown),  U=(!p2&&keys.KeyW)||((p2||solo)&&keys.ArrowUp);
-  let dx=(R?1:0)-(L?1:0);
-  let dy=(D?1:0)-(U?1:0);
-  if(TouchJoy.id!==null && !p2){ dx=TouchJoy.dx; dy=TouchJoy.dy; }
+  let {x:dx,y:dy}=moveInput(p);                                  // Tastatur (Belegung), Touch, Gamepad
   const mlen=Math.hypot(dx,dy); p.moving=mlen>0||p.dashTime>0;
   const tgt=nearestEnemy(p.x,p.y);
   if(tgt) p.aim=Math.atan2(tgt.y-p.y,tgt.x-p.x);
