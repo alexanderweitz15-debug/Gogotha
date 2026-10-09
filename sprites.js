@@ -323,6 +323,117 @@ function enemySprite(type,r,col,frame,white){
   out._pad=pad; SPRITE_CACHE.set(key,out); return out;
 }
 
+/* ---------- REGIONS-GEGNER (je Region zwei, Verhalten in js/regions.js) — gleiche Konvention wie ENEMY_ART ---------- */
+Object.assign(ENEMY_ART,{
+  /* Grabenratte: geduckter Leib, nackter Schwanz, rotes Auge, trippelnde Beine */
+  rat(g,r,c,f){ const d=shade(c,-0.5), sw=Math.sin(f/4*TAU)*r*0.25;
+    g.strokeStyle='#c89a8a'; g.lineWidth=Math.max(1,r*0.12); g.lineCap='round'; g.beginPath(); g.moveTo(-r*0.7,r*0.15); g.quadraticCurveTo(-r*1.3,r*(0.1+sw/r*0.6),-r*1.5,-r*0.3); g.stroke();
+    for(const x of [-0.4,0.35]){ spLine(g,r*x,r*0.35,r*x+sw,r*0.9,d,r*0.14); spLine(g,r*x+r*0.12,r*0.35,r*x+r*0.12-sw,r*0.9,d,r*0.14); }
+    g.fillStyle=c; g.beginPath(); g.ellipse(-r*0.1,r*0.1,r*0.8,r*0.5,0,0,TAU); g.fill();
+    g.strokeStyle=d; g.lineWidth=Math.max(1,r*0.08); for(let i=0;i<3;i++){ g.beginPath(); g.moveTo(-r*0.6+i*r*0.3,-r*0.3); g.lineTo(-r*0.45+i*r*0.3,-r*0.05); g.stroke(); }
+    g.fillStyle=shade(c,0.15); g.beginPath(); g.moveTo(r*0.4,-r*0.25); g.quadraticCurveTo(r*1.4,-r*0.05,r*1.2,r*0.25); g.quadraticCurveTo(r*0.6,r*0.4,r*0.35,r*0.3); g.closePath(); g.fill();
+    spCirc(g,r*0.45,-r*0.32,r*0.2,'#c89a8a'); spCirc(g,r*0.8,-r*0.08,r*0.1,'#ff3a2a'); spCirc(g,r*1.25,r*0.1,r*0.08,'#1a0a08');
+    spLine(g,r*1.0,r*0.25,r*1.05,r*0.42,'#e8e0c8',r*0.07); },
+  /* Grabenpionier: Stahlhelm, Gasmaske, Mantel, Mine unter dem Arm */
+  sapper(g,r,c,f){ const d=shade(c,-0.5), sw=Math.sin(f/4*TAU)*r*0.2;
+    spLine(g,-r*0.25,r*0.4,-r*0.3+sw,r*0.98,d,r*0.2); spLine(g,r*0.15,r*0.4,r*0.2-sw,r*0.98,d,r*0.2);
+    spRobe(g,r,0,c,-0.45,0.48,0.62);
+    g.strokeStyle=d; g.lineWidth=Math.max(1,r*0.06); g.beginPath(); g.moveTo(-r*0.4,r*0.1); g.lineTo(r*0.45,r*0.1); g.stroke();
+    spCirc(g,r*0.02,-r*0.62,r*0.3,'#3a3a32');
+    spCirc(g,-r*0.06,-r*0.66,r*0.09,'#b8c8a0'); spCirc(g,r*0.18,-r*0.66,r*0.09,'#b8c8a0');   // Gasmaskengläser
+    g.fillStyle='#2a2a24'; g.beginPath(); g.ellipse(r*0.25,-r*0.45,r*0.13,r*0.16,0,0,TAU); g.fill();
+    spLine(g,r*0.3,-r*0.35,r*0.1,r*0.0,'#4a4a3a',r*0.08);
+    g.fillStyle=shade(c,-0.2); g.beginPath(); g.ellipse(0,-r*0.86,r*0.58,r*0.16,0,0,TAU); g.fill(); g.beginPath(); g.arc(0,-r*0.86,r*0.38,Math.PI,0); g.fill();   // Stahlhelm
+    g.fillStyle='#2a1a10'; g.beginPath(); g.arc(r*0.55,r*0.15,r*0.33,0,TAU); g.fill();                   // Tellermine
+    g.strokeStyle='#8a7a5a'; g.lineWidth=Math.max(1,r*0.06); g.beginPath(); g.arc(r*0.55,r*0.15,r*0.33,0,TAU); g.stroke();
+    spCirc(g,r*0.55,r*0.15,r*0.1,(f%2)?'#ff4a3a':'#7a2020'); },
+  /* Knochenwand: aufgeschichtete Schädel und Gebeine, wandert als lebende Deckung */
+  bonewall(g,r,c,f){ const d=shade(c,-0.45), sh=Math.sin(f/4*TAU)*r*0.04;
+    g.fillStyle=d; g.beginPath(); g.moveTo(-r*0.5,-r*1.25); g.quadraticCurveTo(r*0.35,-r*1.35,r*0.55,-r*1.1); g.lineTo(r*0.75,r*0.95); g.lineTo(-r*0.4,r*0.95); g.closePath(); g.fill();
+    for(let i=0;i<5;i++){ const y=-r*1.0+i*r*0.42; spLine(g,-r*0.45,y+sh,r*0.65,y+r*0.08-sh,shade(c,-0.15),r*0.14); spCirc(g,-r*0.45,y+sh,r*0.1,c); spCirc(g,r*0.65,y+r*0.08-sh,r*0.1,c); }
+    for(const [x,y,s] of [[0.25,-0.75,0.26],[0.4,-0.15,0.3],[0.2,0.45,0.27],[-0.15,-0.4,0.22],[-0.1,0.25,0.22]]){
+      spCirc(g,r*x,r*y,r*s,c); g.fillStyle=c; g.fillRect(r*(x-s*0.5),r*(y+s*0.6),r*s,r*s*0.45);
+      spCirc(g,r*(x-s*0.35)+r*s*0.7,r*(y-s*0.05),r*s*0.24,'#1a0e0a'); spCirc(g,r*(x+s*0.05)+r*s*0.7,r*(y-s*0.05),r*s*0.24,'#1a0e0a');
+      spCirc(g,r*(x-s*0.35)+r*s*0.7,r*(y-s*0.05),r*s*0.08,'#ff5040'); } },
+  /* Gruftgeist: zerfetztes Leichentuch, hohle Augen, flatternder Saum */
+  ghost(g,r,c,f){ const ph=f/4*TAU;
+    g.save(); g.globalAlpha*=0.8;
+    g.fillStyle=shade(c,-0.25); g.beginPath(); g.moveTo(-r*0.55,-r*0.5);
+    g.quadraticCurveTo(-r*0.6,-r*1.15,r*0.05,-r*1.12); g.quadraticCurveTo(r*0.65,-r*1.05,r*0.6,-r*0.4);
+    for(let i=0;i<=5;i++){ const x=r*0.6-i*r*0.24, y=r*(0.75+(i%2?0.25:0))+Math.sin(ph+i)*r*0.12; g.lineTo(x-r*0.15*i/5,y); }
+    g.closePath(); g.fill();
+    g.fillStyle=c; g.beginPath(); g.ellipse(r*0.05,-r*0.55,r*0.42,r*0.48,0,0,TAU); g.fill();
+    spLine(g,r*0.35,-r*0.1,r*1.0,r*(0.05+Math.sin(ph)*0.15),shade(c,-0.1),r*0.16);
+    g.restore();
+    g.fillStyle='#0a0a12'; g.beginPath(); g.ellipse(-r*0.08,-r*0.6,r*0.1,r*0.15,0,0,TAU); g.ellipse(r*0.22,-r*0.6,r*0.1,r*0.15,0,0,TAU); g.ellipse(r*0.08,-r*0.3,r*0.08,r*0.12,0,0,TAU); g.fill();
+    spCirc(g,-r*0.08,-r*0.6,r*0.04,'#bfe8ff'); spCirc(g,r*0.22,-r*0.6,r*0.04,'#bfe8ff'); },
+  /* Pestarzt: Krempenhut, lange Schnabelmaske, schwarzer Wachsmantel, Rauchfass mit Giftschwaden */
+  plaguedoc(g,r,c,f){ const d=shade(c,-0.5), sw=Math.sin(f/4*TAU)*r*0.12;
+    g.fillStyle=c; g.beginPath(); g.moveTo(-r*0.38,-r*0.45); g.lineTo(r*0.38,-r*0.45); g.lineTo(r*0.72-sw,r*0.98); g.lineTo(-r*0.72+sw,r*0.98); g.closePath(); g.fill();
+    g.strokeStyle=d; g.lineWidth=Math.max(1,r*0.05); g.beginPath(); g.moveTo(0,-r*0.4); g.lineTo(0,r*0.95); g.stroke();
+    spCirc(g,0,-r*0.6,r*0.3,shade(c,-0.3));
+    g.fillStyle='#d8c8a0'; g.beginPath(); g.moveTo(r*0.12,-r*0.72); g.quadraticCurveTo(r*0.8,-r*0.6,r*1.1,-r*0.28); g.quadraticCurveTo(r*0.6,-r*0.36,r*0.12,-r*0.48); g.closePath(); g.fill();
+    spCirc(g,r*0.05,-r*0.68,r*0.09,'#c01f24');
+    g.fillStyle='#0a0a06'; g.beginPath(); g.ellipse(0,-r*0.88,r*0.62,r*0.14,0,0,TAU); g.fill(); g.fillRect(-r*0.3,-r*1.25,r*0.6,r*0.38);
+    spLine(g,r*0.3,-r*0.1,r*0.7,r*0.35,'#6a6a40',r*0.06); spCirc(g,r*0.72,r*0.45,r*0.17,'#5a5a30');
+    g.save(); g.globalAlpha*=0.45+Math.sin(f/4*TAU)*0.15; spCirc(g,r*0.8,r*0.15,r*0.24,C.sick); g.restore(); },
+  /* Fleischkoloss: zusammengenähte Fleischmasse, kleiner Kopf, Pranken */
+  colossus(g,r,c,f){ const d=shade(c,-0.45), l=shade(c,0.2), pulse=1+Math.sin(f/4*TAU)*0.04;
+    spLine(g,-r*0.35,r*0.5,-r*0.45,r*0.98,d,r*0.28); spLine(g,r*0.3,r*0.5,r*0.4,r*0.98,d,r*0.28);
+    g.fillStyle=c; g.beginPath(); g.ellipse(0,r*0.05,r*0.92*pulse,r*0.82*pulse,0,0,TAU); g.fill();
+    for(const [x,y,s] of [[-0.4,-0.3,0.3],[0.35,0.3,0.26],[-0.2,0.45,0.22]]) spCirc(g,r*x,r*y,r*s,l);
+    g.strokeStyle='#2a0a08'; g.lineWidth=Math.max(1,r*0.05);
+    g.beginPath(); g.moveTo(-r*0.6,-r*0.1); g.quadraticCurveTo(0,r*0.2,r*0.6,-r*0.2); g.stroke();
+    for(let i=0;i<6;i++){ const x=-r*0.5+i*r*0.2, y=r*(0.06+0.04*Math.sin(i)); g.beginPath(); g.moveTo(x,y-r*0.08); g.lineTo(x+r*0.04,y+r*0.08); g.stroke(); }
+    spCirc(g,r*0.2,-r*0.78,r*0.24,d); spCirc(g,r*0.28,-r*0.8,r*0.06,'#ffd080');
+    g.fillStyle='#1a0204'; g.fillRect(r*0.14,-r*0.66,r*0.24,r*0.06);
+    spCirc(g,r*0.85,r*0.15,r*0.26,l); spCirc(g,-r*0.85,r*0.1,r*0.22,l); },
+  /* Fleischerhaken: Schlächter mit blutiger Schürze und Kettenhaken */
+  hook(g,r,c,f){ const d=shade(c,-0.5), sw=Math.sin(f/4*TAU)*r*0.18;
+    spLine(g,-r*0.25,r*0.45,-r*0.3+sw,r*0.98,'#2a1a14',r*0.22); spLine(g,r*0.2,r*0.45,r*0.25-sw,r*0.98,'#2a1a14',r*0.22);
+    g.fillStyle=c; g.beginPath(); g.ellipse(0,-r*0.05,r*0.62,r*0.6,0,0,TAU); g.fill();
+    g.fillStyle='#d8cdb8'; g.beginPath(); g.moveTo(-r*0.38,-r*0.3); g.lineTo(r*0.38,-r*0.3); g.lineTo(r*0.45,r*0.75); g.lineTo(-r*0.45,r*0.75); g.closePath(); g.fill();
+    g.fillStyle='rgba(150,15,20,.85)'; g.beginPath(); g.arc(r*0.1,r*0.2,r*0.2,0,TAU); g.arc(-r*0.15,r*0.5,r*0.14,0,TAU); g.arc(r*0.22,r*0.55,r*0.1,0,TAU); g.fill();
+    spCirc(g,0,-r*0.72,r*0.28,'#b08a74'); g.fillStyle=d; g.beginPath(); g.arc(0,-r*0.78,r*0.3,Math.PI,0); g.fill();
+    spCirc(g,r*0.1,-r*0.7,r*0.05,'#1a0a08'); g.fillStyle='#1a0a08'; g.fillRect(-r*0.05,-r*0.56,r*0.22,r*0.05);
+    spLine(g,r*0.45,-r*0.15,r*0.85,r*0.15,c,r*0.16);
+    g.strokeStyle='#8a909a'; g.lineWidth=Math.max(1,r*0.07); for(let i=0;i<3;i++){ g.beginPath(); g.ellipse(r*(0.9+i*0.1),r*(0.22+i*0.12),r*0.06,r*0.04,0.6,0,TAU); g.stroke(); }
+    g.strokeStyle='#c8ccd2'; g.lineWidth=Math.max(1.2,r*0.1); g.beginPath(); g.arc(r*1.12,r*0.72,r*0.22,-Math.PI*0.5,Math.PI*0.9); g.stroke();
+    spLine(g,r*0.92,r*0.78,r*0.98,r*0.64,'#c8ccd2',r*0.08); },
+  /* Schlachtstier: massiger Nacken, gesenkte Hörner, Nasenring */
+  bull(g,r,c,f){ const d=shade(c,-0.5), l=shade(c,0.25), sw=Math.sin(f/4*TAU)*r*0.16;
+    for(const x of [-0.6,-0.3,0.25,0.5]) spLine(g,r*x,r*0.35,r*x+(x<0?sw:-sw),r*0.98,d,r*0.18);
+    g.fillStyle=c; g.beginPath(); g.ellipse(-r*0.15,r*0.05,r*0.85,r*0.55,0,0,TAU); g.fill();
+    g.fillStyle=d; g.beginPath(); g.ellipse(r*0.05,-r*0.25,r*0.55,r*0.4,-0.3,0,TAU); g.fill();
+    g.strokeStyle='#2a0a08'; g.lineWidth=Math.max(1,r*0.05); for(let i=0;i<3;i++){ g.beginPath(); g.moveTo(-r*0.7+i*r*0.25,-r*0.1); g.lineTo(-r*0.6+i*r*0.25,r*0.25); g.stroke(); }
+    g.fillStyle=c; g.beginPath(); g.ellipse(r*0.72,r*0.0,r*0.36,r*0.3,0.3,0,TAU); g.fill();
+    spCirc(g,r*0.98,r*0.15,r*0.14,l); spCirc(g,r*1.0,r*0.12,r*0.04,'#1a0a08');
+    g.strokeStyle=C.gold2; g.lineWidth=Math.max(1,r*0.05); g.beginPath(); g.arc(r*1.02,r*0.26,r*0.08,0,TAU); g.stroke();
+    spCirc(g,r*0.7,-r*0.12,r*0.07,'#ff3a2a');
+    g.strokeStyle='#e8dcc0'; g.lineWidth=Math.max(1.2,r*0.11); g.lineCap='round';
+    g.beginPath(); g.moveTo(r*0.6,-r*0.25); g.quadraticCurveTo(r*0.75,-r*0.75,r*1.25,-r*0.6); g.stroke();
+    g.beginPath(); g.moveTo(r*0.5,-r*0.2); g.quadraticCurveTo(r*0.4,-r*0.7,r*0.8,-r*0.85); g.stroke(); },
+  /* Kreuzträger: gebeugter Büßer in Kutte, trägt ein schweres Holzkreuz als Schild vor sich */
+  crossbearer(g,r,c,f){ const d=shade(c,-0.5), sw=Math.sin(f/4*TAU)*r*0.12;
+    spRobe(g,r,sw,c,-0.45,0.45,0.7);
+    g.strokeStyle='#8a7a4a'; g.lineWidth=Math.max(1,r*0.06); g.beginPath(); g.moveTo(-r*0.4,r*0.15); g.lineTo(r*0.4,r*0.15); g.stroke();
+    g.fillStyle=d; g.beginPath(); g.moveTo(-r*0.45,-r*0.3); g.quadraticCurveTo(-r*0.5,-r*1.1,r*0.05,-r*1.08); g.quadraticCurveTo(r*0.5,-r*1.0,r*0.45,-r*0.3); g.closePath(); g.fill();
+    spCirc(g,r*0.08,-r*0.6,r*0.24,'#0a0608'); spCirc(g,r*0.0,-r*0.62,r*0.05,C.gold2); spCirc(g,r*0.16,-r*0.62,r*0.05,C.gold2);
+    g.fillStyle='#4a3018'; g.fillRect(r*0.62,-r*1.3,r*0.32,r*2.25); g.fillRect(r*0.35,-r*0.8,r*0.86,r*0.28);
+    g.strokeStyle=C.gold; g.lineWidth=Math.max(1,r*0.05); g.strokeRect(r*0.62,-r*1.3,r*0.32,r*2.25); g.strokeRect(r*0.35,-r*0.8,r*0.86,r*0.28);
+    spCirc(g,r*0.78,-r*0.66,r*0.07,'#c8ccd2'); spCirc(g,r*0.78,r*0.6,r*0.06,'#c8ccd2'); },
+  /* Seraph: sechs Flügel, goldener Leib voller Augen, Heiligenschein (4 Flügelbilder) */
+  seraph(g,r,c,f){ const wf=[0.25,0.1,-0.1,0.1][f%4], d=shade(c,-0.35);
+    for(const sd of [-1,1]) for(let k=0;k<3;k++){ const a=(-0.9+k*0.75+wf)*1, len=r*(1.25-k*0.15);
+      g.fillStyle=k===1?c:d; g.beginPath(); g.moveTo(0,-r*0.2);
+      g.quadraticCurveTo(sd*len*0.6,-r*0.2+Math.sin(a)*len*0.9-r*0.3,sd*len,-r*0.2+Math.sin(a)*len*0.8);
+      g.quadraticCurveTo(sd*len*0.5,-r*0.1+Math.sin(a)*len*0.3,0,r*0.05); g.fill(); }
+    g.save(); g.globalAlpha*=0.5; g.strokeStyle='#fff2c0'; g.lineWidth=Math.max(1,r*0.08); g.beginPath(); g.ellipse(0,-r*1.05,r*0.42,r*0.12,0,0,TAU); g.stroke(); g.restore();
+    g.fillStyle=shade(c,0.2); g.beginPath(); g.ellipse(0,-r*0.1,r*0.36,r*0.62,0,0,TAU); g.fill();
+    for(const [x,y] of [[0,-0.55],[-0.14,-0.15],[0.14,-0.15],[0,0.25]]){ spCirc(g,r*x,r*y,r*0.11,'#fff8e8'); spCirc(g,r*x+r*0.03,r*y,r*0.05,'#c01f24'); } },
+});
+Object.assign(ENEMY_FRAMES,{rat:4,sapper:4,bonewall:4,ghost:4,plaguedoc:4,colossus:4,hook:4,bull:4,crossbearer:4,seraph:4});
+
 /* ---------- BOSSE 6–10 (eigene Figuren; col = Körperfarbe bzw. Weiß beim Treffer-Blitz) ---------- */
 const BOSS_ART={
   /* Choral der Asche: drei Aschenmasken kreisen um eine dunkle Flamme */

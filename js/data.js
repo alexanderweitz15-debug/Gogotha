@@ -482,7 +482,7 @@ function checkAchievements(){ if(!DB.current)return; const s=DB.current.stats||{
 function finishRun(died,won){ logBalance(died,won); if(!runCounts()) return 0;
   const snap=buildRunSnapshot(died,won), prev=G.runCommitted; G.runCommitted=snap;
   const rec=prev?runDelta(snap,prev):snap;
-  DB.commit(rec); const souls=awardSouls(rec); checkAchievements(); DB.save(); return souls; }
+  DB.commit(rec); runFeats(rec); const souls=awardSouls(rec); checkAchievements(); DB.save(); return souls; }
 function runCounts(){ return !G.noSave && !(G.run&&G.run.cheated); }
 function runDelta(snap,prev){ const wk={};
   for(const k in snap.weaponKills){ const d=snap.weaponKills[k]-(prev.weaponKills[k]||0); if(d>0)wk[k]=d; }

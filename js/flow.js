@@ -94,6 +94,7 @@ function spawnWave(lvl){
   if(lvl>=9)pool.push('spitter');
   if(lvl>=11)pool.push('exploder');
   if(lvl>=11)pool.push('summoner');
+  regionPool(lvl,pool);
   const eliteChance=lvl>=8?Math.min(0.32,0.08+lvl*0.006):0;
   for(let i=0;i<count;i++){
     const edge=randInt(0,3);let x,y;
@@ -102,7 +103,7 @@ function spawnWave(lvl){
     else if(edge===2){x=rand(ROOM.x+20,ROOM.x+ROOM.w-20);y=ROOM.y+ROOM.h-20;}
     else{x=ROOM.x+20;y=rand(ROOM.y+20,ROOM.y+ROOM.h-20);}
     if(dist2(x,y,player.x,player.y)<170*170){i--;continue;}
-    const e=spawnEnemy(pick(pool),x,y,lvl);
+    const e=spawnEnemy(pick(pool),x,y,lvl); i+=packExtra(e,count-1-i);
     if(eliteChance && !e.support && !e.explode && Math.random()<eliteChance) makeElite(e);
   }
 }
@@ -206,7 +207,7 @@ function rollShopItems(){ const out=[], used=new Set();
     if(!pool.length)break; const it=pick(pool); used.add(it.id); out.push({item:it}); }
   return out; }
 function buyItem(o){ const it=o.item, price=itemPrice(it); if(o.sold||G.coins<price)return;
-  G.coins-=price; $('#coinTag').textContent=G.coins; it.apply(player); player.itemsOwned=player.itemsOwned||{}; player.itemsOwned[it.id]=itemOwned(player,it.id)+1;
+  G.coins-=price; $('#coinTag').textContent=G.coins; it.apply(player); player.itemsOwned=player.itemsOwned||{}; player.itemsOwned[it.id]=itemOwned(player,it.id)+1; codexSeen('i',it.id);
   player.items.push({ic:it.ic,color:rarColor(it.rk)}); updateItemPills(); updateHP(); o.sold=true; Audio2.buy(); renderShop(); }
 function openShop(){
   G.state='shop'; G.menuAt=performance.now(); $('#hud').classList.remove('show');
