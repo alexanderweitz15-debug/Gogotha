@@ -50,8 +50,8 @@ function spawnEnemy(type,x,y,lvl,opts){opts=opts||{};
     slowT:0,burnT:0,burnDmg:0,hitFlash:0,name:t.name,isBoss:false,bspd:(t.bspd||0),bdmg:(t.bdmg||0)*sc.dmg*dD,
     ranged:t.ranged,lob:t.lob,explode:t.explode,edmg:(t.edmg||0)*sc.dmg*dD,
     fly:t.fly,support:t.support,heal:t.heal,summon:t.summon,healAmt:(t.healAmt||0)*sc.hp,
-    xpValue:t.xp||1,wob:rand(0,TAU),_orbCd:0};
-  e.hp=e.maxHp; enemies.push(e); return e;
+    xpValue:t.xp||1,wob:rand(0,TAU),_orbCd:0,ai:t.ai,guard:t.guard};
+  e.hp=e.maxHp; if(t.init)t.init(e); enemies.push(e); return e;
 }
 function updateEnemy(e,dt){
   const p=nearestPlayer(e.x,e.y)||player;   // Gegner zielen auf nächsten lebenden Spieler
@@ -80,7 +80,8 @@ function updateEnemy(e,dt){
     e.fireCd-=dt;
     if(e.fireCd<=0 && !Admin.noFire){ e.fireCd=ETYPES[e.type].fireCd*rand(.8,1.2)/(diffMul('fireRate')*G.curseFire);
       if(e.heal) healAllies(e); else if(e.summon) summonAdds(e); }
-  } else { e.x+=Math.cos(ang)*sp*dt; e.y+=Math.sin(ang)*sp*dt; }
+  } else if(e.ai){ e.ai(e,dt,p,ang,d,sp); }   // Regionsgegner (js/regions.js)
+  else { e.x+=Math.cos(ang)*sp*dt; e.y+=Math.sin(ang)*sp*dt; }
   if(!e.isBoss && !e.fly) collideObstacles(e);   // Flieger ignorieren Hindernisse
   e.x=clamp(e.x,ROOM.x+e.r,ROOM.x+ROOM.w-e.r); e.y=clamp(e.y,ROOM.y+e.r,ROOM.y+ROOM.h-e.r);
   if((e.touch||e.isBoss)&&e.touchCd<=0&&d<e.r+p.r){
@@ -142,7 +143,7 @@ function killEnemy(e,owner,src){
   if(Math.random()<0.8) spawnPickup(e.x,e.y,'coin',Math.max(1,Math.round(randInt(1,3)*gm*rm)));
   if(Math.random()<0.07) spawnPickup(e.x,e.y,'health',randInt(8,14));
   if(o&&!o.dead&&o.lifesteal>0) healPlayer(o,o.lifesteal);
-  spreadOnDeath(e); relicOnKill(e,o); soulBondKill(o); synOnKill(e,o,src);
+  spreadOnDeath(e); relicOnKill(e,o); soulBondKill(o); synOnKill(e,o,src); regionOnKill(e);
   removeEnemy(e);
 }
 function removeEnemy(e){ const i=enemies.indexOf(e); if(i>=0)enemies.splice(i,1); }
@@ -227,16 +228,17 @@ function updateBoss(e,dt,tg){
 }
 /* ---------- GEFAHRENZONEN (Bosse 6–10): erst sichtbare Warnung, dann Schaden — Ausweichschritt hilft ---------- */
 function addHazard(h){ h.t=0; (G.hazards||(G.hazards=[])).push(h); }
-function updateHazards(dt){ const hz=G.hazards; if(!hz)return;
+function updateHazards(dt){ updateRegion(dt); const hz=G.hazards; if(!hz)return;
   for(let i=hz.length-1;i>=0;i--){ const h=hz[i]; h.t+=dt;
     if(!h.hit && h.t>=h.delay){ h.hit=true; G.shake=Math.max(G.shake,3);
       for(const pl of players){ if(pl.dead)continue;
         const inside=h.kind==='circle'?dist2(pl.x,pl.y,h.x,h.y)<(h.r+pl.r)*(h.r+pl.r):distToSeg(pl.x,pl.y,h.x1,h.y1,h.x2,h.y2)<h.w/2+pl.r;
-        if(inside) hurtPlayer(h.dmg,pl); }
+        if(inside&&h.dmg) hurtPlayer(h.dmg,pl); }
+      if(h.onHit) h.onHit(h);
       const px=h.kind==='circle'?h.x:(h.x1+h.x2)/2, py=h.kind==='circle'?h.y:(h.y1+h.y2)/2;
       for(let k=0;k<10;k++)spawnParticle(px+rand(-20,20),py+rand(-20,20),h.color||C.candle,rand(1.5,3),rand(60,160)); }
     if(h.t>=h.delay+0.25) hz.splice(i,1); } }
-function drawHazards(){ const hz=G.hazards; if(!hz)return;
+function drawHazards(){ drawRegion(); const hz=G.hazards; if(!hz)return;
   for(const h of hz){ const pr=clamp(h.t/h.delay,0,1), col=h.color||'#c01f24';
     cx.save();
     if(!h.hit){ cx.globalAlpha=0.12+pr*0.16; cx.fillStyle=col; cx.strokeStyle=col; cx.lineWidth=2;
@@ -299,7 +301,7 @@ const BOSS_AI={
       else { bossAdds(e,['chaser','shooter','tank','healer'],3+Math.floor(G.level/12),2); e.atkCd=2.4*sp; } } },
 };
 function bossDefeated(e){
-  G.bossMode=false; G.boss=null; $('#bossBarWrap').classList.remove('show');
+  G.bossMode=false; G.boss=null; $('#bossBarWrap').classList.remove('show'); regionBossDown(e);
   if(G.run){G.run.bossKills=(G.run.bossKills||0)+1; G.run.bossKinds=G.run.bossKinds||{}; G.run.bossKinds[e.bossKind]=true;}
   /* Phase 5: Boss-Charakter sofort freischalten + persistieren */
   if(DB.current && runCounts()){ DB.current.stats=DB.current.stats||{}; const bk=DB.current.stats.bossKinds=DB.current.stats.bossKinds||{};

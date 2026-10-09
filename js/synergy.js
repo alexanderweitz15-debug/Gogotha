@@ -49,7 +49,7 @@ function duoClsChip(c,txt){ const k=c==='nahkampf'?MELEE_CLS:CLASSES[c]; return 
 function duoCount(p,c){ return c==='nahkampf'?p.weapons.filter(isMelee).length:((p.clsN&&p.clsN[c])||0); }
 const duoReady=(p,d)=>!hasDuo(p,d.id)&&duoCount(p,d.a)>=2&&duoCount(p,d.b)>=2;
 const duoReqText=d=>duoClsName(d.a)+' 2 + '+duoClsName(d.b)+' 2';
-function giveDuo(p,id){ const d=duoById(id); if(!p||!d||hasDuo(p,id))return; (p.duos||(p.duos={}))[id]=true;
+function giveDuo(p,id){ const d=duoById(id); if(!p||!d||hasDuo(p,id))return; (p.duos||(p.duos={}))[id]=true; codexSeen('d',id);
   p.items.push({ic:d.ic,color:C.gold2,relic:true}); updateItemPills(); Audio2.ability();
   showToast(t('duo_label'),'<b style="color:var(--gold2)">'+duoName(d)+'</b> · '+duoDesc(d)); }
 /* openRelic: Zusatzkarte nur nach einem Boss (nicht am Blutschrein) */
@@ -135,7 +135,7 @@ function setPartName(pt){ const o=pt.k==='item'?itemById(pt.id):pt.k==='relic'?r
 const setCount=(p,s)=>s.parts.filter(pt=>setPartOwned(p,pt)).length;
 function checkSets(p){ if(!p)return;
   for(const s of SETS){ if(hasSet(p,s.id)||setCount(p,s)<s.parts.length)continue;
-    (p.sets||(p.sets={}))[s.id]=true; if(s.apply)s.apply(p); Audio2.ability(); G.shake=Math.max(G.shake,6);
+    (p.sets||(p.sets={}))[s.id]=true; codexSeen('s',s.id); if(s.apply)s.apply(p); Audio2.ability(); G.shake=Math.max(G.shake,6);
     for(let i=0;i<30;i++)spawnParticle(p.x,p.y,s.color,rand(1.5,3.5),rand(80,220));
     showToast(t('set_toast'),'<b style="color:'+s.color+'">'+setName(s)+'</b> · '+setDesc(s)); updateHP(); } }
 /* Karten-Hinweis: „Teil von Set X (n/3)“ (k = item | gift | relic) */

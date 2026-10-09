@@ -16,7 +16,7 @@ const DB=(()=>{
   function newStats(){return {runs:0,kills:0,gold:0,bestLevel:0,bestCharLevel:0,deaths:0,wins:0,bossKills:0,playTime:0};}
   function blankProfile(name){return {name,stats:newStats(),unlocks:{},achievements:{},meta:{currency:0,levels:{}}};}
   function fill(p){ p.stats=p.stats||newStats(); p.unlocks=p.unlocks||{}; p.achievements=p.achievements||{}; p.meta=p.meta||{currency:0,levels:{}}; if(!p.meta.levels)p.meta.levels={}; return p; }
-  function dataOf(p){ return {stats:p.stats,unlocks:p.unlocks,achievements:p.achievements,meta:p.meta}; }
+  function dataOf(p){ return {stats:p.stats,unlocks:p.unlocks,achievements:p.achievements,meta:p.meta,codex:p.codex}; }
   /* Speicherfehler werden gemeldet statt verschluckt; _unsynced markiert lokal gecachte, nicht hochgeladene Stände */
   let onSaveError=null, lastErrAt=0;
   function saveFailed(reason){ if(current){ current._unsynced=true; cache(); }

@@ -87,7 +87,7 @@ function relicOnKill(e,o){ if(!o||!o.relics||G._relicD)return; G._relicD=1;
     if(o.relics.urn && e.burnT>0){ const d=(e.lastHit||0)*0.4; if(d>0){ novaRings.push({x:e.x,y:e.y,r:8,max:60,t:0.3,color:C.candle});
       for(const n of enemies.slice()) if(n!==e&&dist2(e.x,e.y,n.x,n.y)<60*60) damageEnemy(n,d,Math.atan2(n.y-e.y,n.x-e.x),40,false,'r_urn',o); } }
   } finally { G._relicD=0; } }
-function giveRelic(p,id){ const r=relicById(id); if(!p||!r||hasRelic(p,id))return; p.relics[id]=true;
+function giveRelic(p,id){ const r=relicById(id); if(!p||!r||hasRelic(p,id))return; p.relics[id]=true; codexSeen('r',id);
   p.items.push({ic:r.ic,color:C.gold2,relic:true}); updateItemPills(); checkSets(p); }
 function relicRecipeHint(id){ const rc=WEAPON_EVOS.find(x=>x.relic===id); return rc?t('relic_recipe',{w:weaponById(rc.a).name,r:weaponById(rc.result).name}):''; }
 
@@ -138,12 +138,13 @@ function updateBullets(dt){
       for(const e of enemies){
         if(b.hitIds.has(e.id))continue;
         if(dist2(b.x,b.y,e.x,e.y)<(b.r+e.r)*(b.r+e.r)){
+          const gd=e.guard&&e.guard(e,b); if(gd==='pass')continue; if(gd==='block'){ dead=true; break; }   // Regionsgegner: Geist, Kreuzträger
           const dmg=fxDmg(b,e);
           damageEnemy(e,dmg,Math.atan2(b.vy,b.vx),b.kb,true,b.wid,b.owner); relicOnHit(b,e,dmg);
           if(b.crit&&b.owner&&b.owner.critSlow&&e.hp>0) applySlow(e,b.owner);
           spawnFloater(e.x,e.y-e.r,Math.round(dmg),b.crit); Audio2.hit();
           b.hitIds.add(e.id); b.pierce--;
-          if(runFx(b,'hit',e)==='die'){ dead=true; break; }
+          if(runFx(b,'hit',e)==='die'||gd==='absorb'){ dead=true; break; }
           for(let k=0;k<3;k++)spawnParticle(b.x,b.y,b.color,1.2,40);
           if(b.pierce<0){dead=true;break;}
         }
@@ -159,7 +160,7 @@ function updateBullets(dt){
     if(b.x<ROOM.x-10||b.x>ROOM.x+ROOM.w+10||b.y<ROOM.y-10||b.y>ROOM.y+ROOM.h+10) dead=true;
     if(!dead && !b.lob && bulletHitsObstacle(b)) dead=true;
     if(b.lob && b.startD>=b.maxD){ spawnPuddle(b.x,b.y,b.dmg*0.5,{hostile:true,effect:'poison',big:true}); dead=true; }
-    if(!dead){ for(const pl of players){ if(pl.dead||pl.invuln>0)continue; if(dist2(b.x,b.y,pl.x,pl.y)<(b.r+pl.r)*(b.r+pl.r)){ hurtPlayer(b.dmg,pl); dead=true; break; } } }
+    if(!dead){ for(const pl of players){ if(pl.dead||pl.invuln>0)continue; if(dist2(b.x,b.y,pl.x,pl.y)<(b.r+pl.r)*(b.r+pl.r)){ hurtPlayer(b.dmg,pl); if(b.onHit)b.onHit(pl); dead=true; break; } } }
     if(dead) ebullets.splice(i,1);
   }
 }

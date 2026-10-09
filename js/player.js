@@ -40,7 +40,7 @@ function soulBondKill(o){ if(!o||!o.soulBond||o.dead)return; const fallen=player
   for(let i=0;i<24;i++)spawnParticle(fallen.x,fallen.y,C.gold2,rand(1.5,3),rand(60,180)); Audio2.ability();
   showToast(t('bond_t'),'<b>'+charById(fallen.charId).name+'</b> '+t('bond_d')); updateHP(); }
 function healPlayer(p,amt){ if(!p||p.dead)return; p.hp=clamp(p.hp+amt*(p.healMul||1),0,p.maxHP); updateHP(); }
-function giveWeapon(id){ if(!player)return;
+function giveWeapon(id){ if(!player)return; codexSeen('w',id);
   if(!player.weapons.includes(id)){player.weapons.push(id);player.wCd.push(0);}
   else {player.wLevel[id]=Math.min(WEAPON_MAX_LEVEL-1,(player.wLevel[id]||0)+1);}
   recalcClasses(player); updateWeaponBar(); }
