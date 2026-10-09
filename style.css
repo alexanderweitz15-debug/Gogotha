@@ -380,3 +380,11 @@ body.touch #hud.show ~ #touchUI{display:block}
 .sum-line{font-family:var(--mono);font-size:11px;line-height:1.5;margin-top:4px}
 .sum-l{color:var(--bone-dim)}
 @media (max-width:760px),(max-height:520px){ .sum{grid-template-columns:minmax(0,1fr);gap:8px} .sum-box{padding:8px 10px} .sum-row{grid-template-columns:minmax(0,10.5em) minmax(24px,1fr) auto 3em;gap:6px} }
+/* NAHKAMPF, DUO-SEGEN, SETS (melee.js, synergy.js) */
+#relicCards.four{grid-template-columns:repeat(4,1fr);max-width:920px}
+@media (max-width:760px){ #relicCards.four{grid-template-columns:repeat(2,1fr)} }
+.rcard.duo{border:2px solid transparent;background:linear-gradient(180deg,#1b150c,#0b0907) padding-box,linear-gradient(135deg,var(--ca),var(--cb)) border-box;box-shadow:0 0 22px rgba(255,233,160,.12) inset}
+.rcard.duo:hover{box-shadow:0 12px 30px rgba(0,0,0,.55),0 0 26px rgba(255,233,160,.3)}
+.rcard.duo .rk{color:var(--gold2);animation:godpulse 1.6s ease-in-out infinite}
+.rcard.duo .cls-row{margin-bottom:6px}
+.set-tag{margin-top:6px;font-family:var(--mono);font-size:10px;letter-spacing:.04em;opacity:.95}

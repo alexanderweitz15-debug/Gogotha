@@ -88,7 +88,7 @@ function relicOnKill(e,o){ if(!o||!o.relics||G._relicD)return; G._relicD=1;
       for(const n of enemies.slice()) if(n!==e&&dist2(e.x,e.y,n.x,n.y)<60*60) damageEnemy(n,d,Math.atan2(n.y-e.y,n.x-e.x),40,false,'r_urn',o); } }
   } finally { G._relicD=0; } }
 function giveRelic(p,id){ const r=relicById(id); if(!p||!r||hasRelic(p,id))return; p.relics[id]=true;
-  p.items.push({ic:r.ic,color:C.gold2,relic:true}); updateItemPills(); }
+  p.items.push({ic:r.ic,color:C.gold2,relic:true}); updateItemPills(); checkSets(p); }
 function relicRecipeHint(id){ const rc=WEAPON_EVOS.find(x=>x.relic===id); return rc?t('relic_recipe',{w:weaponById(rc.a).name,r:weaponById(rc.result).name}):''; }
 
 /* ---------- SCHREINE: auf Nicht-Boss-Stationen mit 35%; 1,5 s darin stehen aktiviert ihn (keine neue Taste) ---------- */
@@ -125,6 +125,7 @@ function shrineIcon(kind){ if(SHRINE_ICONS[kind])return SHRINE_ICONS[kind]; cons
 
 function nearestEnemy(x,y){let best=null,bd=1e9;for(const e of enemies){const d=dist2(x,y,e.x,e.y);if(d<bd){bd=d;best=e;}}return best;}
 function updateBullets(dt){
+  updateMelee(dt); updateSynergy(dt);   // Nahkampf-Schwünge, Duo-/Set-Effekte, Regeneration (melee.js, synergy.js)
   for(let i=bullets.length-1;i>=0;i--){
     const b=bullets[i]; b.life-=dt;
     /* ponytail: keine Zielsuche mehr — Schüsse fliegen geradeaus, ändern nie die Richtung */
@@ -233,6 +234,7 @@ function updateFloaters(dt){for(let i=floaters.length-1;i>=0;i--){const f=floate
 function hurtPlayer(dmg,who){
   const p=who||player; if(p.dead||p.invuln>0||Admin.god)return;
   p.waveHit=true; if(hasRelic(p,'mblood')) p.mbloodT=2;
+  p.hurtT=G.time;   // Regeneration pausiert danach (synergy.js)
   dmg=Math.max(1,dmg-(p.armorLocked?0:p.armor));   // Fluch Eiserne Gier: Rüstung wirkt nicht
   if(p.shield>0){ const a=Math.min(p.shield,dmg); p.shield-=a; dmg-=a; p.shieldRegT=Math.max(p.shieldRegT,2.0);
     for(let i=0;i<6;i++)spawnParticle(p.x,p.y,C.chill,2,90); }

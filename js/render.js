@@ -51,6 +51,7 @@ function renderGame(){
   for(const e of enemies) drawEnemy(e);
   // eigene Geschosse: Form je Waffe (sprites.js), vorgezeichnet und gedreht
   for(const b of bullets){ if(b.x<cam.x-60||b.x>cam.x+W+60||b.y<cam.y-60||b.y>cam.y+H+60)continue; drawProjectile(cx,b,G.uiTime); }
+  drawMelee();   // Nahkampf (melee.js)
   for(const bo of bolts){cx.save();cx.globalAlpha=clamp(bo.t/0.12,0,1);cx.strokeStyle=bo.color||'#cfe0ff';cx.lineWidth=2;cx.shadowColor=bo.color||'#9bbcff';cx.shadowBlur=10;cx.beginPath();cx.moveTo(bo.x1,bo.y1);const mx=(bo.x1+bo.x2)/2+rand(-10,10),my=(bo.y1+bo.y2)/2+rand(-10,10);cx.lineTo(mx,my);cx.lineTo(bo.x2,bo.y2);cx.stroke();cx.restore();}
   for(const bm of beams){cx.save();cx.globalAlpha=clamp(bm.t/0.09,0,1);cx.lineCap='round';cx.shadowColor=bm.color;cx.shadowBlur=14;cx.strokeStyle=bm.color;cx.lineWidth=bm.width||6;cx.beginPath();cx.moveTo(bm.x1,bm.y1);cx.lineTo(bm.x2,bm.y2);cx.stroke();cx.strokeStyle='#fff';cx.lineWidth=(bm.width||6)*0.35;cx.stroke();cx.restore();}
   drawLinkChain();
@@ -180,6 +181,7 @@ function drawPlayer(){
   if(flick)cx.globalAlpha=0.5;
   cx.save();cx.strokeStyle=p===players[1]?'rgba(127,208,230,.75)':'rgba(224,178,90,.75)';cx.lineWidth=2;cx.beginPath();cx.ellipse(p.x,p.y+p.r*1.25,p.r*1.35,p.r*0.5,0,0,TAU);cx.stroke();cx.restore();
   drawHero(cx,p.charId||G.charId,p.x,p.y,p.r*1.3,G.uiTime,!!moving,p.aim);   // größer gezeichnet, Trefferzone bleibt p.r
+  drawSynergyMarks(p);   // Set-Merkmale (synergy.js)
   if(G.coop&&players.length>1){ cx.fillStyle=p===players[0]?C.gold2:C.chill; cx.globalAlpha=0.9; cx.font='bold 11px "JetBrains Mono",monospace'; cx.textAlign='center'; cx.fillText('P'+(players.indexOf(p)+1),p.x,p.y-p.r-10); }
   cx.globalAlpha=1;
   // shield ring

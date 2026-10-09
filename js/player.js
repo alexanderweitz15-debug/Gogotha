@@ -45,7 +45,7 @@ function giveWeapon(id){ if(!player)return;
   else {player.wLevel[id]=Math.min(WEAPON_MAX_LEVEL-1,(player.wLevel[id]||0)+1);}
   recalcClasses(player); updateWeaponBar(); }
 function giveUpgradeDef(def,rk){ if(!player||!upAvail(def))return; const r=rarRank(rk); def.apply(player,r); player.taken[def.id]=(player.taken[def.id]||0)+1; player.hp=clamp(player.hp,0,player.maxHP);
-  player.items.push({ic:def.ic,color:rarColor(rk)}); updateItemPills(); updateHP(); }
+  player.items.push({ic:def.ic,color:rarColor(rk)}); updateItemPills(); updateHP(); checkSets(player); }
 function giveAbility(def,rk){ if(!player)return; const r=rarRank(rk);
   const existing=player.abilities.find(a=>a.id===def.id);
   if(existing){ existing.level=(existing.level||1)+1; existing.rk=rk; def.apply(player, Math.min(7, r+existing.level-1)); }
@@ -118,7 +118,7 @@ function updatePlayer(dt){
     const w=weaponById(p.weapons[i]);
     if(p.wCd[i]<=0 && (tgt || w.deploy)){
       if(w.deploy) deployFromWeapon(w);
-      else fireWeapon(w,Math.atan2(tgt.y-p.y,tgt.x-p.x));
+      else if(fireWeapon(w,Math.atan2(tgt.y-p.y,tgt.x-p.x))===false) continue;   // Nahkampf: niemand in Reichweite → bereit bleiben
       let fr=w.fr; if(w.ramp)fr=lerp(w.fr,w.frMin,clamp(p.heldTime/1.4,0,1));
       p.wCd[i]=(fr*frMul*(1-clsB(p,'pulver','fr'))*charCdMul(p,w))/1000; (p.wCdMax||(p.wCdMax=[]))[i]=p.wCd[i];
     }
@@ -132,6 +132,7 @@ function weaponDamage(w){ const lvl=player.wLevel[w.id]||0; return w.dmg*(1+lvl*
 function fireWeapon(w,base){
   if(w.beam){ fireBeam(w,base); return; }
   if(w.strike){ fireStrike(w); return; }
+  if(w.melee) return fireMelee(w,base);   // melee.js
   const p=player, n=w.count+p.multishot+charShots(p,w), spr=w.spread*(1+clsB(p,'pulver','spread')), total=spr*(n-1);
   Audio2.shoot();
   const baseDmg=weaponDamage(w)*charDmgMul(p,w);

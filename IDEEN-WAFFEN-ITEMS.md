@@ -339,11 +339,75 @@ Wenn Läufe dadurch zu leicht werden, zuerst `itemPrice` (Faktor 0,55) anheben.
 
 | Idee | Voraussetzung | Aufwand |
 |---|---|---|
-| Duo-Segen (2+2 Waffen aus zwei Klassen → Angebot bei Boss-Reliquie) | Klassen laufen, Overlay zeigt, welche Paare gespielt werden | M |
-| Set-Verwandlungen | Mindestens 25 Gaben/Reliquien im Pool | M |
-| Nahkampf als Angriffsart | E3 | L |
-| Lebensregeneration (Fastenbrot) | Entscheidung, ob Heilung außer am Wellenende gewollt ist | S |
+| ~~Duo-Segen~~ ✓ (09.10.) | Umgesetzt, siehe 12.2 | M |
+| ~~Set-Verwandlungen~~ ✓ (09.10.) | Umgesetzt, siehe 12.3 | M |
+| ~~Nahkampf als Angriffsart~~ ✓ (09.10.) | Umgesetzt, siehe 12.1 | L |
+| ~~Lebensregeneration~~ ✓ (09.10.) | Umgesetzt als Weihwasserflasche + Gabe, siehe 12.4 | S |
 | ~~Koop-Gaben~~ ✓ (09.10.) | Umgesetzt als Gaben, die nur im Koop erscheinen: **Verbundene Kette** (Kette zwischen beiden Spielern bis 520 px, 20+8×Seltenheit Schaden/s, stapelbar) und **Seelenband** (fällt der Gefährte, holen ihn 20 eigene Tötungen sofort mit 50 % LP zurück) | M |
+
+### 12.1 Nahkampfwaffen (09.10.2026, umgesetzt) — `js/melee.js`
+
+Neue Angriffsart `w.melee`: **Schwung** (Kreissektor), **Stoß** (Kapsel), **Bodenschlag** (wachsende Scheibe), **Kette** (kreisende Kugel an einer Kette).
+Die Trefferzone ist genau die gezeichnete Fläche; geschwungen wird nur, wenn ein Gegner in Reichweite ist (sonst bleibt die Waffe bereit).
+Treffer laufen über `damageEnemy(src = Waffe, owner)`: Henker-Nähe, Klassenboni und Klassen-Gegenstände, Krit, Lebensraub, Brand/Frost/Höllenfeuer-Gaben,
+Hinrichtung, Reliquien (Hammer, Krähenfeder beim Stoß), F3-Messung und Waffen-Kills greifen. Zusatzgeschosse: breiterer Bogen / +Durchschlag / größerer Ring / mehr Kugeln;
+Projektilgröße: +halbe Größe als Reichweite. Geschoss-Modifikatoren (Pechfass, Splitter …) gelten nicht (kein Geschoss).
+
+Benchmark (`tools/balance-bench.js`, 30 s, Stufe 10, Faktor zum Median der Seltenheit). Im Einzelziel steht der Spieler in Reichweite und das Ziel wird nach Rückstoß zurückgesetzt;
+in der Welle kitet der Spieler im Kreis und hängt die Verfolger ab — das benachteiligt Nahkampf, daher sind die Wellenwerte bewusst niedriger.
+
+| Waffe | Seltenheit | Klassen | Art | Besonderheit | Welle L10 | Ziel L10 | × Welle | × Ziel |
+|---|---|---|---|---|---|---|---|---|
+| Geißel | gewöhnlich | Eisen | Schwung 69°, 165 px | trifft bis zu 2; jeder 3. Hieb doppelt, kostet 1 LP | 68 | 125 | 0,69 | 1,21 |
+| Opfermesser | gewöhnlich | Seuche | Stoß 95 px | +1 % Schaden je 1 % fehlender LP, Gift | 43 | 143 | 0,43 | 1,39 |
+| Ketzergabel | ungewöhnlich | Feuer | Stoß 140 px | durchbohrt 2, Brand, Brennende fliegen doppelt weit | 93 | 152 | 0,60 | 1,55 |
+| Büßerkette | selten | Blitz, Eisen | Kette 86 px | Radius wächst mit dem Tempo, 35 % Kettenblitz je Treffer | 131 | 134 | 0,65 | 0,94 |
+| Glockenklöppel | selten | Heilig | Bodenschlag 130 px | betäubt 0,5 s, Bosse nur verlangsamt | 167 | 142 | 0,82 | 1,00 |
+| Henkersbeil | ultraselten | Eisen, Heilig | Schwung 149°, 130 px | richtet unter 15 % LP hin (nicht Bosse) | 475 | 289 | 0,91 | 1,41 |
+| Sense des Totengräbers | episch | Frost | Schwung 180°, 150 px | verlangsamt; Kills geben Seelen, 10 Seelen heilen 6 LP | 300 | 279 | 0,88 | 1,35 |
+
+Einzelziel 0,94–1,55, Welle 0,43–0,91 (Opfermesser mit der kürzesten Reichweite am stärksten benachteiligt). Nebenwirkung: Die Nahkampfwaffen heben die
+Einzelziel-Mediane einiger Seltenheiten (gewöhnlich 87 → 103; ultraselten hat nur drei Waffen, dort sinkt Splittersturm auf 0,45). Ungemessen in echten Läufen.
+`tools/weapon-audit.js` prüft je Nahkampfwaffe 14–16 Punkte: trifft vorn, nicht dahinter (Bodenschlag: rundum), Reichweite innen/außen, Trefferzone gegen die
+gezeichnete Geometrie (50 zufällige Ziele, unabhängige Stichprobe), Besonderheit, Henker-Nähe (×1,35), Krit, Klassen-Gegenstand, Gaben, Lebensraub, Hinrichtung, Messung — 54/54 bestehen.
+
+### 12.2 Duo-Segen (09.10.2026, umgesetzt) — `DUOS` in `js/synergy.js`
+
+≥ 2 Waffen aus Klasse A und ≥ 2 aus Klasse B (`p.clsN`, Lieblingsklasse zählt mit; „Nahkampf“ zählt für zwei Duos wie eine Klasse): nach der nächsten
+Boss-Station erscheint mit 50 % der passende Segen als 4. Karte neben den Reliquien (nicht am Blutschrein). Wählen statt einer Reliquie.
+Auslöser-Bremse: Duo-Schaden läuft mit eigener Quelle (`duo_…`, im F3-Overlay sichtbar) und Tiefe `G._duoD`; Treffer-Effekte feuern nie aus Duo- oder Reliquien-Schaden,
+Schwefel-Explosionen aus Tiefe 1 nur mit 20 %, aus Tiefe 2 nie (gemessen: 40 brennend-vergiftete Gegner im Haufen → 2–3 Explosionen, kein Endlos-Kreislauf).
+
+| Klassen | Duo | Effekt |
+|---|---|---|
+| Feuer + Seuche | Schwefel | brennende und vergiftete Gegner explodieren beim Tod (85 px, 30 % ihres Lebens) |
+| Konstrukt + Seuche | Seuchenträger | Geschütze, Totems, Minen, Ratten, Begleiter vergiften bei jedem Treffer |
+| Frost + Blitz | Supraleiter | Blitz-Treffer auf Verlangsamte: +50 % Schaden, Frostwelle 70 px |
+| Feuer + Blitz | Höllengewitter | alle 1,2 s Blitz von oben in bis zu 3 eigene brennende Gegner |
+| Heilig + Eisen | Hammer der Hexen | jeder 8. Eisen-Treffer nagelt 0,6 s fest; Festgehaltene +40 % Schaden |
+| Pulver + Eisen | Schrapnell | Pulver-Kills zerplatzen in 5 Splitter (je 40 % des letzten Treffers) |
+| Frost + Feuer | Thermoschock | Treffer auf brennend + verlangsamt: Dampfstoß 75 px (80 %), betäubt 0,4 s, 2,5 s Abklingzeit je Gegner |
+| Heilig + Blitz | Strafgericht | jeder 7. Heilig/Blitz-Treffer ruft einen goldenen Blitz (120 %), gegen Elite/Bosse fast doppelt so oft |
+| Nahkampf + Feuer | Glühende Schneide | Nahkampf entzündet immer; Brennende +30 % Nahkampfschaden; Schwünge glühen |
+| Nahkampf + Eisen | Wurfklingen | jeder 3. Schwung wirft eine kreisende Klinge (70 %, durchbohrt 3) |
+
+### 12.3 Set-Verwandlungen (09.10.2026, umgesetzt) — `SETS` in `js/synergy.js`
+
+Drei Teile aus Gegenständen, Tausch-/Modifikator-Gaben und Reliquien. Shop-, Gaben- und Reliquienkarten zeigen „Teil von Set X (n/3)“,
+das Werte-Panel den Fortschritt; bei der Verwandlung erscheinen Toast, Partikel und ein Merkmal an der Figur.
+
+| Set | Teile | Verwandlung | Merkmal |
+|---|---|---|---|
+| Der Büßer | Bußgürtel (Gabe), Fastenbrot, Märtyrerblut (Reliquie) | unter 30 % LP: +50 % Schaden, +20 % Tempo | Dornenkrone, rote Aura wenn aktiv |
+| Der Henker | Schwarze Kapuze, Rostige Kette, Totenschädel (Gaben) | Hinrichtungs-Schwelle +10 % (bleibt auch nach Richtspruch erhalten), Hinrichtung heilt 2 LP | Henkerskapuze |
+| Der Pestdoktor | Giftphiole, Aschenurne (Reliquie), Almosenbeutel (Gabe) | vergiftete Gegner: doppelt Gold + Giftwolke beim Tod (Wolken-Tote erzeugen keine neue) | Schnabelmaske |
+| Der Pilger | Pilgerstab (Gabe), Pilgersandalen, Weihwasserflasche | +10 % Tempo, in Bewegung +1,5 LP/s, Ausweichen lädt 40 % schneller | Heiligenschein |
+| Der Scheiterhaufen | Lampenöl, Altarkerze, Pechfass (Gabe) | Brennende +25 % Schaden, Brand springt beim Tod auf 2 Nachbarn (höchstens 2 Generationen) | Flammenkrone |
+
+### 12.4 Lebensregeneration (09.10.2026, umgesetzt)
+
+Gegenstand **Weihwasserflasche** (ungewöhnlich, +0,4 LP/s) und Gabe **Gnadenquell** (+0,3 + 0,1 × Seltenheit LP/s). Heilt über `healPlayer` (Heilungsfaktor der Figur
+wirkt, Flagellant also 70 %), pausiert 2 s nach jedem erlittenen Treffer; das Werte-Panel zeigt LP/s. Gemessen: 0,4 LP/s, nach Treffer 2 s nichts, dann weiter.
 
 ---
 

@@ -146,8 +146,9 @@ function openRelic(after){ G.state='relic'; const done=after||advancePost; G.men
   const wrap=$('#relicCards'); wrap.innerHTML='';
   pool.forEach((r,i)=>{ const el=document.createElement('div'); el.className='rcard relic'; el.dataset.key=i+1; const hint=relicRecipeHint(r.id);
     el.innerHTML='<div class="ic">'+svgIcon(r.ic,C.gold2,34)+'</div><div class="rk" style="color:var(--gold2)">✦ '+t('relic_label')+'</div><div class="rn">'+r.name+'</div>'+
-      '<div class="rd">'+r.desc+(hint?'<br><span style="color:var(--epic)">'+hint+'</span>':'')+'</div>';
+      '<div class="rd">'+r.desc+(hint?'<br><span style="color:var(--epic)">'+hint+'</span>':'')+'</div>'+setTagHtml('relic',r.id);
     el.onclick=()=>{ giveRelic(player,r.id); Audio2.ability(); done(); }; wrap.appendChild(el); });
+  duoOffer(wrap,done,!after);   // Duo-Segen als 4. Karte (synergy.js)
   Audio2.ability(); show('relic'); }
 function playerTag(){ return (G.coop&&players.length>1) ? (t('coop_player')+' '+(players.indexOf(player)+1)+' · ') : ''; }
 function finishPostWave(){
@@ -207,7 +208,7 @@ function rollShopItems(){ const out=[], used=new Set();
   return out; }
 function buyItem(o){ const it=o.item, price=itemPrice(it); if(o.sold||G.coins<price)return;
   G.coins-=price; $('#coinTag').textContent=G.coins; it.apply(player); player.itemsOwned=player.itemsOwned||{}; player.itemsOwned[it.id]=itemOwned(player,it.id)+1;
-  player.items.push({ic:it.ic,color:rarColor(it.rk)}); updateItemPills(); updateHP(); o.sold=true; Audio2.buy(); renderShop(); }
+  player.items.push({ic:it.ic,color:rarColor(it.rk)}); updateItemPills(); updateHP(); o.sold=true; Audio2.buy(); checkSets(player); renderShop(); }
 function openShop(){
   G.state='shop'; G.menuAt=performance.now(); $('#hud').classList.remove('show');
   player.freeReroll=hasRelic(player,'dice');
@@ -258,11 +259,11 @@ function renderShopItems(){ const wrap=$('#shopItems'); wrap.innerHTML=''; $('#s
   for(const o of shopItems){ const it=o.item, price=itemPrice(it), can=!o.sold&&G.coins>=price, own=itemOwned(player,it.id);
     const el=document.createElement('div'); el.className='rcard item'+(can?'':' locked')+(o.sold?' sold':''); el.style.borderColor=rarColor(it.rk);
     el.innerHTML='<div class="ic">'+svgIcon(it.ic,rarColor(it.rk),26)+'</div><div class="rk '+it.rk+'">'+rarName(it.rk)+(own?' · '+t('shop_owned',{n:own}):'')+'</div>'+
-      '<div class="rn">'+it.name+'</div><div class="rd"><span class="up">'+itemUp(it)+'</span>'+(it.down?'<br><span class="down">'+it.down+'</span>':'')+'</div>'+
+      '<div class="rn">'+it.name+'</div><div class="rd"><span class="up">'+itemUp(it)+'</span>'+(it.down?'<br><span class="down">'+it.down+'</span>':'')+'</div>'+setTagHtml('item',it.id)+
       (o.sold?'<div class="owned">'+t('shop_sold')+'</div>':'<div class="price'+(can?'':' cant')+'">'+price+' '+t('hud_gold')+'</div>');
     if(can) el.onclick=()=>buyItem(o);
     wrap.appendChild(el); } }
-function weaponMeta(w,dmgTxt){ return t('dbg_dmg')+' '+dmgTxt+' · '+(w.count>1?t('w_proj',{n:w.count}):t('w_single'))+(w.pierce>2?' · '+t('w_pierce'):'')+(w.chain?' · '+t('w_chain'):'')+(w.burn?' · '+t('ammo_burn'):'')+(w.explosive?' · '+t('w_explosive'):'')+(w.deploy?' · '+t('w_deploy'):'')+(w.poison?' · '+t('w_poison'):'')+(w.bounce?' · '+t('w_bounce'):'')+(w.contagion||w.ignite?' · '+t('w_spread'):'')+(w.frostpool?' · '+t('w_frostpool'):'')+(w.hex?' · '+t('w_hex'):'')+(w.nail?' · '+t('w_nail'):'')+(w.rail?' · '+t('w_rail'):'')+(w.verdict?' · '+t('w_verdict'):'')+(w.strike?' · '+t('w_strike'):''); }
+function weaponMeta(w,dmgTxt){ return t('dbg_dmg')+' '+dmgTxt+' · '+(w.melee?meleeMeta(w):w.count>1?t('w_proj',{n:w.count}):t('w_single'))+(w.pierce>2?' · '+t('w_pierce'):'')+(w.chain?' · '+t('w_chain'):'')+(w.burn?' · '+t('ammo_burn'):'')+(w.explosive?' · '+t('w_explosive'):'')+(w.deploy?' · '+t('w_deploy'):'')+(w.poison?' · '+t('w_poison'):'')+(w.bounce?' · '+t('w_bounce'):'')+(w.contagion||w.ignite?' · '+t('w_spread'):'')+(w.frostpool?' · '+t('w_frostpool'):'')+(w.hex?' · '+t('w_hex'):'')+(w.nail?' · '+t('w_nail'):'')+(w.rail?' · '+t('w_rail'):'')+(w.verdict?' · '+t('w_verdict'):'')+(w.strike?' · '+t('w_strike'):''); }
 function buyWeapon(w,price){
   if(G.coins<price)return;
   G.coins-=price; $('#coinTag').textContent=G.coins; giveWeapon(w.id); Audio2.buy();
@@ -307,6 +308,7 @@ function renderUpgrade(cards){
         '<div class="rk '+c.rk+'">'+rarName(c.rk)+'</div>'+
         '<div class="rn">'+c.def.name+'</div>'+
         '<div class="rd">'+c.def.desc(r)+'</div>';
+    el.innerHTML+=setTagHtml('gift',c.def.id);
     el.onclick=()=>{ giveUpgradeDef(c.def,c.rk); advancePost(); };
     wrap.appendChild(el);
   });
@@ -381,6 +383,7 @@ function fillStats(){
     [t('s_xp'),p.xp+' / '+p.xpNext],
     [t('s_items'),p.items.length],
   ];
+  rows.push(...synStatRows(p));
   $('#statGrid').innerHTML=rows.map(r=>'<div class="stat-row"><span class="l">'+r[0]+'</span><span class="v">'+r[1]+'</span></div>').join('');
   const wlist=p.weapons.map(id=>{const w=weaponById(id);const l=weaponLevel(id);return '<b>'+w.name+'</b> <span style="color:var(--gold2)">'+t('lvl_short')+l+'</span>';}).join(' · ');
   const act=Object.keys(p.clsSt||{}).filter(c=>p.clsSt[c]>0);
@@ -388,6 +391,7 @@ function fillStats(){
   const rl=Object.keys(p.relics||{}).map(id=>'<b style="color:var(--gold2)">'+relicById(id).name+'</b>');
   const il=Object.keys(p.itemsOwned||{}).map(id=>{ const it=itemById(id); return '<b style="color:'+rarColor(it.rk)+'">'+it.name+'</b>'+(p.itemsOwned[id]>1?' ×'+p.itemsOwned[id]:''); });
   $('#statAbilities').innerHTML=(il.length?t('items_label')+': '+il.join(' · ')+'<br>':'')+(rl.length?t('relics_label')+': '+rl.join(' · ')+'<br>':'')+(p.abilities.length?(t('abilities_label')+': '+p.abilities.map(a=>'<b style="color:'+rarColor(a.rk)+'">'+a.name+'</b>'+(a.level>1?' '+t('lvl_short')+a.level:'')).join(' · ')):'');
+  $('#statAbilities').innerHTML+=synStatsHtml(p);   // Duo-Segen, Set-Fortschritt (synergy.js)
 }
 $('#statsClose').onclick=closeStats;
 
