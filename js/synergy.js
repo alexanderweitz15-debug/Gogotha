@@ -12,7 +12,7 @@ ICONS.flask='M10 3h4 M10 3v5l-4 9a2 2 0 0 0 2 3h8a2 2 0 0 0 2-3l-4-9V3 M8 14h8';
 ITEMS.push({id:'i_holywater',name:'Weihwasserflasche',rk:'uncommon',ic:'flask',up:'+0,4 LP/s Regeneration',down:'pausiert 2 s nach Treffer',apply:p=>{p.regen=(p.regen||0)+0.4;}});
 UPGRADE_DEFS.push({id:'regen',name:'Gnadenquell',ic:'flask',minRank:1,desc:r=>'+'+(0.3+r*0.1).toFixed(1)+' LP/s Regeneration',apply:(p,r)=>{p.regen=(p.regen||0)+0.3+r*0.1;}});
 const REGEN_PAUSE=2;
-const regenRate=p=>(p.regen||0)+(hasSet(p,'pilgrim')&&p.moving?1.5:0);
+const regenRate=p=>(p.regen||0)+(hasSet(p,'pilgrim')&&p.moving?0.8:0);
 const regenPaused=p=>G.time-(p.hurtT!=null?p.hurtT:-99)<REGEN_PAUSE;
 
 /* ---------- DUO-SEGEN (Hades): ≥2 Waffen aus Klasse a und ≥2 aus Klasse b → bei der nächsten Boss-Reliquie mit 50 % als 4. Karte ----------
@@ -124,7 +124,7 @@ const SETS=[
    desc:'Vergiftete Gegner lassen doppelt Gold fallen und hinterlassen beim Tod eine Giftwolke · Schnabelmaske', desc_en:'Poisoned enemies drop double gold and leave a toxic cloud on death · beak mask'},
  {id:'pilgrim',name:'Der Pilger',name_en:'The Pilgrim',ic:'wing',color:'#e0b25a',mark:'halo',
    parts:[{k:'gift',id:'t_staff'},{k:'item',id:'i_sandals'},{k:'item',id:'i_holywater'}],
-   desc:'+10% Tempo, in Bewegung +1,5 LP/s, Ausweichen lädt 40% schneller · Heiligenschein', desc_en:'+10% speed, +1.5 HP/s while moving, dodge recharges 40% faster · halo',
+   desc:'+10% Tempo, in Bewegung +0,8 LP/s, Ausweichen lädt 40% schneller · Heiligenschein', desc_en:'+10% speed, +0.8 HP/s while moving, dodge recharges 40% faster · halo',
    apply:p=>{ p.speed*=1.1; }},
  {id:'pyre',name:'Der Scheiterhaufen',name_en:'The Pyre',ic:'flame',color:'#e08a2f',mark:'flames',
    parts:[{k:'item',id:'i_oil'},{k:'item',id:'i_candle'},{k:'gift',id:'m_pitch'}],
