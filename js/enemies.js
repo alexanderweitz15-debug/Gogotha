@@ -18,13 +18,13 @@ function buildObstacles(){
   }
 }
 function collideObstacles(o){
-  for(const ob of obstacles){
+  for(const ob of mapNear(o.x,o.y,o.r)){
     const dx=o.x-ob.x, dy=o.y-ob.y, d=Math.hypot(dx,dy), min=o.r+ob.r;
     if(d<min && d>0.001){ const push=(min-d); o.x+=dx/d*push; o.y+=dy/d*push; }
   }
 }
 function bulletHitsObstacle(b){
-  for(const ob of obstacles){ if(dist2(b.x,b.y,ob.x,ob.y)<(b.r+ob.r)*(b.r+ob.r)) return ob; }
+  for(const ob of mapNear(b.x,b.y,b.r)){ if(dist2(b.x,b.y,ob.x,ob.y)<(b.r+ob.r)*(b.r+ob.r)) return ob; }
   return null;
 }
 
@@ -62,7 +62,7 @@ function updateEnemy(e,dt){
     if(e.poisonT<=0){e.poisonStacks=0;e.poisonDps=0;} if(e.hp<=0){killEnemy(e,e.poisonOwner,e.poisonSrc);return;} }
   if(e.rootT>0)e.rootT-=dt;
   const sp=e.speed*(e.slowT>0?(e.slowF||0.45):1)*(e.rootT>0?0:1)*(G.modEnemySpeed||1);
-  const ang=Math.atan2(p.y-e.y,p.x-e.x), d=Math.hypot(p.x-e.x,p.y-e.y);
+  const ang=mapSteer(e,p), d=Math.hypot(p.x-e.x,p.y-e.y);   // ohne Sichtlinie: Weg um Wände (map.js)
   if(e.isBoss){ updateBoss(e,dt,p); }
   else if(e.ranged){
     const want=220;
