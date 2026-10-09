@@ -321,3 +321,12 @@ body.touch #hud.show ~ #touchUI{display:block}
 .rcard.item .rd .up{color:#7fcf6a}
 .rcard.item .rd .down{color:#e0405f}
 .rcard.item.sold{opacity:.4}
+
+/* NAHKAMPF, DUO-SEGEN, SETS (melee.js, synergy.js) */
+#relicCards.four{grid-template-columns:repeat(4,1fr);max-width:920px}
+@media (max-width:760px){ #relicCards.four{grid-template-columns:repeat(2,1fr)} }
+.rcard.duo{border:1px solid transparent;background:linear-gradient(180deg,#1b150c,#0b0907) padding-box,linear-gradient(135deg,var(--ca),var(--cb)) border-box;box-shadow:0 0 22px rgba(255,233,160,.12) inset}
+.rcard.duo:hover{box-shadow:0 12px 30px rgba(0,0,0,.55),0 0 26px rgba(255,233,160,.3)}
+.rcard.duo .rk{color:var(--gold2);animation:godpulse 1.6s ease-in-out infinite}
+.rcard.duo .cls-row{margin-bottom:6px}
+.set-tag{margin-top:6px;font-family:var(--mono);font-size:10px;letter-spacing:.04em;opacity:.95}

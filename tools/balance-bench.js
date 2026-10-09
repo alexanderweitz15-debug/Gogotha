@@ -4,7 +4,9 @@
    (Overkill zählt nicht, Brand/Gift/Pfützen schon):
      - Welle:      20 Verdammte mit je 600 Leben (damit starke Waffen nicht an den Nachschub stoßen), jagen den Spieler,
                    der im Kreis (r 260 px, 180 px/s) vor ihnen herläuft; getötete werden ersetzt
-     - Einzelziel: ein unbewegliches Ziel in Bossgröße (r 36) in 220 px — Einzelziel-Schaden zählt vor allem gegen Bosse
+     - Einzelziel: ein unbewegliches Ziel in Bossgröße (r 36) in 220 px — Einzelziel-Schaden zählt vor allem gegen Bosse.
+                   Nahkampf: der Spieler steht so nah, dass er es erreicht (Rand bei 70 % der Reichweite, Kette: Bahn durch die Mitte).
+                   In der Welle kitet der Spieler dagegen wie bei allen Waffen — das benachteiligt Nahkampf deutlich.
    jeweils mit Waffenstufe 1 und 10, Figur ohne Boni und Upgrades, ist unverwundbar, Gegner schießen nicht.
    Zufall ist festgelegt (3 Durchläufe mit festen Startwerten, Median), damit vorher/nachher vergleichbar ist.
    Das ist KEIN Ersatz für echte Läufe (Spieler bewegen sich, kombinieren Waffen und Gaben), aber es zeigt,
@@ -34,7 +36,8 @@ const SECS = +process.argv[2] || 30;
       G.level = 10; G.time = 0; G.curseHp = 1; G.diff = diffById('medium'); G.modMul = {}; G.run = { kills: 0, gold: 0, weaponKills: {}, bossKinds: {}, dmg: {}, id: 0 };
       const spawn = () => { const a = Math.random() * TAU, e = spawnEnemy('chaser', p.x + Math.cos(a) * ring, p.y + Math.sin(a) * ring, 10); e.maxHp = e.hp = 600; return e; };
       if (mode === 'crowd') for (let i = 0; i < 20; i++) spawn();
-      else { const t = spawnEnemy('tank', p.x + 220, p.y, 10); t.r = 36; t.maxHp = t.hp = 1e12; t.speed = 0; t.touch = false; }
+      else { const mw = weaponById(wid).melee, td = !mw ? 220 : mw.kind === 'orbit' ? meleeReach(p, weaponById(wid)) : Math.min(220, meleeReach(p, weaponById(wid)) * 0.7 + 36);
+        const t = spawnEnemy('tank', p.x + td, p.y, 10); t.r = 36; t.maxHp = t.hp = 1e12; t.speed = 0; t.touch = false; }
       let th = 0; if (mode === 'crowd') { p.x = WORLD.w / 2 + 260; p.y = WORLD.h / 2; }
       for (let k = 0; k < SECS / dt; k++) {
         G.time += dt; G.uiTime += dt; p.invuln = 1e9;

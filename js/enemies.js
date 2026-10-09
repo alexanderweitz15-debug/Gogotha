@@ -119,11 +119,13 @@ function damageEnemy(e,dmg,ang,kb,fromBullet,src,owner){
   const o=owner||player, credit=src; let before=e.hp;
   if(src&&weaponById(src)) dmg*=charHitMul(o,e);
   const hs=clsStage(o,'heilig'); if(hs) dmg*=(e.isBoss||e.elite)?1+CLS_BONUS.heilig.boss[hs]:1-CLS_BONUS.heilig.normal[hs];
+  dmg*=synDmgMul(e,src,o);   // Duo-Segen/Sets (synergy.js)
   e.hp-=dmg; e.hitFlash=0.08;
   if(kb){ e.x+=Math.cos(ang)*kb*0.04; e.y+=Math.sin(ang)*kb*0.04;
     e.x=clamp(e.x,ROOM.x+e.r,ROOM.x+ROOM.w-e.r); e.y=clamp(e.y,ROOM.y+e.r,ROOM.y+ROOM.h-e.r); }
   if(!e.isBoss && o.execPct>0 && e.hp>0 && e.hp<e.maxHp*o.execPct){ trackDmg(e,before,src); before=e.hp; src='exec'; e.hp=0; spawnFloater(e.x,e.y-e.r-8,'✝',true); }
   trackDmg(e,before,src);
+  synOnHit(e,dmg,credit,o,src==='exec');
   if(e.hp<=0) killEnemy(e,o,credit);
 }
 /* Schaden ohne Treffer-Effekte (Brand-, Aura-, Pfützen-Ticks) — läuft trotzdem durch die Messung */
@@ -140,7 +142,7 @@ function killEnemy(e,owner,src){
   if(Math.random()<0.8) spawnPickup(e.x,e.y,'coin',Math.max(1,Math.round(randInt(1,3)*gm*rm)));
   if(Math.random()<0.07) spawnPickup(e.x,e.y,'health',randInt(8,14));
   if(o&&!o.dead&&o.lifesteal>0) healPlayer(o,o.lifesteal);
-  spreadOnDeath(e); relicOnKill(e,o); soulBondKill(o);
+  spreadOnDeath(e); relicOnKill(e,o); soulBondKill(o); synOnKill(e,o,src);
   removeEnemy(e);
 }
 function removeEnemy(e){ const i=enemies.indexOf(e); if(i>=0)enemies.splice(i,1); }
