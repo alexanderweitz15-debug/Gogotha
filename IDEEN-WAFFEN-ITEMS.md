@@ -292,6 +292,33 @@ Das kostet nach Abschnitt 4 fast nichts und gibt jeder Figur eine Richtung.
 
 Jeder Pool enthält mindestens ein Paar für eine Fähigkeits-Verschmelzung (orbital+nova, aegis+frenzy oder exec+soulharvest).
 
+### 11.1 Ausbau zu Brotato-Profilen (09.10.2026, umgesetzt)
+
+Die Affinität allein war zu schwach, um eine Figur anders spielen zu lassen. Jetzt hat jede der 16 Figuren eine Spielweise mit Stärke und Schwäche,
+sichtbar auf der Karte (grün/rot) und im Werte-Panel. Daten in `CHAR_PROFILE` (`game.js`), Auswertung in `charDmgMul`, `charCdMul`, `charShots`, `charHitMul`.
+Die Shop-Neigung bietet zusätzlich die Klassen an, die die Figur mag.
+
+| Figur | Stärke | Schwäche |
+|---|---|---|
+| Büßer | +6 % Schaden je verschiedener Waffenklasse | – |
+| Henker | +35 % Schaden auf nahe Gegner (< 170 px) | −25 % auf große Entfernung (> 320 px) |
+| Ketzerin | Feuer/Seuche/Frost/Blitz +25 % | Pulver/Eisen −30 % |
+| Pestpriester | Seuche +25 %, Pfützen/Wolken +50 % Dauer | Pulver −20 % |
+| Kreuzritter | Pulver +20 %, Rückstoß +50 % | andere Waffen feuern 10 % langsamer |
+| Flagellant | Eisen +20 %, +0,6 % Schaden je 1 % fehlender LP | Heilung −30 % |
+| Inquisitor (Start jetzt Dreifaltigkeit) | Heilig +25 %, +30 % gegen Elite/Bosse | nur 4 Waffenplätze |
+| Märtyrerin | unter 50 % LP +35 % Schaden und Feuerrate | Max-LP −15 % |
+| Geheiligter | Blitz +30 %, Kettenblitz +1 Sprung | alle anderen −20 % |
+| Revolverheld (Start jetzt Revolver) | Pulver +1 Geschoss, 10 % schneller | alle anderen −25 % |
+| Scheiterhexe | Feuer +25 %, Brand +1 s, brennende Gegner +20 % Schaden | Frost −50 % |
+| Predigt-Echo | Waffen mit 3+ Geschossen +1 Geschoss | −15 % Schaden |
+| Madenfürst | Seuche +20 %, +2 LP/s in eigenen Pfützen | langsam |
+| Chirurgen-Schemen | +12 % Krit, +50 % Krit-Schaden, Krits verlangsamen | Max-LP −10 % |
+| Schlachtlamm | in Bewegung +20 % | im Stehen −20 % |
+| Gekreuzigtes Echo | steht einmal pro Lauf wieder auf, Heilig +15 % | Heilung −25 % |
+
+Werte sind Startwerte; sie sind nicht in echten Läufen gemessen.
+
 ---
 
 ## 12. Später, erst nach Messung
@@ -320,6 +347,9 @@ Jeder Pool enthält mindestens ein Paar für eine Fähigkeits-Verschmelzung (orb
 | 8 ✓ | Tausch-Gaben (7) – erledigt: 8 Karten, in 25 % der Aufstiege ersetzt eine davon eine normale Karte, je 1× pro Lauf | M | – |
 | 9 ✓ | Boss-Reliquien + 3 Rezepte (8) – erledigt: Auswahl nach jeder Boss-Station (vor dem Shop), Ketten-Bremse für Auslöser, Admin-Panel kann Reliquien geben | M | – |
 | 10 ✓ | Fluch-Wahl, Pakte (9), Schreine (10), Charakter-Profile (11) – erledigt; nebenbei behoben: Wellenende-Heilung bekam im Koop nur Spieler 1 | S / M / M | – |
+
+| 11 ✓ | Waffen-Eigenheiten + Balancing (09.10.) – Hexenfeuer (Hexenmal), Nagelkanzel (festnageln), Schienennagel (durch Deckung, wächst je Durchschlag), Jüngstes Gericht (Hinrichtung unter 25 %), Sturmrufer (Blitz von oben); Läuterungsstrahl trifft nur noch Durchschlag+1 Gegner; Litanei/Predigtkreis als echter Ring; Fächer ohne Mittelgeschoss behoben (Seraph, Kreuzsalve, Sturm der Engel). Messung mit `tools/balance-bench.js` (Spieler kitet), Funktion mit `tools/weapon-audit.js` | M | 47/47 Waffen bestehen die Funktionsprüfung |
+| 12 ✓ | Charakter-Profile im Brotato-Stil (11.1) | M | – |
 
 Nach den Schritten 5, 6, 7 und 9 jeweils 20 Läufe mit dem Overlay, dann nachjustieren.
 Das Admin-Panel braucht ab Schritt 5 eine Auswahl für Gaben und Reliquien, sonst ist das Testen mühsam.

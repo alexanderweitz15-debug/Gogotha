@@ -2,10 +2,10 @@
 /* GOLGOTHA — Waffen-Benchmark
    Simuliert jede Waffe unter gleichen Bedingungen und misst den echten Schaden pro Sekunde
    (Overkill zählt nicht, Brand/Gift/Pfützen schon):
-     - Welle:      20 Verdammte mit je 600 Leben (damit starke Waffen nicht an den Nachschub stoßen), laufen auf den Spieler zu,
-                   getötete werden ersetzt
+     - Welle:      20 Verdammte mit je 600 Leben (damit starke Waffen nicht an den Nachschub stoßen), jagen den Spieler,
+                   der im Kreis (r 260 px, 180 px/s) vor ihnen herläuft; getötete werden ersetzt
      - Einzelziel: ein unbewegliches Ziel in Bossgröße (r 36) in 220 px — Einzelziel-Schaden zählt vor allem gegen Bosse
-   jeweils mit Waffenstufe 1 und 10, Büßer ohne Upgrades, steht still, ist unverwundbar, Gegner schießen nicht.
+   jeweils mit Waffenstufe 1 und 10, Figur ohne Boni und Upgrades, ist unverwundbar, Gegner schießen nicht.
    Zufall ist festgelegt (3 Durchläufe mit festen Startwerten, Median), damit vorher/nachher vergleichbar ist.
    Das ist KEIN Ersatz für echte Läufe (Spieler bewegen sich, kombinieren Waffen und Gaben), aber es zeigt,
    welche Waffe im Verhältnis zu ihrer Seltenheit aus der Reihe fällt.
@@ -28,16 +28,18 @@ const SECS = +process.argv[2] || 30;
     const median = a => a.sort((x, y) => x - y)[Math.floor(a.length / 2)];
     function sim(wid, lvl, mode) {
       WORLD = { w: 1820, h: 1180 }; ROOM = { x: 40, y: 40, w: WORLD.w - 80, h: WORLD.h - 80 }; obstacles = [];
-      const p = makePlayer('penitent', 'solo'); p.weapons = [wid]; p.wCd = [0]; p.wLevel = {}; if (lvl > 1) p.wLevel[wid] = lvl - 1;
+      const p = makePlayer('penitent', 'solo'); p.charId = '_neutral'; /* ohne Charakter-Boni */ p.weapons = [wid]; p.wCd = [0]; p.wLevel = {}; if (lvl > 1) p.wLevel[wid] = lvl - 1;
       recalcClasses(p); p.invuln = 1e9; p.x = WORLD.w / 2; p.y = WORLD.h / 2; players = [p]; player = p;
       enemies = []; bullets = []; ebullets = []; puddles = []; deployables = []; beams = []; pickups = []; G.hazards = []; G.shrine = null;
       G.level = 10; G.time = 0; G.curseHp = 1; G.diff = diffById('medium'); G.modMul = {}; G.run = { kills: 0, gold: 0, weaponKills: {}, bossKinds: {}, dmg: {}, id: 0 };
       const spawn = () => { const a = Math.random() * TAU, e = spawnEnemy('chaser', p.x + Math.cos(a) * ring, p.y + Math.sin(a) * ring, 10); e.maxHp = e.hp = 600; return e; };
       if (mode === 'crowd') for (let i = 0; i < 20; i++) spawn();
       else { const t = spawnEnemy('tank', p.x + 220, p.y, 10); t.r = 36; t.maxHp = t.hp = 1e12; t.speed = 0; t.touch = false; }
+      let th = 0; if (mode === 'crowd') { p.x = WORLD.w / 2 + 260; p.y = WORLD.h / 2; }
       for (let k = 0; k < SECS / dt; k++) {
         G.time += dt; G.uiTime += dt; p.invuln = 1e9;
         updatePlayer(dt); updateAbilities(dt);
+        if (mode === 'crowd') { th += 180 / 260 * dt; p.x = WORLD.w / 2 + Math.cos(th) * 260; p.y = WORLD.h / 2 + Math.sin(th) * 260; p.moving = true; }   // Spieler kitet im Kreis
         for (let i = enemies.length - 1; i >= 0; i--) if (enemies[i]) updateEnemy(enemies[i], dt);
         updateDeployables(dt); updateBullets(dt); updatePuddles(dt);
         if (mode === 'crowd') while (enemies.length < 20) spawn();
@@ -60,7 +62,8 @@ const SECS = +process.argv[2] || 30;
   const groups = {};
   for (const r of rows) { const g = r.evo ? 'evo:' + r.rk : r.rk; (groups[g] = groups[g] || []).push(r); }
   const med = a => { const s = [...a].sort((x, y) => x - y); return s.length ? s[Math.floor(s.length / 2)] : 0; };
-  for (const g in groups) { const mc = med(groups[g].map(r => r.crowd10)), ms = med(groups[g].map(r => r.single10));
+  /* Einzelziel-Median ohne Waffen, die ein stehendes Ziel prinzipbedingt nicht treffen (Minen, Totem, Flamme außer Reichweite) */
+  for (const g in groups) { const mc = med(groups[g].map(r => r.crowd10)), ms = med(groups[g].map(r => r.single10).filter(v => v > 0));
     for (const r of groups[g]) { r.vsCrowd = mc ? +(r.crowd10 / mc).toFixed(2) : null; r.vsSingle = ms ? +(r.single10 / ms).toFixed(2) : null; } }
   rows.sort((a, b) => (a.evo - b.evo) || (a.rank - b.rank) || (b.crowd10 - a.crowd10));
   fs.writeFileSync(path.resolve(__dirname, 'balance-bench.json'), JSON.stringify({ secs: SECS, date: new Date().toISOString(), rows }, null, 1));

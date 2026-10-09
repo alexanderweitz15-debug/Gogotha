@@ -49,7 +49,7 @@ const I18N={
   stats_title:'Aktuelle Werte', stats_close:'Zurück', prof_title:'Pilgerbuch', prof_close:'Zurück',
   pause_title:'Innehalten', pause_resume:'Fortsetzen', pause_stats:'Werte ansehen', pause_admin:'Admin-Panel', pause_quit:'Aufgeben',
   go_title:'GEFALLEN', go_retry:'Erneut bereuen', go_menu:'Hauptmenü',
-  win_sub:'Du hast den Gipfel erreicht', win_menu:'Hauptmenü', endless_go:'Endlos weiter', endless_restart:'Neu beginnen',
+  endless_go:'Endlos weiter', endless_restart:'Neu beginnen',
   hud_level:'Stufe', hud_gold:'Gold', hud_kills:'Tötungen', hud_diff:'Grad', hud_dodge:'Ausweichen',
   hud_station:'Station', hud_endless:'Endlos',
   s_hp:'Leben', s_shield:'Schild', s_dmg:'Schaden', s_fr:'Feuerrate', s_speed:'Tempo', s_armor:'Rüstung',
@@ -87,7 +87,7 @@ const I18N={
   stats_title:'Current Stats', stats_close:'Back', prof_title:'Pilgrim Book', prof_close:'Back',
   pause_title:'Pause', pause_resume:'Resume', pause_stats:'View stats', pause_admin:'Admin panel', pause_quit:'Give up',
   go_title:'FALLEN', go_retry:'Repent again', go_menu:'Main menu',
-  win_sub:'You have reached the summit', win_menu:'Main menu', endless_go:'Endless onward', endless_restart:'Start over',
+  endless_go:'Endless onward', endless_restart:'Start over',
   hud_level:'Level', hud_gold:'Gold', hud_kills:'Kills', hud_diff:'Diff', hud_dodge:'Dodge',
   hud_station:'Station', hud_endless:'Endless',
   s_hp:'Health', s_shield:'Shield', s_dmg:'Damage', s_fr:'Fire rate', s_speed:'Speed', s_armor:'Armor',
@@ -152,7 +152,7 @@ Object.assign(I18N.de,{
   end_all50:'Du hast alle 50 Stationen überstanden.', end_clvl:'Charakterstufe', end_station:'Erreichte Station', end_class:'Klasse', endless_q:'Wie weit reicht die Gnade?',
   dbg_title:'Schaden pro Quelle (F3)', dbg_dmg:'Schaden', dbg_export:'Verlauf exportieren (JSON)',
   src_orbit:'Kreisende Klingen', src_nova:'Nova', src_aura:'Pestaura', src_thorns:'Dornen', src_exec:'Hinrichtung', src_burn:'Brand', src_puddle:'Pfützen', src_poison:'Gift', 'src_?':'Unbekannt',
-  w_poison:'Gift', w_bounce:'prallt ab', w_spread:'steckt an', w_frostpool:'Frostpfütze',
+  w_poison:'Gift', w_bounce:'prallt ab', w_spread:'steckt an', w_frostpool:'Frostpfütze', w_hex:'Hexenmal: jeder 5. Treffer ×2,5', w_nail:'jeder 8. Nagel hält fest', w_rail:'durch Deckung, +20% je Durchschlag', w_verdict:'richtet unter 25% LP hin', w_strike:'Blitz von oben, verfehlt nie',
   coop_off:'Koop: AUS', coop_on:'Koop: AN', coop_p1pick:'Spieler 1 wählt …', coop_p2:'Spieler 2 wählt … (Pfeiltasten + Rechte Umschalt)',
 });
 Object.assign(I18N.en,{
@@ -185,7 +185,7 @@ Object.assign(I18N.en,{
   end_all50:'You survived all 50 stations.', end_clvl:'Character level', end_station:'Station reached', end_class:'Class', endless_q:'How far does grace reach?',
   dbg_title:'Damage by source (F3)', dbg_dmg:'Damage', dbg_export:'Export history (JSON)',
   src_orbit:'Orbiting blades', src_nova:'Nova', src_aura:'Plague aura', src_thorns:'Thorns', src_exec:'Execution', src_burn:'Burn', src_puddle:'Puddles', src_poison:'Poison', 'src_?':'Unknown',
-  w_poison:'poison', w_bounce:'bounces', w_spread:'spreads', w_frostpool:'frost pool',
+  w_poison:'poison', w_bounce:'bounces', w_spread:'spreads', w_frostpool:'frost pool', w_hex:'hex: every 5th hit ×2.5', w_nail:'every 8th nail pins', w_rail:'through cover, +20% per pierce', w_verdict:'executes below 25% HP', w_strike:'strikes from above, never misses',
   coop_off:'Co-op: OFF', coop_on:'Co-op: ON', coop_p1pick:'Player 1, choose …', coop_p2:'Player 2, choose … (Arrows + Right Shift)',
 });
 
@@ -241,23 +241,23 @@ function svgIcon(key,color,size){size=size||22;const d=ICONS[key]||ICONS.star;re
 /* ---------- WEAPONS (Shop, mit Gold gekauft) ---------- */
 const WEAPONS=[
  {id:'revolver',name:'Rostiger Revolver',rk:'common',ic:'bullet',dmg:13,fr:380,spd:620,count:1,spread:0.03,pierce:0,size:5,kb:140,color:C.bone},
- {id:'scatter',name:'Schädelbrecher',rk:'common',ic:'spread',dmg:6,fr:760,spd:560,count:6,spread:0.55,pierce:0,size:4,kb:120,life:0.42,pattern:'random',color:C.candle},
- {id:'witchfire',name:'Hexenfeuer',rk:'common',ic:'witch',dmg:5,fr:130,spd:720,count:1,spread:0.09,pierce:0,size:5,kb:50,color:C.sick},
- {id:'nailgun',name:'Nagelkanzel',rk:'common',ic:'nail',dmg:3.6,fr:90,spd:780,count:1,spread:0.16,pierce:0,size:3,kb:30,color:C.steel},
- {id:'handcannon',name:'Donnerbüchse',rk:'uncommon',ic:'cannon',dmg:40,fr:900,spd:560,count:1,spread:0.02,pierce:1,size:9,kb:340,color:C.gold2},
+ {id:'scatter',name:'Schädelbrecher',rk:'common',ic:'spread',dmg:7,fr:760,spd:560,count:6,spread:0.4,pierce:0,size:4,kb:120,life:0.5,pattern:'random',color:C.candle},
+ {id:'witchfire',name:'Hexenfeuer',rk:'common',ic:'witch',dmg:4,fr:130,spd:720,count:1,spread:0.09,pierce:0,size:5,kb:50,hex:true,color:C.sick},
+ {id:'nailgun',name:'Nagelkanzel',rk:'common',ic:'nail',dmg:3.6,fr:90,spd:780,count:1,spread:0.16,pierce:0,size:3,kb:30,nail:true,color:C.steel},
+ {id:'handcannon',name:'Donnerbüchse',rk:'uncommon',ic:'cannon',dmg:30,fr:900,spd:560,count:1,spread:0.02,pierce:1,size:9,kb:340,color:C.gold2},
  {id:'bolt',name:'Geißelbogen',rk:'uncommon',ic:'bolt',dmg:17,fr:520,spd:840,count:1,spread:0.02,pierce:2,size:5,kb:90,color:C.blood2},
- {id:'flame',name:'Läuterungsflamme',rk:'uncommon',ic:'flame',dmg:2.2,fr:42,spd:340,count:1,spread:0.28,pierce:2,size:7,kb:10,life:0.34,burn:true,color:C.candle},
+ {id:'flame',name:'Läuterungsflamme',rk:'uncommon',ic:'flame',dmg:2.6,fr:42,spd:340,count:1,spread:0.28,pierce:2,size:7,kb:10,life:0.4,burn:true,color:C.candle},
  {id:'plague',name:'Seuchenmörser',rk:'uncommon',ic:'plague',dmg:9,fr:850,spd:430,count:1,spread:0.03,pierce:0,size:7,kb:60,puddle:true,color:C.sick},
  {id:'trinity',name:'Dreifaltigkeit',rk:'rare',ic:'trinity',dmg:11,fr:420,spd:700,count:3,spread:0.20,pierce:1,size:5,kb:90,pattern:'even',color:C.gold2},
- {id:'wrath',name:'Zorn des Heiligen',rk:'rare',ic:'lightning',dmg:13,fr:600,spd:900,count:1,spread:0.02,pierce:0,size:5,kb:60,chain:true,color:'#bcd6ff'},
+ {id:'wrath',name:'Zorn des Heiligen',rk:'rare',ic:'lightning',dmg:17,fr:520,spd:900,count:1,spread:0.02,pierce:0,size:5,kb:60,chain:true,color:'#bcd6ff'},
  {id:'gatling',name:'Weihrauch-Gatling',rk:'rare',ic:'gatling',dmg:4.6,fr:150,frMin:55,spd:760,count:1,spread:0.12,pierce:0,size:4,kb:40,ramp:true,color:C.gold},
- {id:'lance',name:'Heilige Lanze',rk:'rare',ic:'lance',dmg:26,fr:300,spd:920,count:1,spread:0.01,pierce:99,size:6,kb:160,color:C.gold2},
- {id:'shardstorm',name:'Splittersturm',rk:'ultrarare',ic:'snow',dmg:7,fr:520,spd:680,count:5,spread:0.42,pierce:1,size:4,kb:60,slow:true,pattern:'even',color:C.chill},
+ {id:'lance',name:'Heilige Lanze',rk:'rare',ic:'lance',dmg:18,fr:300,spd:920,count:1,spread:0.01,pierce:3,size:6,kb:160,color:C.gold2},
+ {id:'shardstorm',name:'Splittersturm',rk:'ultrarare',ic:'snow',dmg:14,fr:480,spd:680,count:5,spread:0.22,pierce:2,size:4,kb:60,slow:true,pattern:'even',color:C.chill},
  {id:'frostlance',name:'Frostpike',rk:'ultrarare',ic:'beam',dmg:22,fr:330,spd:980,count:1,spread:0.01,pierce:4,size:6,kb:120,slow:true,color:'#a8e8ff'},
  {id:'reaper',name:'Sensenwurf',rk:'epic',ic:'scythe',dmg:34,fr:560,spd:560,count:2,spread:0.16,pierce:6,size:8,kb:140,pattern:'even',color:'#cfd6d0'},
- {id:'seraph',name:'Seraphsalve',rk:'epic',ic:'wing',dmg:14,fr:300,spd:820,count:4,spread:0.5,pierce:1,size:5,kb:70,pattern:'even',color:'#ffe0a0'},
- {id:'judgement',name:'Jüngstes Gericht',rk:'legendary',ic:'beam',dmg:52,fr:520,spd:1200,count:1,spread:0,pierce:99,size:9,kb:220,color:'#fff2c0'},
- {id:'tempest',name:'Sturm der Engel',rk:'legendary',ic:'lightning',dmg:20,fr:240,spd:1000,count:2,spread:0.3,pierce:0,size:5,kb:60,chain:true,pattern:'even',color:'#cfe0ff'},
+ {id:'seraph',name:'Seraphsalve',rk:'epic',ic:'wing',dmg:14,fr:300,spd:820,count:5,spread:0.5,pierce:1,size:5,kb:70,pattern:'even',color:'#ffe0a0'},
+ {id:'judgement',name:'Jüngstes Gericht',rk:'legendary',ic:'beam',dmg:52,fr:520,spd:1200,count:1,spread:0,pierce:99,size:9,kb:220,verdict:0.25,color:'#fff2c0'},
+ {id:'tempest',name:'Sturm der Engel',rk:'legendary',ic:'lightning',dmg:24,fr:240,spd:1000,count:3,spread:0.3,pierce:0,size:5,kb:60,chain:true,pattern:'even',color:'#cfe0ff'},
  {id:'apocalypse',name:'Apokalypse',rk:'mythic',ic:'explosion',dmg:30,fr:300,spd:720,count:3,spread:0.26,pierce:2,size:7,kb:160,explosive:true,burn:true,pattern:'even',color:C.candle},
  {id:'voidmaw',name:'Schlund der Leere',rk:'mythic',ic:'voidh',dmg:44,fr:420,spd:600,count:1,spread:0.02,pierce:99,size:11,kb:260,explosive:true,color:'#c89bff'},
  {id:'godhand',name:'Hand Gottes',rk:'godlike',ic:'hand',dmg:60,fr:150,spd:1000,count:3,spread:0.18,pierce:99,size:8,kb:200,chain:true,explosive:true,burn:true,pattern:'even',color:'#ffe9a0'},
@@ -265,33 +265,33 @@ const WEAPONS=[
  {id:'sentry',   name:'Geschützturm',     rk:'rare',     ic:'gatling',   deploy:'turret',   deployMax:2,deployLife:9, deployFire:300,dmg:7, spd:720,count:1,spread:0.05,pierce:0,size:4,fr:1500,kb:40,color:C.steel},
  {id:'totem',    name:'Totem der Qual',   rk:'rare',     ic:'nova',      deploy:'totem',    deployMax:2,deployLife:11,deployFire:900,dmg:13,spd:0,  count:1,spread:0,   pierce:0,size:5,fr:1700,kb:40,novaR:96,burn:true,color:C.candle},
  {id:'minelayer',name:'Minenleger',       rk:'uncommon', ic:'explosion', deploy:'mine',     deployMax:6,deployLife:16,             dmg:22,spd:0,  count:1,spread:0,   pierce:0,size:7,fr:650, kb:0, explosive:true,color:C.blood2},
- {id:'familiar', name:'Höllenbrut',       rk:'epic',     ic:'ghost',     deploy:'companion',deployMax:2,deployLife:18,deployFire:420,dmg:8, spd:780,count:1,spread:0.06,pierce:1,size:4,fr:2200,kb:30,color:'#c89bff'},
- {id:'laser',    name:'Läuterungsstrahl', rk:'rare',     ic:'beam',      beam:true,         dmg:8, spd:780,count:1,spread:0,pierce:99,size:7,fr:95, kb:30,burn:true,color:'#ff5a6a'},
- {id:'railspike',name:'Schienennagel',    rk:'epic',     ic:'lance',     dmg:46,fr:620,spd:1300,count:1,spread:0,pierce:99,size:6,kb:160,color:'#cfe0ff'},
- {id:'stormcaller',name:'Sturmrufer',     rk:'epic',     ic:'lightning', dmg:14,fr:300,spd:1000,count:1,spread:0.03,pierce:0,size:5,kb:50,chain:true,color:'#9bbcff'},
+ {id:'familiar', name:'Höllenbrut',       rk:'epic',     ic:'ghost',     deploy:'companion',deployMax:2,deployLife:18,deployFire:420,dmg:10, spd:780,count:1,spread:0.06,pierce:1,size:4,fr:2200,kb:30,color:'#c89bff'},
+ {id:'laser',    name:'Läuterungsstrahl', rk:'rare',     ic:'beam',      beam:true,         dmg:7, spd:780,count:1,spread:0,pierce:3,size:7,fr:150, kb:30,burn:true,color:'#ff5a6a'},
+ {id:'railspike',name:'Schienennagel',    rk:'epic',     ic:'lance',     dmg:46,fr:620,spd:1300,count:1,spread:0,pierce:99,size:6,kb:160,rail:0.2,color:'#cfe0ff'},
+ {id:'stormcaller',name:'Sturmrufer',     rk:'epic',     ic:'lightning', strike:true,      dmg:14,fr:300,spd:480,count:1,spread:0,pierce:0,size:5,kb:50,chain:true,color:'#9bbcff'},
  /* --- SCHRITT 7: neue Waffen für die dünnen Klassen (Seuche, Frost, Feuer) --- */
- {id:'pestflask', name:'Pestflasche',      rk:'common',  ic:'plague', dmg:6, fr:900, spd:420,count:1,spread:0.05,pierce:0,size:6,kb:20,life:0.55,poison:true,toxcloud:true,contagion:true,color:C.sick},
- {id:'ratcage',   name:'Rattenkäfig',      rk:'rare',    ic:'leech',  deploy:'rat',deployMax:6,deployLife:5,dmg:6,fr:2400,spd:170,count:3,spread:0,pierce:0,size:5,kb:0,poison:true,color:'#8a7a5a'},
- {id:'litany',    name:'Eisige Litanei',   rk:'uncommon',ic:'snow',   dmg:7, fr:1100,spd:520,count:8,spread:0.785,pierce:0,size:5,kb:40,life:0.6,slow:true,pattern:'even',color:C.chill},
- {id:'tears',     name:'Gefrorene Tränen', rk:'rare',    ic:'snow',   dmg:5, fr:1300,spd:400,count:1,spread:0.05,pierce:0,size:6,kb:0,life:0.6,slow:true,frostpool:true,color:'#a8e8ff'},
+ {id:'pestflask', name:'Pestflasche',      rk:'common',  ic:'plague', dmg:4.5, fr:900, spd:420,count:1,spread:0.05,pierce:0,size:6,kb:20,life:0.55,poison:true,toxcloud:true,contagion:true,color:C.sick},
+ {id:'ratcage',   name:'Rattenkäfig',      rk:'rare',    ic:'leech',  deploy:'rat',deployMax:6,deployLife:5,dmg:5,fr:2400,spd:170,count:3,spread:0,pierce:0,size:5,kb:0,poison:true,color:'#8a7a5a'},
+ {id:'litany',    name:'Eisige Litanei',   rk:'uncommon',ic:'snow',   dmg:11, fr:900,spd:520,count:8,spread:0.785,pierce:1,size:5,kb:40,life:0.8,slow:true,pattern:'ring',color:C.chill},
+ {id:'tears',     name:'Gefrorene Tränen', rk:'rare',    ic:'snow',   dmg:14, fr:1000,spd:400,count:1,spread:0.05,pierce:0,size:6,kb:0,life:0.6,slow:true,frostpool:true,color:'#a8e8ff'},
  {id:'firearrow', name:'Brandpfeil',       rk:'common',  ic:'bolt',   dmg:10,fr:520, spd:760,count:1,spread:0.03,pierce:0,size:4,kb:60,burn:true,ignite:true,color:C.candle},
  {id:'skullsling',name:'Schädelschleuder', rk:'uncommon',ic:'weight', dmg:15,fr:800, spd:600,count:1,spread:0.04,pierce:0,size:6,kb:80,bounce:2,color:C.bone},
  /* --- EVOLVIERTE WAFFEN (nur durch Verschmelzung, nicht im normalen Shop) --- */
  {id:'pestburst',name:'Seuchenschlund',rk:'mythic',evo:true,ic:'plague',dmg:14,fr:560,spd:520,count:7,spread:0.5,pierce:1,size:6,kb:120,puddle:true,burn:true,pattern:'even',color:C.sick},
- {id:'reckoning',name:'Vergeltung',rk:'epic',evo:true,ic:'bolt',dmg:30,fr:300,spd:980,count:1,spread:0.01,pierce:5,size:6,kb:200,chain:true,color:C.blood2},
- {id:'hellwitch',name:'Höllenhexe',rk:'epic',evo:true,ic:'witch',dmg:6,fr:70,spd:760,count:2,spread:0.14,pierce:2,size:5,kb:40,burn:true,pattern:'even',color:C.candle},
+ {id:'reckoning',name:'Vergeltung',rk:'epic',evo:true,ic:'bolt',dmg:22,fr:300,spd:980,count:1,spread:0.01,pierce:5,size:6,kb:200,chain:true,color:C.blood2},
+ {id:'hellwitch',name:'Höllenhexe',rk:'epic',evo:true,ic:'witch',dmg:5,fr:70,spd:760,count:2,spread:0.14,pierce:2,size:5,kb:40,burn:true,pattern:'even',color:C.candle},
  {id:'naildriver',name:'Sturmnagler',rk:'legendary',evo:true,ic:'gatling',dmg:6,fr:55,frMin:38,spd:900,count:1,spread:0.1,pierce:1,size:4,kb:50,ramp:true,slow:true,color:C.steel},
- {id:'godsedge',name:'Götterzorn',rk:'legendary',evo:true,ic:'trinity',dmg:18,fr:360,spd:920,count:3,spread:0.22,pierce:2,size:6,kb:120,chain:true,pattern:'even',color:C.gold2},
+ {id:'godsedge',name:'Götterzorn',rk:'legendary',evo:true,ic:'trinity',dmg:16,fr:360,spd:920,count:3,spread:0.22,pierce:2,size:6,kb:120,chain:true,pattern:'even',color:C.gold2},
  /* --- ENDFORMEN aus Waffe St. 10 + Reliquie (Schritt 9) --- */
  {id:'blackdeath',name:'Schwarzer Tod',rk:'mythic',evo:true,ic:'plague',dmg:12,fr:620,spd:440,count:3,spread:0.3,pierce:0,size:6,kb:20,life:0.6,poison:true,toxcloud:true,contagion:true,contagionMax:3,pattern:'even',color:'#5a7a1a'},
  {id:'bonehail',name:'Knochenhagel',rk:'legendary',evo:true,ic:'weight',dmg:22,fr:650,spd:640,count:1,spread:0.04,pierce:0,size:7,kb:100,bounce:4,bounceGrow:0.15,color:'#e8e0c8'},
  {id:'pyresalvo',name:'Scheiterhaufen-Salve',rk:'legendary',evo:true,ic:'bolt',dmg:14,fr:480,spd:780,count:3,spread:0.18,pierce:0,size:4,kb:60,burn:true,ignite:true,igniteN:2,pattern:'even',color:'#ff9a40'},
  /* --- BOSS-WAFFEN (abgespeckt, nur via Boss-Freischaltung, nicht im Shop) --- */
- {id:'bw_preach',name:'Predigtkreis',rk:'epic',evo:true,ic:'nova',dmg:10,fr:680,spd:560,count:8,spread:0.8,pierce:0,size:5,kb:60,pattern:'even',color:C.blood2},
+ {id:'bw_preach',name:'Predigtkreis',rk:'epic',evo:true,ic:'nova',dmg:14,fr:680,spd:560,count:8,spread:0.8,pierce:1,size:5,kb:60,pattern:'ring',color:C.blood2},
  {id:'bw_plague',name:'Madenbrut',rk:'epic',evo:true,ic:'plague',dmg:11,fr:600,spd:430,count:1,spread:0.05,pierce:0,size:8,kb:60,puddle:true,color:C.sick},
  {id:'bw_surgeon',name:'Skalpellfächer',rk:'epic',evo:true,ic:'spread',dmg:9,fr:500,spd:820,count:5,spread:0.32,pierce:1,size:4,kb:70,pattern:'even',slow:true,color:'#a8e8ff'},
  {id:'bw_lamb',name:'Wollgeißel',rk:'epic',evo:true,ic:'bolt',dmg:13,fr:150,spd:700,count:1,spread:0.04,pierce:1,size:5,kb:50,color:C.bone},
- {id:'bw_cross',name:'Kreuzsalve',rk:'epic',evo:true,ic:'trinity',dmg:16,fr:520,spd:760,count:4,spread:0.5,pierce:1,size:5,kb:90,pattern:'even',color:C.gold2},
+ {id:'bw_cross',name:'Kreuzsalve',rk:'epic',evo:true,ic:'trinity',dmg:16,fr:520,spd:760,count:5,spread:0.5,pierce:1,size:5,kb:90,pattern:'even',color:C.gold2},
 ];
 const weaponById=id=>WEAPONS.find(w=>w.id===id);
 
@@ -335,6 +335,7 @@ const clsStage=(p,c)=>(p&&p.clsSt&&p.clsSt[c])||0;
 const clsB=(p,c,k)=>CLS_BONUS[c][k][clsStage(p,c)];
 function recalcClasses(p){ p.clsN={}; p.clsSt={};
   for(const id of p.weapons){ const w=weaponById(id); if(w) for(const c of w.cls) p.clsN[c]=(p.clsN[c]||0)+1; }
+  p.clsDistinct=Object.keys(p.clsN).length;
   const pr=CHAR_PROFILE[p.charId]; if(pr&&pr.aff) p.clsN[pr.aff]=(p.clsN[pr.aff]||0)+1;   // Lieblingsklasse zählt eine Waffe mehr
   for(const c in p.clsN){ const n=p.clsN[c]; p.clsSt[c]=n>=5?4:n>=4?3:n>=3?2:n>=2?1:0; } }
 function clsDesc(c,st){ const B=CLS_BONUS[c], en=LANG==='en', pc=v=>Math.round(v*100)+'%';
@@ -474,12 +475,69 @@ const CHAR_ABILITIES={
  lamb_c:['frenzy','aegis','bloodlust','volley','critstorm','orbital','nova','revenant'],
  crucified_c:['revenant','aegis','frenzy','nova','orbital','juggernaut','guardianorbit','overload'],
 };
-/* Lieblingsklasse (zählt eine Waffe mehr) und Nachteile der Zusatzfiguren */
+/* ---------- CHARAKTER-PROFILE (wie Brotato: jede Figur hat eine Spielweise) ----------
+   aff  = Lieblingsklasse (zählt eine Waffe mehr für den Klassenbonus, Shop bietet sie öfter an)
+   wb   = Waffenboni nach Klasse: {klasse:{dmg,cd,shots}}; '*' gilt für Waffen ohne eine der genannten Klassen.
+          dmg +0.25 = +25% Schaden, cd −0.1 = 10% schnellere Feuerrate, shots = zusätzliche Geschosse
+   perk = Sonderregel (siehe charDynMul/charHitMul und makePlayer), stats = feste Werte beim Start
+   pros/cons = Text für die Charakterwahl [de, en] */
 const CHAR_PROFILE={
- crusader:{aff:'pulver'}, flagellant:{aff:'eisen',heal:0.7}, inquisitor:{aff:'heilig'}, martyr:{aff:'heilig',hpMul:0.85},
- saint:{aff:'blitz'}, gunslinger:{aff:'pulver'}, pyre:{aff:'feuer'}, preacher_c:{aff:'heilig'}, maggot_c:{aff:'seuche'},
- surgeon_c:{aff:'frost'}, lamb_c:{aff:'eisen'}, crucified_c:{aff:'heilig'},
+ penitent:{perk:'allround',
+   pros:[['+6% Schaden je verschiedener Waffenklasse','+6% damage per different weapon class']], cons:[]},
+ executioner:{aff:'pulver',perk:'close',
+   pros:[['+35% Schaden auf Gegner in deiner Nähe','+35% damage to nearby enemies']], cons:[['−25% Schaden auf große Entfernung','−25% damage at long range']]},
+ heretic:{aff:'seuche',wb:{feuer:{dmg:.25},seuche:{dmg:.25},frost:{dmg:.25},blitz:{dmg:.25},pulver:{dmg:-.3},eisen:{dmg:-.3}},
+   pros:[['Feuer, Seuche, Frost, Blitz: +25% Schaden','Fire, Plague, Frost, Lightning: +25% damage']], cons:[['Pulver, Eisen: −30% Schaden','Powder, Iron: −30% damage']]},
+ plaguepriest:{aff:'seuche',wb:{seuche:{dmg:.25},pulver:{dmg:-.2}},stats:{puddleMul:1.5},
+   pros:[['Seuche: +25% Schaden','Plague: +25% damage'],['Pfützen und Wolken halten 50% länger','Puddles and clouds last 50% longer']], cons:[['Pulver: −20% Schaden','Powder: −20% damage']]},
+ crusader:{aff:'pulver',wb:{pulver:{dmg:.2},'*':{cd:.1}},stats:{kbMult:1.5},
+   pros:[['Pulver: +20% Schaden','Powder: +20% damage'],['+50% Rückstoß','+50% knockback']], cons:[['Andere Waffen feuern 10% langsamer','Other weapons fire 10% slower']]},
+ flagellant:{aff:'eisen',heal:0.7,wb:{eisen:{dmg:.2}},perk:'scourge',
+   pros:[['Eisen: +20% Schaden','Iron: +20% damage'],['Je 1% fehlender LP +0,6% Schaden','+0.6% damage per 1% missing HP']], cons:[['Heilung −30%','Healing −30%']]},
+ inquisitor:{aff:'heilig',wb:{heilig:{dmg:.25}},perk:'hunter',stats:{weaponCap:4},
+   pros:[['Heilig: +25% Schaden','Holy: +25% damage'],['+30% Schaden gegen Elite und Bosse','+30% damage to elites and bosses']], cons:[['Nur 4 Waffenplätze','Only 4 weapon slots']]},
+ martyr:{aff:'heilig',hpMul:0.85,perk:'zeal',
+   pros:[['Unter 50% LP: +35% Schaden und Feuerrate','Below 50% HP: +35% damage and fire rate']], cons:[['Max-LP −15%','Max HP −15%']]},
+ saint:{aff:'blitz',wb:{blitz:{dmg:.3},'*':{dmg:-.2}},stats:{chainPlus:1},
+   pros:[['Blitz: +30% Schaden','Lightning: +30% damage'],['Kettenblitze springen einmal weiter','Chain lightning jumps once more']], cons:[['Alle anderen Waffen: −20% Schaden','All other weapons: −20% damage']]},
+ gunslinger:{aff:'pulver',wb:{pulver:{shots:1,cd:-.1},'*':{dmg:-.25}},
+   pros:[['Pulver: +1 Geschoss, 10% schneller','Powder: +1 projectile, 10% faster']], cons:[['Alle anderen Waffen: −25% Schaden','All other weapons: −25% damage']]},
+ pyre:{aff:'feuer',wb:{feuer:{dmg:.25},frost:{dmg:-.5}},perk:'kindle',stats:{burnPlus:1},
+   pros:[['Feuer: +25% Schaden, Brand +1 s','Fire: +25% damage, burn +1 s'],['Brennende Gegner nehmen +20% Schaden','Burning enemies take +20% damage']], cons:[['Frost: −50% Schaden','Frost: −50% damage']]},
+ preacher_c:{aff:'heilig',perk:'choir',stats:{dmgAdd:-.15},
+   pros:[['Waffen mit 3+ Geschossen: +1 Geschoss','Weapons with 3+ projectiles: +1 projectile']], cons:[['−15% Schaden','−15% damage']]},
+ maggot_c:{aff:'seuche',wb:{seuche:{dmg:.2}},stats:{puddleHeal:2},
+   pros:[['Seuche: +20% Schaden','Plague: +20% damage'],['In eigenen Pfützen: +2 LP/s','In your own puddles: +2 HP/s']], cons:[['Langsam','Slow']]},
+ surgeon_c:{aff:'frost',hpMul:0.9,stats:{critAdd:.12,critMultAdd:.5,critSlow:true},
+   pros:[['+12% Krit-Chance, +50% Krit-Schaden','+12% crit chance, +50% crit damage'],['Kritische Treffer verlangsamen','Critical hits slow']], cons:[['Max-LP −10%','Max HP −10%']]},
+ lamb_c:{aff:'eisen',perk:'charge',
+   pros:[['In Bewegung: +20% Schaden','While moving: +20% damage']], cons:[['Im Stehen: −20% Schaden','Standing still: −20% damage']]},
+ crucified_c:{aff:'heilig',heal:0.75,wb:{heilig:{dmg:.15}},stats:{revive:1},
+   pros:[['Steht einmal pro Lauf wieder auf','Rises once per run'],['Heilig: +15% Schaden','Holy: +15% damage']], cons:[['Heilung −25%','Healing −25%']]},
 };
+const charProf=p=>(p&&CHAR_PROFILE[p.charId])||null;
+/* Klassenbonus der Figur für eine Waffe: k = 'dmg' | 'cd' (additiv) | 'shots' */
+function charWB(p,w,k){ const pr=charProf(p); if(!pr||!pr.wb||!w)return 0; let v=0, hit=false;
+  for(const c in pr.wb){ if(c!=='*'&&w.cls.includes(c)){ hit=true; v+=pr.wb[c][k]||0; } }
+  if(!hit&&pr.wb['*']) v+=pr.wb['*'][k]||0; return v; }
+/* Schadensfaktor der Figur beim Abfeuern (Klasse + zustandsabhängige Sonderregeln) */
+function charDmgMul(p,w){ const pr=charProf(p); if(!pr)return 1; let m=Math.max(0.1,1+charWB(p,w,'dmg'));
+  switch(pr.perk){
+   case 'allround': m*=1+0.06*(p.clsDistinct||0); break;
+   case 'scourge': m*=1+0.6*clamp(1-p.hp/p.maxHP,0,1); break;
+   case 'zeal': if(p.hp<p.maxHP*0.5) m*=1.35; break;
+   case 'charge': m*=p.moving?1.2:0.8; break; }
+  return m; }
+/* Feuerrate (Faktor auf die Abklingzeit) */
+function charCdMul(p,w){ const pr=charProf(p); if(!pr)return 1; let m=1+charWB(p,w,'cd'); if(pr.perk==='zeal'&&p.hp<p.maxHP*0.5) m/=1.35; return Math.max(0.2,m); }
+function charShots(p,w){ const pr=charProf(p); if(!pr)return 0; return charWB(p,w,'shots')+(pr.perk==='choir'&&w.count>=3?1:0); }
+/* Faktor beim Treffer, abhängig vom Ziel (nur Waffenschaden) */
+function charHitMul(o,e){ const pr=charProf(o); if(!pr||!pr.perk)return 1;
+  switch(pr.perk){
+   case 'close': { const d=Math.hypot(e.x-o.x,e.y-o.y); return d<170?1.35:d>320?0.75:1; }
+   case 'hunter': return (e.isBoss||e.elite)?1.3:1;
+   case 'kindle': return e.burnT>0?1.2:1; }
+  return 1; }
 const ABILITY_LEVELS=[10,20,30,40,50];
 
 /* ---------- CHARACTERS (Balancing angepasst) ---------- */
@@ -491,10 +549,10 @@ const CHARS=[
  /* --- FREISCHALTBARE CHARAKTERE (eigene Figuren in sprites.js/HERO_ART; skin = Rückfall-Design) --- */
  {id:'crusader',name:'Der Kreuzritter',role:'Bollwerk',weapon:'handcannon',lore:'Trug das Banner durch zehn Schlachten und ließ es nie sinken.',hp:130,speed:1.0,dmg:1.05,fr:1.0,armor:1,skin:'penitent',unlock:{level:10}},
  {id:'flagellant',name:'Der Flagellant',role:'Panzer',weapon:'nailgun',lore:'Jede Wunde, die er austeilt, hat er sich erst selbst geschlagen.',hp:155,speed:0.9,dmg:1.0,fr:1.1,skin:'executioner',unlock:{level:20}},
- {id:'inquisitor',name:'Der Inquisitor',role:'Glaskanone',weapon:'bolt',lore:'Findet die Ketzerei in jedem Herzen — und brennt sie heraus.',hp:70,speed:1.1,dmg:1.3,fr:0.95,skin:'heretic',unlock:{level:30}},
+ {id:'inquisitor',name:'Der Inquisitor',role:'Jäger',weapon:'trinity',lore:'Findet die Ketzerei in jedem Herzen — und brennt sie heraus.',hp:70,speed:1.1,dmg:1.3,fr:0.95,skin:'heretic',unlock:{level:30}},
  {id:'martyr',name:'Die Märtyrerin',role:'Berserker',weapon:'lance',lore:'Je näher dem Tod, desto heller ihr Zorn.',hp:85,speed:1.08,dmg:1.2,fr:1.0,skin:'penitent',unlock:{level:40}},
  {id:'saint',name:'Der Geheiligte',role:'Endzeit',weapon:'wrath',lore:'Hat den Gipfel gesehen und ist zurückgekehrt, um ihn niederzubrennen.',hp:120,speed:1.05,dmg:1.25,fr:0.95,skin:'heretic',unlock:{level:50}},
- {id:'gunslinger',name:'Der Revolverheld',role:'Schütze',weapon:'trinity',lore:'Tausend Tote tragen seine Kugeln. Er zählt nicht mehr mit.',hp:100,speed:1.1,dmg:1.1,fr:0.92,skin:'penitent',unlock:{weapon:'revolver',kills:1000}},
+ {id:'gunslinger',name:'Der Revolverheld',role:'Schütze',weapon:'revolver',lore:'Tausend Tote tragen seine Kugeln. Er zählt nicht mehr mit.',hp:100,speed:1.1,dmg:1.1,fr:0.92,skin:'penitent',unlock:{weapon:'revolver',kills:1000}},
  {id:'pyre',name:'Die Scheiterhexe',role:'Brand',weapon:'flame',lore:'Aus tausend Funken ward ein Inferno.',hp:80,speed:1.05,dmg:1.15,fr:1.0,burn:true,skin:'heretic',unlock:{weapon:'witchfire',kills:1000}},
  {id:'preacher_c',name:'Predigt-Echo',role:'Boss',weapon:'bw_preach',lore:'Was vom Grabenpredigter blieb, predigt nun für dich.',hp:130,speed:0.95,dmg:1.1,skin:'executioner',unlock:{boss:'preacher'}},
  {id:'maggot_c',name:'Madenfürst',role:'Boss',weapon:'bw_plague',lore:'Ein Splitter von Made Magna, der deinem Willen folgt.',hp:140,speed:0.9,dmg:1.05,burn:true,skin:'plaguepriest',unlock:{boss:'maggot'}},
@@ -546,7 +604,7 @@ const CURSE_DEFS=[
  {id:'martyrdom',name:'Märtyrertum',ic:'crown',up:'+90% Schaden unter 50% LP',down:'−40% Max-LP',apply:p=>{p.maxHP=Math.round(p.maxHP*0.6);p.hp=Math.min(p.hp,p.maxHP);p.curseMartyr=true;}},
  {id:'recklessrage',name:'Rücksichtslose Wut',ic:'frenzy',up:'+45% Feuerrate',down:'−20% Max-LP & +25% Gegner-Spawn',apply:p=>{p.frMult*=0.55;p.maxHP=Math.round(p.maxHP*0.8);p.hp=Math.min(p.hp,p.maxHP);G.curseSpawn+=0.25;}},
  {id:'greedpact',name:'Pakt der Gier',ic:'crown',up:'Doppeltes Gold',down:'Gegner +30% Leben',apply:p=>{p.goldMult*=2; if(G.curseHp!==1.3){ G.curseHp=1.3; for(const e of enemies){e.maxHp*=1.3;e.hp*=1.3;} } }},   // gilt auch für die schon erschienene erste Welle
- {id:'silencepact',name:'Pakt des Schweigens',ic:'multi',up:'+1 Waffenslot',down:'Waffenkammer nur nach jeder 2. Welle',apply:p=>{p.weaponCap=WEAPON_CAP+1;G.silence=true;}},
+ {id:'silencepact',name:'Pakt des Schweigens',ic:'multi',up:'+1 Waffenslot',down:'Waffenkammer nur nach jeder 2. Welle',apply:p=>{p.weaponCap=capOf(p)+1;G.silence=true;}},
 ];
 const curseById=id=>CURSE_DEFS.find(c=>c.id===id);
 const capOf=p=>(p&&p.weaponCap)||WEAPON_CAP;
@@ -789,7 +847,11 @@ function makePlayer(charId,ctrl){
     execPct:0,frenzy:false,frenzyPow:0,frenzyActive:false,
     revive:0,auraDps:0,auraR:0,
     statuses:{poison:{t:0,dps:0},burn:{t:0,dps:0},chill:{t:0,mult:1}}};
-  const pr=CHAR_PROFILE[charId]; if(pr){ if(pr.hpMul){ p.maxHP=Math.round(p.maxHP*pr.hpMul); p.hp=p.maxHP; } if(pr.heal) p.healMul=pr.heal; }
+  const pr=CHAR_PROFILE[charId]; if(pr){ if(pr.hpMul){ p.maxHP=Math.round(p.maxHP*pr.hpMul); p.hp=p.maxHP; } if(pr.heal) p.healMul=pr.heal;
+    const st=pr.stats||{};
+    if(st.kbMult) p.kbMult*=st.kbMult; if(st.weaponCap) p.weaponCap=st.weaponCap; if(st.dmgAdd) p.dmgMult+=st.dmgAdd;
+    if(st.critAdd) p.crit+=st.critAdd; if(st.critMultAdd) p.critMult+=st.critMultAdd; if(st.revive) p.revive=(p.revive||0)+st.revive;
+    for(const k of ['puddleMul','puddleHeal','chainPlus','burnPlus','critSlow']) if(st[k]) p[k]=st[k]; }
   recalcClasses(p); return p;
 }
 /* Heilung läuft über healMul (Flagellant: −30%) */
@@ -883,7 +945,7 @@ function updatePlayer(dt){
       if(w.deploy) deployFromWeapon(w);
       else fireWeapon(w,Math.atan2(tgt.y-p.y,tgt.x-p.x));
       let fr=w.fr; if(w.ramp)fr=lerp(w.fr,w.frMin,clamp(p.heldTime/1.4,0,1));
-      p.wCd[i]=(fr*frMul*(1-clsB(p,'pulver','fr')))/1000; (p.wCdMax||(p.wCdMax=[]))[i]=p.wCd[i];
+      p.wCd[i]=(fr*frMul*(1-clsB(p,'pulver','fr'))*charCdMul(p,w))/1000; (p.wCdMax||(p.wCdMax=[]))[i]=p.wCd[i];
     }
   }
   if(p.ctrl!=='p2') $('#dashPip').classList.toggle('ready',p.dashCd<=0||Admin.dash);
@@ -894,15 +956,17 @@ const bonusMul=p=>skullMul(p)*(p.mbloodT>0?1.3:1);
 function weaponDamage(w){ const lvl=player.wLevel[w.id]||0; return w.dmg*(1+lvl*0.22); }
 function fireWeapon(w,base){
   if(w.beam){ fireBeam(w,base); return; }
-  const p=player, n=w.count+p.multishot, spr=w.spread*(1+clsB(p,'pulver','spread')), total=spr*(n-1);
+  if(w.strike){ fireStrike(w); return; }
+  const p=player, n=w.count+p.multishot+charShots(p,w), spr=w.spread*(1+clsB(p,'pulver','spread')), total=spr*(n-1);
   Audio2.shoot();
-  const baseDmg=weaponDamage(w);
+  const baseDmg=weaponDamage(w)*charDmgMul(p,w);
   const frenzyDmg=p.frenzyActive?(1+p.frenzyPow):1;
   const martyrDmg=(p.curseMartyr && p.hp<p.maxHP*0.5)?1.9:1;   // Fluch Märtyrertum: +90% unter 50% LP
   const feather=hasRelic(p,'feather')&&p.featherNext[w.id]; if(feather)p.featherNext[w.id]=false; let anyCrit=false;
   for(let i=0;i<n;i++){
     let ang;
-    if(w.pattern==='even'&&n>1) ang=base-total/2+total*(i/(n-1));
+    if(w.pattern==='ring') ang=base+TAU*i/n;   // gleichmäßig rundum, ein Geschoss immer genau aufs Ziel
+    else if(w.pattern==='even'&&n>1) ang=base-total/2+total*(i/(n-1));
     else ang=base+rand(-spr,spr);
     let dmg=baseDmg*p.dmgMult*frenzyDmg*martyrDmg*bonusMul(p)*Admin.dmg, crit=false;
     if(Math.random()<p.crit){dmg*=p.critMult;crit=true;anyCrit=true;}
@@ -923,16 +987,32 @@ function fireBeam(w,base){
   const p=player; Audio2.shoot();
   const len=w.spd||900, ex=p.x+Math.cos(base)*len, ey=p.y+Math.sin(base)*len;
   const frenzyDmg=p.frenzyActive?(1+p.frenzyPow):1, martyrDmg=(p.curseMartyr&&p.hp<p.maxHP*0.5)?1.9:1;
-  let dmg=weaponDamage(w)*p.dmgMult*frenzyDmg*martyrDmg*bonusMul(p)*Admin.dmg, crit=false;
+  let dmg=weaponDamage(w)*charDmgMul(p,w)*p.dmgMult*frenzyDmg*martyrDmg*bonusMul(p)*Admin.dmg, crit=false;
   if(Math.random()<p.crit){dmg*=p.critMult;crit=true;}
   const rad=(w.size||6)*p.projSize;
-  for(const e of enemies){ if(distToSeg(e.x,e.y,p.x,p.y,ex,ey)<e.r+rad){
+  /* trifft die nächsten (Durchschlag+1) Gegner auf der Linie, nicht alle */
+  const maxHits=(w.pierce||0)+p.pierce+clsB(p,'eisen','pierce')+1;
+  const onLine=enemies.filter(e=>distToSeg(e.x,e.y,p.x,p.y,ex,ey)<e.r+rad).sort((a,b)=>dist2(p.x,p.y,a.x,a.y)-dist2(p.x,p.y,b.x,b.y)).slice(0,maxHits);
+  for(const e of onLine){ {
     damageEnemy(e,dmg,base,w.kb||40,true,w.id,p);
     spawnFloater(e.x,e.y-e.r,Math.round(dmg),crit);
     if(w.burn||p.burn) applyBurn(e,dmg*0.4+2,w.id,p);
     if(w.slow||p.slow) applySlow(e,p); } }
   beams.push({x1:p.x,y1:p.y,x2:ex,y2:ey,t:0.09,color:w.color,width:rad*1.6});
 }
+
+/* Sturmrufer: Blitze fallen vom Himmel auf zufällige Gegner in Reichweite — kein Geschoss, verfehlt nie, ignoriert Deckung */
+function fireStrike(w){ const p=player, n=w.count+p.multishot+charShots(p,w), R=w.spd||480;
+  const pool=enemies.filter(e=>dist2(p.x,p.y,e.x,e.y)<R*R); if(!pool.length)return; Audio2.shoot();
+  const frenzyDmg=p.frenzyActive?(1+p.frenzyPow):1, martyrDmg=(p.curseMartyr&&p.hp<p.maxHP*0.5)?1.9:1;
+  for(let i=0;i<n&&pool.length;i++){ const e=pool.splice(Math.floor(Math.random()*pool.length),1)[0];
+    let dmg=weaponDamage(w)*charDmgMul(p,w)*p.dmgMult*frenzyDmg*martyrDmg*bonusMul(p)*Admin.dmg, crit=false;
+    if(Math.random()<p.crit){dmg*=p.critMult;crit=true;}
+    bolts.push({x1:e.x+rand(-40,40),y1:e.y-280,x2:e.x,y2:e.y,t:0.16,color:w.color});
+    for(let k=0;k<5;k++)spawnParticle(e.x,e.y,w.color,1.6,90);
+    const ex=e.x, ey=e.y; damageEnemy(e,dmg,-Math.PI/2,w.kb,true,w.id,p); spawnFloater(ex,ey-e.r,Math.round(dmg),crit);
+    if(e.hp>0){ if(p.burn)applyBurn(e,dmg*0.5+2,w.id,p); if(p.slow||(crit&&p.critSlow))applySlow(e,p); }
+    if(w.chain) chainLightning({dmg,owner:p,wid:w.id,depth:0},e); } }
 
 /* ---------- PHASE 6: DEPLOYABLES (Geschütz/Totem/Mine/Begleiter) ---------- */
 function deployFromWeapon(w){
@@ -945,7 +1025,7 @@ function deployFromWeapon(w){
   for(let k=0;k<(w.deploy==='rat'?(w.count||1):1);k++){   // Rattenkäfig setzt mehrere Ratten auf einmal frei
   if(k>0){ const ml=deployables.filter(d=>d.wid===w.id); if(ml.length>=max){ const j=deployables.indexOf(ml[0]); if(j>=0)deployables.splice(j,1); } }
   deployables.push({kind:w.deploy,wid:w.id,x:x+(k?rand(-14,14):0),y:y+(k?rand(-14,14):0),r:w.deploy==='mine'?8:w.deploy==='rat'?6:13,
-    dmg:weaponDamage(w)*p.dmgMult*frenzyDmg*bonusMul(p)*Admin.dmg, fireCd:(w.deployFire||600)/1000, fireT:0.3,
+    dmg:weaponDamage(w)*charDmgMul(p,w)*p.dmgMult*frenzyDmg*bonusMul(p)*Admin.dmg, fireCd:(w.deployFire||600)/1000, fireT:0.3,
     life:(w.deployLife||10)*(1+clsB(p,'konstrukt','life')), color:w.color, spd:(w.spd||640)*p.projSpeed, count:w.count||1, spread:w.spread||0,
     pierce:(w.pierce||0)+p.pierce+clsB(p,'eisen','pierce'), size:(w.size||5)*p.projSize, novaR:w.novaR||90,
     burn:w.burn||p.burn, fx:bulletFx(w,p), owner:p, phase:rand(0,TAU)});
@@ -1000,6 +1080,7 @@ function updateAbilities(dt){
       for(const e of enemies){ if(e._orbCd&&e._orbCd>0)continue; if(dist2(ox,oy,e.x,e.y)<(e.r+9)*(e.r+9)){ damageEnemy(e,p.orbitDmg,a,40,false,'orbit',p); e._orbCd=0.22; spawnFloater(e.x,e.y-e.r,Math.round(p.orbitDmg),false);} } }
   }
   for(const e of enemies){ if(e._orbCd>0)e._orbCd-=dt; }
+  if(p.puddleHeal&&p.hp<p.maxHP&&puddles.some(pu=>!pu.hostile&&pu.owner===p&&dist2(pu.x,pu.y,p.x,p.y)<pu.r*pu.r)) healPlayer(p,p.puddleHeal*dt);
   if(p.novaDmg>0){ p.novaT-=dt; if(p.novaT<=0){ p.novaT=p.novaCd; doNova(); } }
   if(p.shieldMax>0){ p.shieldRegT-=dt; if(p.shieldRegT<=0 && p.shield<p.shieldMax){ p.shield=clamp(p.shield+p.shieldMax*0.30,0,p.shieldMax); p.shieldRegT=1.1; updateHP(); } }
   if(p.auraDps>0){ for(const e of enemies){ if(!e.isBoss && dist2(p.x,p.y,e.x,e.y)<p.auraR*p.auraR){ hurtEnemyRaw(e,p.auraDps*dt,'aura',p);} }
@@ -1130,6 +1211,7 @@ function damageEnemy(e,dmg,ang,kb,fromBullet,src,owner){
   if(e.isBoss&&e.shieldT>0) dmg*=0.25;   // Eiserner Heiliger hinter dem Schild
   e.lastHit=dmg;
   const o=owner||player, credit=src; let before=e.hp;
+  if(src&&weaponById(src)) dmg*=charHitMul(o,e);
   const hs=clsStage(o,'heilig'); if(hs) dmg*=(e.isBoss||e.elite)?1+CLS_BONUS.heilig.boss[hs]:1-CLS_BONUS.heilig.normal[hs];
   e.hp-=dmg; e.hitFlash=0.08;
   if(kb){ e.x+=Math.cos(ang)*kb*0.04; e.y+=Math.sin(ang)*kb*0.04;
@@ -1357,7 +1439,7 @@ function renderDbg(){ if(!dbgOn)return; const d=(G.run&&G.run.dmg)||{}; const ro
 const BULLET_FX={
   burn:   { hit(b,e){ applyBurn(e,b.dmg*0.5+2,b.wid,b.owner); } },
   slow:   { hit(b,e){ applySlow(e,b.owner); } },
-  puddle: { hit(b,e){ spawnPuddle(b.x,b.y,b.dmg*0.4,{hostile:false,src:b.wid,owner:b.owner,life:2.2*(1+clsB(b.owner,'seuche','life')),rMul:1+clsB(b.owner,'seuche','rad')}); } },
+  puddle: { hit(b,e){ spawnPuddle(b.x,b.y,b.dmg*0.4,{hostile:false,src:b.wid,owner:b.owner,life:2.2*(1+clsB(b.owner,'seuche','life'))*((b.owner&&b.owner.puddleMul)||1),rMul:1+clsB(b.owner,'seuche','rad')}); } },
   chain:  { hit(b,e){ chainLightning(b,e); } },
   explode:{ hit(b,e){ explodeBullet(b); return 'die'; } },
   poison: { hit(b,e){ applyPoison(e,b.dmg*0.5+1,b.wid,b.owner,true); } },
@@ -1369,6 +1451,17 @@ const BULLET_FX={
       let best=null,bd=160*160; for(const o of enemies){ if(o===e||b.hitIds.has(o.id))continue; const d=dist2(e.x,e.y,o.x,o.y); if(d<bd){bd=d;best=o;} }
       if(!best)return; const sp=Math.hypot(b.vx,b.vy), a=Math.atan2(best.y-b.y,best.x-b.x);
       b.vx=Math.cos(a)*sp; b.vy=Math.sin(a)*sp; b.bnc=(b.bnc||0)+1; b.pierce++; b.life=Math.max(b.life,0.6); if(w.bounceGrow)b.dmg*=1+w.bounceGrow; } },
+  /* --- Eigenheiten einzelner Waffen --- */
+  /* Hexenfeuer: jeder 5. Treffer auf denselben Gegner entlädt das Hexenmal (+150% Schaden) */
+  hex:    { hit(b,e){ if(b.depth>0||e.hp<=0)return; e.hex=(e.hex||0)+1; if(e.hex<5)return; e.hex=0;
+      novaRings.push({x:e.x,y:e.y,r:6,max:e.r+22,t:0.25,color:'#b06ad0'}); damageEnemy(e,b.dmg*1.5,0,0,false,b.wid,b.owner); } },
+  /* Nagelkanzel: jeder 8. Nagel im selben Gegner nagelt ihn 0,8 s fest (nicht Bosse) */
+  nail:   { hit(b,e){ if(e.isBoss||e.hp<=0)return; e.nails=(e.nails||0)+1; if(e.nails%8)return; e.rootT=Math.max(e.rootT||0,0.8); spawnFloater(e.x,e.y-e.r-8,'✚',false); } },
+  /* Schienennagel: geht durch Hindernisse und wird mit jedem durchschlagenen Gegner stärker */
+  rail:   { obstacle(){ return 'keep'; }, hit(b){ const w=weaponById(b.wid); b.dmg*=1+((w&&w.rail)||0.2); } },
+  /* Jüngstes Gericht: richtet Gegner (nicht Bosse) unter 25% Leben sofort hin */
+  verdict:{ dmg(b,d,e){ const w=weaponById(b.wid); if(!e||e.isBoss||!w||!w.verdict)return d;
+      if(e.hp-d<e.maxHp*w.verdict && e.hp-d>0){ spawnFloater(e.x,e.y-e.r-8,'✝',true); return e.hp*2+10; } return d; } },   // Puffer gegen Schadensabzüge danach
   /* Geschoss-Modifikatoren (Gaben, je 1× pro Lauf) */
   pitch:  { hit(b){ pitchPuddle(b); }, expire(b){ pitchPuddle(b); } },
   ricochet:{ wall(b){ if(b.rico)return; b.rico=1;
@@ -1391,10 +1484,10 @@ function pitchPuddle(b){ if(b.depth>0||!b.owner)return; const tt=b.owner._pitchT
   if(G.time-(tt[b.wid]!=null?tt[b.wid]:-9)<0.2)return; tt[b.wid]=G.time;
   spawnPuddle(b.x,b.y,b.dmg*0.25,{hostile:false,effect:'fire',life:1.5,src:b.wid,owner:b.owner}); }
 /* Explosion zuletzt: früher beendete sie das Geschoss, bevor Kettenblitz und Pfütze auslösen konnten */
-const FX_ORDER=['burn','slow','poison','puddle','toxcloud','frostpool','bounce','chain','explode'];
-function applyBurn(e,dmg,src,owner){ e.burnGen=0; e.burnT=2.0+clsB(owner,'feuer','dur'); e.burnDmg=Math.max(e.burnDmg,dmg*(1+clsB(owner,'feuer','dmg'))); e.burnSrc=src; e.burnOwner=owner; }
+const FX_ORDER=['verdict','burn','slow','poison','puddle','toxcloud','frostpool','hex','nail','rail','bounce','chain','explode'];
+function applyBurn(e,dmg,src,owner){ e.burnGen=0; e.burnT=2.0+clsB(owner,'feuer','dur')+((owner&&owner.burnPlus)||0); e.burnDmg=Math.max(e.burnDmg,dmg*(1+clsB(owner,'feuer','dmg'))); e.burnSrc=src; e.burnOwner=owner; }
 function dropPool(b,effect){ if(b.pooled||b.depth>0)return; b.pooled=1;
-  spawnPuddle(b.x,b.y,b.dmg*0.4,{hostile:false,effect,life:2.5*(effect==='toxin'?1+clsB(b.owner,'seuche','life'):1),rMul:1.3,src:b.wid,owner:b.owner}); }
+  spawnPuddle(b.x,b.y,b.dmg*0.4,{hostile:false,effect,life:2.5*(effect==='toxin'?1+clsB(b.owner,'seuche','life'):1)*((b.owner&&b.owner.puddleMul)||1),rMul:1.3,src:b.wid,owner:b.owner}); }
 /* Gift auf Gegnern: bis 3 Stapel, jeder Stapel tickt dps; Wolken halten mindestens 1 Stapel aufrecht */
 function applyPoison(e,dps,src,owner,stack){ e.poisonStacks=stack?Math.min(3,(e.poisonStacks||0)+1):Math.max(1,e.poisonStacks||0);
   e.poisonDps=Math.max(e.poisonDps||0,dps); e.poisonT=Math.max(e.poisonT||0,3); e.poisonSrc=src; e.poisonOwner=owner; e.poisonGen=0; }
@@ -1405,7 +1498,8 @@ function spreadOnDeath(e){
   if(e.poisonT>0 && wp&&wp.contagion && pg<(wp.contagionMax||1)){ for(const n of near(140,1)){ applyPoison(n,e.poisonDps,e.poisonSrc,e.poisonOwner,true); n.poisonGen=pg+1; bolts.push({x1:e.x,y1:e.y,x2:n.x,y2:n.y,t:0.12,color:C.sick}); } }
   if(e.burnT>0 && wb&&wb.ignite && bgn<1){ for(const n of near(140,wb.igniteN||1)){ applyBurn(n,e.burnDmg,e.burnSrc,e.burnOwner); n.burnGen=bgn+1; bolts.push({x1:e.x,y1:e.y,x2:n.x,y2:n.y,t:0.12,color:C.candle}); } } }
 function applySlow(e,owner){ e.slowT=1.4+clsB(owner,'frost','dur'); e.slowF=clsB(owner,'frost','slow'); }
-function bulletFx(w,p){ const on={burn:w.burn||p.burn,slow:w.slow||p.slow,poison:w.poison,puddle:w.puddle,toxcloud:w.toxcloud,frostpool:w.frostpool,bounce:w.bounce,chain:w.chain,explode:w.explosive||p.explosive};
+function bulletFx(w,p){ const on={burn:w.burn||p.burn,slow:w.slow||p.slow,poison:w.poison,puddle:w.puddle,toxcloud:w.toxcloud,frostpool:w.frostpool,bounce:w.bounce,chain:w.chain,explode:w.explosive||p.explosive,
+    hex:w.hex,nail:w.nail,rail:w.rail,verdict:w.verdict};
   return FX_ORDER.filter(k=>on[k]).concat(p.fxMods||[]); }
 function runFx(b,hook,a1,a2){ let res; for(const id of b.fx){ const h=BULLET_FX[id]&&BULLET_FX[id][hook]; if(h){ const r=h(b,a1,a2); if(r)res=r; } } return res; }
 function fxDmg(b,e){ let d=b.dmg; for(const id of b.fx){ const h=BULLET_FX[id]&&BULLET_FX[id].dmg; if(h)d=h(b,d,e); } return d; }
@@ -1474,6 +1568,7 @@ function updateBullets(dt){
         if(dist2(b.x,b.y,e.x,e.y)<(b.r+e.r)*(b.r+e.r)){
           const dmg=fxDmg(b,e);
           damageEnemy(e,dmg,Math.atan2(b.vy,b.vx),b.kb,true,b.wid,b.owner); relicOnHit(b,e,dmg);
+          if(b.crit&&b.owner&&b.owner.critSlow&&e.hp>0) applySlow(e,b.owner);
           spawnFloater(e.x,e.y-e.r,Math.round(dmg),b.crit); Audio2.hit();
           b.hitIds.add(e.id); b.pierce--;
           if(runFx(b,'hit',e)==='die'){ dead=true; break; }
@@ -1502,7 +1597,7 @@ function explodeBullet(b){
   for(const e of enemies){ if(dist2(b.x,b.y,e.x,e.y)<60*60){ damageEnemy(e,b.dmg*0.7,Math.atan2(e.y-b.y,e.x-b.x),40,true,b.wid,b.owner); } }
 }
 function chainLightning(b,from){
-  let last=from,jumps=clsB(b.owner,'blitz','jumps'); const hitS=new Set([from.id]), rng=140+clsB(b.owner,'blitz','range');
+  let last=from,jumps=clsB(b.owner,'blitz','jumps')+((b.owner&&b.owner.chainPlus)||0); const hitS=new Set([from.id]), rng=140+clsB(b.owner,'blitz','range');
   while(jumps-->0){
     let best=null,bd=rng*rng;
     for(const e of enemies){if(hitS.has(e.id))continue;const d=dist2(last.x,last.y,e.x,e.y);if(d<bd){bd=d;best=e;}}
@@ -1756,7 +1851,8 @@ function rollShop(){
       let pool=WEAPONS.filter(x=>!x.evo && x.rk===rk && !used.has(x.id) && !player.weapons.includes(x.id));
       if(!pool.length){ for(let r=rarRank(rk);r>=0 && !pool.length;r--){ pool=WEAPONS.filter(x=>!x.evo && rarRank(x.rk)===r && !used.has(x.id) && !player.weapons.includes(x.id)); } }
       if(Math.random()<SHOP_CLS_BIAS){   // Neigung: Waffe, die eine Klasse mit einer getragenen teilt — gleiche oder niedrigere Seltenheit
-        const own=new Set(player.weapons.flatMap(id=>weaponById(id).cls));
+        const own=new Set(player.weapons.flatMap(id=>weaponById(id).cls)), pr=charProf(player);   // dazu die Klassen, die die Figur mag
+        if(pr){ if(pr.aff)own.add(pr.aff); for(const c in (pr.wb||{})) if(c!=='*'&&((pr.wb[c].dmg||0)>0||pr.wb[c].shots)) own.add(c); }
         for(let r=rarRank(rk);r>=0;r--){ const f=WEAPONS.filter(x=>!x.evo && rarRank(x.rk)===r && !used.has(x.id) && !player.weapons.includes(x.id) && x.cls.some(c=>own.has(c))); if(f.length){pool=f;break;} } }
       if(pool.length){ const w=pick(pool); used.add(w.id); offer.push({weapon:w}); } else break;
     }
@@ -1818,7 +1914,7 @@ function renderShop(){
   $('#shopReroll').textContent=t('shop_reroll',{cost:rerollCost()});
   $('#shopReroll').style.opacity=G.coins<rerollCost()?0.45:1;
 }
-function weaponMeta(w,dmgTxt){ return t('dbg_dmg')+' '+dmgTxt+' · '+(w.count>1?t('w_proj',{n:w.count}):t('w_single'))+(w.pierce>2?' · '+t('w_pierce'):'')+(w.chain?' · '+t('w_chain'):'')+(w.burn?' · '+t('ammo_burn'):'')+(w.explosive?' · '+t('w_explosive'):'')+(w.deploy?' · '+t('w_deploy'):'')+(w.poison?' · '+t('w_poison'):'')+(w.bounce?' · '+t('w_bounce'):'')+(w.contagion||w.ignite?' · '+t('w_spread'):'')+(w.frostpool?' · '+t('w_frostpool'):''); }
+function weaponMeta(w,dmgTxt){ return t('dbg_dmg')+' '+dmgTxt+' · '+(w.count>1?t('w_proj',{n:w.count}):t('w_single'))+(w.pierce>2?' · '+t('w_pierce'):'')+(w.chain?' · '+t('w_chain'):'')+(w.burn?' · '+t('ammo_burn'):'')+(w.explosive?' · '+t('w_explosive'):'')+(w.deploy?' · '+t('w_deploy'):'')+(w.poison?' · '+t('w_poison'):'')+(w.bounce?' · '+t('w_bounce'):'')+(w.contagion||w.ignite?' · '+t('w_spread'):'')+(w.frostpool?' · '+t('w_frostpool'):'')+(w.hex?' · '+t('w_hex'):'')+(w.nail?' · '+t('w_nail'):'')+(w.rail?' · '+t('w_rail'):'')+(w.verdict?' · '+t('w_verdict'):'')+(w.strike?' · '+t('w_strike'):''); }
 function buyWeapon(w,price){
   if(G.coins<price)return;
   G.coins-=price; $('#coinTag').textContent=G.coins; giveWeapon(w.id); Audio2.buy();
@@ -1939,7 +2035,7 @@ function fillStats(){
   $('#statGrid').innerHTML=rows.map(r=>'<div class="stat-row"><span class="l">'+r[0]+'</span><span class="v">'+r[1]+'</span></div>').join('');
   const wlist=p.weapons.map(id=>{const w=weaponById(id);const l=weaponLevel(id);return '<b>'+w.name+'</b> <span style="color:var(--gold2)">'+t('lvl_short')+l+'</span>';}).join(' · ');
   const act=Object.keys(p.clsSt||{}).filter(c=>p.clsSt[c]>0);
-  $('#statWeapons').innerHTML=t('weapons_label')+': '+wlist+(act.length?'<div class="stat-cls">'+act.map(c=>clsChip(c,clsName(c)+' '+ROMAN[p.clsSt[c]])+' <span>'+clsDesc(c,p.clsSt[c])+'</span>').join('<br>')+'</div>':'');
+  $('#statWeapons').innerHTML=charPerkHtml(p.charId)+t('weapons_label')+': '+wlist+(act.length?'<div class="stat-cls">'+act.map(c=>clsChip(c,clsName(c)+' '+ROMAN[p.clsSt[c]])+' <span>'+clsDesc(c,p.clsSt[c])+'</span>').join('<br>')+'</div>':'');
   const rl=Object.keys(p.relics||{}).map(id=>'<b style="color:var(--gold2)">'+relicById(id).name+'</b>');
   $('#statAbilities').innerHTML=(rl.length?t('relics_label')+': '+rl.join(' · ')+'<br>':'')+(p.abilities.length?(t('abilities_label')+': '+p.abilities.map(a=>'<b style="color:'+rarColor(a.rk)+'">'+a.name+'</b>'+(a.level>1?' '+t('lvl_short')+a.level:'')).join(' · ')):'');
 }
@@ -1962,12 +2058,6 @@ function gameOver(){
   $('#goEpitaph').textContent=pick(EPITAPHS);
   $('#goStats').innerHTML=t('end_station')+': <b>'+G.level+(G.level>50?' ('+t('hud_endless')+')':' / 50')+'</b><br>'+t('end_clvl')+': <b>'+player.level+'</b><br>'+t('hud_kills')+': <b>'+G.kills+'</b><br>'+t('hud_gold')+': <b>'+G.coins+'</b><br>'+t('end_class')+': <b>'+charById(G.charId).name+'</b><br>'+soulsLine(souls);
   $('#gameover').classList.add('show');
-}
-function victory(){
-  G.state='victory'; $('#hud').classList.remove('show'); $('#bossBarWrap').classList.remove('show');
-  const souls=finishRun(false,true);
-  $('#winStats').innerHTML=t('end_all50')+'<br>'+t('end_clvl')+': <b>'+player.level+'</b> · '+t('hud_kills')+': <b>'+G.kills+'</b><br>'+t('s_items')+': <b>'+player.items.length+'</b><br>'+soulsLine(souls);
-  Audio2.win(); $('#victory').classList.add('show');
 }
 
 /* =========================================================================
@@ -2462,6 +2552,10 @@ function fillProfile(){
   $('#profileGrid').innerHTML=rows.map(r=>'<div class="stat-row"><span class="l">'+r[0]+'</span><span class="v">'+r[1]+'</span></div>').join('');
 }
 
+/* Stärken (grün) und Schwächen (rot) der Figur, wie in Brotato direkt auf der Karte */
+function charPerkHtml(id){ const pr=CHAR_PROFILE[id]; if(!pr)return ''; const L=LANG==='en'?1:0;
+  return '<div class="char-perks">'+(pr.aff?'<div class="char-aff">'+clsChip(pr.aff,t('affinity')+': '+clsName(pr.aff))+'</div>':'')+
+    (pr.pros||[]).map(x=>'<div class="char-pro">+ '+x[L]+'</div>').join('')+(pr.cons||[]).map(x=>'<div class="char-mal">− '+x[L]+'</div>').join('')+'</div>'; }
 function renderCharCards(){
   const wrap=$('#charCards');wrap.innerHTML='';charPreviews=[];
   CHARS.forEach((c,idx)=>{
@@ -2479,8 +2573,7 @@ function renderCharCards(){
         '<div class="row">'+t('s_dmg').toUpperCase()+'<div class="bar"><div class="fill" style="width:'+bar(c.dmg,0.9,1.35)+'%"></div></div></div>'+
       '</div>'+
       '<div class="char-weapon">'+svgIcon(w.ic,w.color,16)+' '+(unlocked?w.name:'???')+'</div>'+
-      (unlocked&&CHAR_PROFILE[c.id]?'<div class="char-aff">'+clsChip(CHAR_PROFILE[c.id].aff,t('affinity')+': '+clsName(CHAR_PROFILE[c.id].aff))+
-        (CHAR_PROFILE[c.id].heal?' <span class="char-mal">'+t('mal_heal')+'</span>':'')+(CHAR_PROFILE[c.id].hpMul?' <span class="char-mal">'+t('mal_hp')+'</span>':'')+'</div>':'');
+      (unlocked?charPerkHtml(c.id):'');
     if(unlocked) el.onclick=()=>{charPreviews=[];pickChar(c.id);};
     wrap.appendChild(el);
     const cvp=el.querySelector('canvas');
@@ -2546,7 +2639,6 @@ $('#quitBtn').onclick=()=>{ if(player&&G.run){finishRun(true,false);} G.state='m
 
 $('#retryBtn').onclick=()=>{G.coopPick=0;G.state='charselect';hideAllOverlays();renderCharCards();show('charselect');};
 $('#goMenu').onclick=()=>{G.state='menu';hideAllOverlays();refreshProfile();show('menu');};
-$('#winMenu').onclick=()=>{G.state='menu';hideAllOverlays();refreshProfile();show('menu');};
 
 /* ---------- ADMIN (Passwort 321) ---------- */
 function backToContext(){ if(player&&G.state==='paused')show('pause'); else show('menu'); }

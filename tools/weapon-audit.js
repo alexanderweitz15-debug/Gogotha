@@ -22,7 +22,7 @@ const path = require('path'), fs = require('fs');
     function reset(wid, lvl) {
       Math.random = seeded(4242);
       WORLD = { w: 1820, h: 1180 }; ROOM = { x: 40, y: 40, w: WORLD.w - 80, h: WORLD.h - 80 }; obstacles = [];
-      const p = makePlayer('penitent', 'solo'); p.weapons = [wid]; p.wCd = [0]; p.wLevel = {}; if (lvl > 1) p.wLevel[wid] = lvl - 1;
+      const p = makePlayer('penitent', 'solo'); p.charId = '_neutral'; /* ohne Charakter-Boni */ p.weapons = [wid]; p.wCd = [0]; p.wLevel = {}; if (lvl > 1) p.wLevel[wid] = lvl - 1;
       recalcClasses(p); p.invuln = 1e9; p.crit = 0; p.x = 600; p.y = WORLD.h / 2; players = [p]; player = p;
       enemies = []; bullets = []; ebullets = []; puddles = []; deployables = []; beams = []; pickups = []; bolts = []; novaRings = []; G.hazards = []; G.shrine = null;
       G.level = 10; G.time = 0; G.curseHp = 1; G.diff = diffById('medium'); G.modMul = {}; G.run = { kills: 0, gold: 0, weaponKills: {}, bossKinds: {}, dmg: {}, id: 0 };
@@ -34,7 +34,7 @@ const path = require('path'), fs = require('fs');
     const out = [];
     for (const w of WEAPONS) {
       const exp = [], ok = {}, note = {};
-      const proj = !w.deploy && !w.beam;
+      const proj = !w.deploy && !w.beam && !w.strike;
       // 1) Salve: Anzahl, Effektliste, Reichweite
       let p = reset(w.id, 1);
       if (proj) { fireWeapon(w, 0); const n = bullets.length; exp.push('count'); ok.count = n === w.count; note.count = n + '/' + w.count;
@@ -70,7 +70,21 @@ const path = require('path'), fs = require('fs');
         exp.push('mineBlast'); ok.mineBlast = (spy.deployMineExplode || 0) > 0 && e.hp < e.maxHp; }
       // 4b) Strahl: durchdringt eine Reihe (ohne nähere Seitenziele, auf die er sonst zielt)
       if (w.beam) { p = reset(w.id, 1); const row = [0, 1, 2, 3].map(i => dummy(p.x + 140 + i * 60, p.y, 1e9, 13)); step(120, true);
-        const hit = row.filter(e => e.hp < e.maxHp).length; exp.push('beamPierce'); ok.beamPierce = hit === Math.min(4, w.pierce + 1); note.beamPierce = hit + '/4'; }
+        const hit = row.filter(e => e.hp < e.maxHp).length; exp.push('beamPierce'); ok.beamPierce = hit === Math.min(4, w.pierce + 1 + clsB(p, 'eisen', 'pierce')); note.beamPierce = hit + '/4'; }
+      // 4c) Eigenheiten
+      if (w.strike) { p = reset(w.id, 1); const ds = [0, 1, 2].map(i => dummy(p.x + 150 + i * 70, p.y + (i - 1) * 60, 1e9, 13)); obstacles = [{ x: p.x + 70, y: p.y, r: 40 }];
+        fireWeapon(w, 0); const hit = ds.filter(e => e.hp < e.maxHp).length; exp.push('strike'); ok.strike = hit >= 1 + (w.chain ? 1 : 0); note.strike = hit + ' getroffen'; }
+      if (w.hex) { p = reset(w.id, 1); const e = dummy(p.x + 150, p.y); const hits = [];
+        for (let k = 0; k < 5; k++) { const h0 = e.hp; const nb = { id: 1e6 + k, x: e.x - 20, y: e.y, vx: 600, vy: 0, dmg: 10, r: 5, pierce: 0, life: 1, kb: 0, fx: bulletFx(w, p), owner: p, depth: 0, wid: w.id, hitIds: new Set() };
+          bullets.push(nb); step(3, false); hits.push(h0 - e.hp); }
+        exp.push('hex'); ok.hex = hits[4] > hits[0] * 2; note.hex = hits.map(Math.round).join('/'); }
+      if (w.nail) { p = reset(w.id, 1); const e = dummy(p.x + 150, p.y);
+        for (let k = 0; k < 8; k++) { bullets.push({ id: 2e6 + k, x: e.x - 20, y: e.y, vx: 600, vy: 0, dmg: 1, r: 3, pierce: 0, life: 1, kb: 0, fx: bulletFx(w, p), owner: p, depth: 0, wid: w.id, hitIds: new Set() }); step(3, false); }
+        exp.push('nail'); ok.nail = e.rootT > 0; }
+      if (w.rail) { p = reset(w.id, 1); obstacles = [{ x: p.x + 80, y: p.y, r: 30 }]; const row = [0, 1, 2].map(i => dummy(p.x + 200 + i * 60, p.y, 1e9, 13));
+        fireWeapon(w, 0); step(60, false); const dm = row.map(e => e.maxHp - e.hp); exp.push('rail'); ok.rail = dm[0] > 0 && dm[2] > dm[0] * 1.3; note.rail = dm.map(Math.round).join('/'); }
+      if (w.verdict) { p = reset(w.id, 1); const e = dummy(p.x + 150, p.y, 1000); e.hp = 300; const b2 = dummy(p.x + 150, p.y + 300, 1000); b2.hp = 300; b2.isBoss = true;
+        fireWeapon(w, 0); fireWeapon(w, Math.atan2(300, 150)); step(60, false); exp.push('verdict'); ok.verdict = e.hp <= 0 && !enemies.includes(e) && b2.hp > 0; }
       // 5) Begleiter folgt dem Besitzer
       if (w.deploy === 'companion') { p = reset(w.id, 1); deployFromWeapon(w); p.x += 400; step(120, false); const d = deployables[0];
         exp.push('follows'); ok.follows = Math.hypot(d.x - p.x, d.y - p.y) < 90; }
@@ -99,9 +113,9 @@ const path = require('path'), fs = require('fs');
     }
     // Einzigartigkeit: Mechanik-Signatur
     const bucket = (v, cuts) => cuts.findIndex(c => v <= c);
-    const sig = w => [w.deploy ? 'deploy:' + w.deploy : w.beam ? 'beam' : 'proj', w.pattern || 'single', 'n' + bucket(w.count, [1, 3, 6, 99]), 'p' + bucket(w.pierce, [0, 2, 6, 99]),
+    const sig = w => [w.deploy ? 'deploy:' + w.deploy : w.beam ? 'beam' : w.strike ? 'strike' : 'proj', w.pattern || 'single', 'n' + bucket(w.count, [1, 3, 6, 99]), 'p' + bucket(w.pierce, [0, 2, 6, 99]),
       'r' + bucket((w.life || 1.8) * (w.spd || 0), [300, 700, 99999]),
-      ...['burn', 'slow', 'poison', 'puddle', 'toxcloud', 'frostpool', 'chain', 'explosive', 'bounce', 'ramp', 'contagion', 'ignite'].filter(k => w[k])].join(' ');
+      ...['burn', 'slow', 'poison', 'puddle', 'toxcloud', 'frostpool', 'chain', 'explosive', 'bounce', 'ramp', 'contagion', 'ignite', 'hex', 'nail', 'rail', 'verdict', 'strike'].filter(k => w[k])].join(' ');
     const groups = {}; for (const w of WEAPONS) (groups[sig(w)] = groups[sig(w)] || []).push(w.name + (w.evo ? '*' : ''));
     Math.random = rnd0;
     return { weapons: out, sameMechanic: Object.entries(groups).filter(([, v]) => v.length > 1).map(([k, v]) => ({ signature: k, weapons: v })) };
