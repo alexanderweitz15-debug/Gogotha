@@ -85,12 +85,16 @@ function aiBull(e,dt,p,ang,d,sp){ const st=e.st||0;
   if(e.stT<=0){ e.st=0; e.fireCd=rand(2.4,3.4); } }
 
 /* ---------- GOLGOTHA ---------- */
-/* Kreuzträger: das Kreuz vor ihm fängt Schüsse von vorn ab; er dreht sich nur langsam — von der Seite oder hinten treffen */
+/* Kreuzträger: das Kreuz vor ihm fängt Schüsse von vorn ab (6 Treffer, dann 2 s Taumeln); von der Seite oder hinten trifft man immer */
 function aiCross(e,dt,p,ang,d,sp){ if(e.fa==null)e.fa=ang;
+  if(e.stagT>0){ e.stagT-=dt; return; }   // taumelt: Schild unten, steht still
   const df=angDiff(ang,e.fa), tr=1.5*dt; e.fa+=clamp(df,-tr,tr); e.faceX=Math.cos(e.fa)<0?-1:1;
   const k=Math.abs(df)<1.2?1:0.35; e.x+=Math.cos(e.fa)*sp*k*dt; e.y+=Math.sin(e.fa)*sp*k*dt; }
-function guardCross(e,b){ if(Math.abs(angDiff(Math.atan2(-b.vy,-b.vx),e.fa||0))>1.15)return null;
-  for(let k=0;k<4;k++)spawnParticle(b.x,b.y,C.gold2,1.5,110); return 'block'; }
+/* Das Kreuz fängt 6 Treffer ab, dann taumelt er 2 s ohne Schild (sonst wäre er bei automatischem Zielen praktisch unverwundbar) */
+function guardCross(e,b){ if(e.stagT>0||Math.abs(angDiff(Math.atan2(-b.vy,-b.vx),e.fa||0))>1.15)return null;
+  for(let k=0;k<4;k++)spawnParticle(b.x,b.y,C.gold2,1.5,110);
+  e.blk=(e.blk||0)+1; if(e.blk>=6){ e.blk=0; e.stagT=2; spawnFloater(e.x,e.y-e.r-10,'✝',true); for(let k=0;k<10;k++)spawnParticle(e.x,e.y,C.gold2,2,140); }
+  return 'block'; }
 /* Seraph: schwebt über allem und richtet einen Lichtstrahl aus (1 s Warnstreifen, dann Treffer entlang der Linie) */
 function aiSeraph(e,dt,p,ang,d,sp){
   if(e.castT>0){ e.castT-=dt; return; }
@@ -135,8 +139,8 @@ const REGION_ENV=[
   /* Gräben: Stacheldraht — halbiert das Tempo darin */
   ()=>addZone('wire',rand(75,100),1.2,9),
   /* Katakomben: einstürzende Decke — Warnkreise, dann Trümmer */
-  ()=>{ const n=2+(G.level>15?1:0); for(let i=0;i<n;i++){ const s=envSpot(170);
-    addHazard({kind:'circle',x:s.x,y:s.y,r:52,delay:1.4+i*0.25,dmg:envDmg(13),color:'#a89880',onHit:h=>{ for(let k=0;k<14;k++)spawnParticle(h.x+rand(-30,30),h.y+rand(-30,30),pick(['#6a6058','#8a8070','#3a3430']),rand(2,4),rand(40,120)); }}); } },
+  ()=>{ for(let i=0;i<2;i++){ const s=envSpot(170);   /* 2 Kreise, 1,7 s Vorwarnung: in engen Katakomben-Gängen war mehr kaum auszuweichen */
+    addHazard({kind:'circle',x:s.x,y:s.y,r:52,delay:1.7+i*0.3,dmg:envDmg(10),color:'#a89880',onHit:h=>{ for(let k=0;k<14;k++)spawnParticle(h.x+rand(-30,30),h.y+rand(-30,30),pick(['#6a6058','#8a8070','#3a3430']),rand(2,4),rand(40,120)); }}); } },
   /* Lazarett: Giftschwaden — treibt langsam, vergiftet darin */
   ()=>{ const a=rand(0,TAU); addZone('gas',rand(85,110),1.5,7,{vx:Math.cos(a)*16,vy:Math.sin(a)*16,dps:envDmg(3)}); },
   /* Schlachthof: Blutlache — rutschig, man kommt schwer in Gang und schwer zum Stehen */
@@ -206,7 +210,7 @@ function drawRegion(){
   for(const z of R.zones) drawZone(z);
   for(const m of R.mines) drawMine(m);
   for(const e of enemies){ const ty=e.type;
-    if(ty==='crossbearer'&&e.fa!=null){ cx.save(); cx.globalAlpha=0.45; cx.strokeStyle=C.gold2; cx.lineWidth=3; cx.beginPath(); cx.arc(e.x,e.y,e.r+8,e.fa-1.15,e.fa+1.15); cx.stroke(); cx.restore(); }
+    if(ty==='crossbearer'&&e.fa!=null&&!(e.stagT>0)){ cx.save(); cx.globalAlpha=0.45; cx.strokeStyle=C.gold2; cx.lineWidth=3; cx.beginPath(); cx.arc(e.x,e.y,e.r+8,e.fa-1.15,e.fa+1.15); cx.stroke(); cx.restore(); }
     else if(ty==='bull'&&e.st===1){ const L=470, pr=1-clamp(e.stT/0.9,0,1); cx.save(); cx.lineCap='butt'; cx.strokeStyle='#c01f24';
       cx.globalAlpha=0.14+pr*0.16; cx.lineWidth=e.r*2; cx.beginPath(); cx.moveTo(e.x,e.y); cx.lineTo(e.x+e.cdx*L,e.y+e.cdy*L); cx.stroke();
       cx.globalAlpha=0.5; cx.lineWidth=Math.max(2,e.r*2*pr); cx.beginPath(); cx.moveTo(e.x,e.y); cx.lineTo(e.x+e.cdx*L*pr,e.y+e.cdy*L*pr); cx.stroke(); cx.restore(); }
