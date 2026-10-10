@@ -129,6 +129,7 @@ function updateBullets(dt){
   for(let i=bullets.length-1;i>=0;i--){
     const b=bullets[i]; b.life-=dt;
     /* ponytail: keine Zielsuche mehr — Schüsse fliegen geradeaus, ändern nie die Richtung */
+    const px=b.x, py=b.y;   // Treffer entlang der Flugstrecke prüfen: sonst überspringt ein Geschoss Gegner, die direkt am Spieler kleben
     b.x+=b.vx*dt; b.y+=b.vy*dt; runFx(b,'fly',dt);
     let dead=false;
     if(b.life<=0){ runFx(b,'expire'); dead=true; }
@@ -137,7 +138,7 @@ function updateBullets(dt){
     if(!dead){
       for(const e of enemies){
         if(b.hitIds.has(e.id))continue;
-        if(dist2(b.x,b.y,e.x,e.y)<(b.r+e.r)*(b.r+e.r)){
+        if(distToSeg(e.x,e.y,px,py,b.x,b.y)<b.r+e.r){
           const gd=e.guard&&e.guard(e,b); if(gd==='pass')continue; if(gd==='block'){ dead=true; break; }   // Regionsgegner: Geist, Kreuzträger
           const dmg=fxDmg(b,e);
           damageEnemy(e,dmg,Math.atan2(b.vy,b.vx),b.kb,true,b.wid,b.owner); relicOnHit(b,e,dmg);
