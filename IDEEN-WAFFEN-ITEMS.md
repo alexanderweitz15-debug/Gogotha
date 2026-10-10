@@ -333,6 +333,25 @@ Preis 55 % des Waffenpreises gleicher Seltenheit; Seltenheit gewürfelt wie bei 
 Ungemessen. Risiko: Gold war bisher knapp an Ausgaben gebunden (ein Kauf pro Besuch); mit Gegenständen wird überschüssiges Gold zu Stärke.
 Wenn Läufe dadurch zu leicht werden, zuerst `itemPrice` (Faktor 0,55) anheben.
 
+### 11.3 Bot-Messung der Schwierigkeit (10.10.2026)
+
+`tools/bot-run.js` spielt ganze Läufe (4 Figuren × 5 feste Zufallsfolgen je Grad) und vergleicht den Stand vor dem großen Feature-Paket (`73967bb`) mit dem Stand danach.
+Erste Messung: der neue Stand war deutlich schwerer (Schwer: 5 statt 14 von 20 Läufen gewonnen). Abschalt-Versuche (ohne neue Gegner / ohne Gefahren / ohne neue Karten) zeigten die Ursachen:
+Golgotha durch die neuen Gegner, Katakomben durch die einstürzende Decke; die Karten nicht. Behoben bzw. entschärft:
+
+- Treffer aus nächster Nähe: Geschosse übersprangen Gegner, die am Spieler klebten (alter Fehler; Gruftgeist 31 s → 2,6 s bis zum Tod)
+- Kreuzträger war bei automatischem Zielen unverwundbar → Kreuz fängt 6 Treffer, dann 2 s Taumeln
+- Einstürzende Decke: 2 Kreise, 1,7 s Vorwarnung, Schaden 10
+- Fernkämpfer und Knochenwände hielten hinter Kartenwänden Abstand → Stationen endeten nie; jetzt Wegfindung um Wände
+
+| gewonnen von 20 | vorher (alt) | neu, erste Messung | neu, nach Korrekturen |
+|---|---|---|---|
+| Mittel | 16 | 5 | 12 (7 Läufe hängen am ersten Boss: Bot-Schwäche mit Kurzstrecken-Waffe, im alten Stand ebenso) |
+| Schwer | 14 | 5 | 17 |
+| Sehr schwer | 12 | 1 | 13 |
+
+Grenzen: Der Bot weicht besser aus als ein Mensch und spielt taktisch schlechter (kauft einfach, wählt Gaben zufällig). Er ersetzt keine echten Läufe.
+
 ---
 
 ## 12. Später, erst nach Messung
