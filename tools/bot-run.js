@@ -2,7 +2,9 @@
 /* GOLGOTHA — Bot-Läufe: spielt komplette Läufe ohne Zeichnen mit fester Zufallsfolge und misst, wie weit er kommt
    (Lebensverlust je Station, getrennt nach Treffern und Gift/Brand/Boden, Dauer, Gegnerzahl; bei einer Station
    über 5 Minuten die übrigen Gegner). Der Bot kitet im Kreis, weicht Geschossen, Gefahrenzonen und giftigem Boden
-   aus, kauft keine Nahkampfwaffen und geht über das Wegraster auf Gegner zu, wenn er 8 s nichts trifft.
+   aus, nimmt keine Nahkampfwaffen und geht über das Wegraster auf Gegner zu, wenn er 8 s nichts trifft.
+   Stufenaufstieg (feste Regel): Verschmelzung > neue Fernkampfwaffe > Schadens-/Überlebens- und Klassen-Booster (neu oder Stufe) > Waffen-Stufe > übrige Booster > Heilung/Gold.
+   Händler: Heiltrank unter 60% LP, dann Truhen solange das Gold reicht, dann Sondergaben.
    Er spielt besser ausweichend und schlechter taktisch als ein Mensch: gut für Vergleiche zwischen zwei Ständen,
    kein Ersatz für echte Läufe. Bekannte Schwäche: mit nur einer Kurzstrecken-Waffe hängt er an Bossen fest.
    Aufruf (braucht Playwright):
@@ -30,7 +32,7 @@ const [,, DIR, SEED, CHAR, OUT, DIFF, ABL] = process.argv;   // DIFF = Index in 
     if (ABL === 'nomap') { buildMap = () => buildObstacles(); }
     G.level = 0; nextLevel();   // Station 1 mit frischem Zufall neu aufbauen
     renderGame = () => {}; if (typeof renderMinimap === 'function') renderMinimap = () => {};
-    const st = { cp: [], hpLoss: 0, stations: [], dmgTaken: 0, dashes: 0, buys: { w: 0, i: 0 } }; let cur = null;
+    const st = { cp: [], hpLoss: 0, stations: [], dmgTaken: 0, dashes: 0, buys: { chest: 0, heal: 0, gift: 0 }, picks: {} }; let cur = null;
     const hp0 = hurtPlayer; hurtPlayer = function (d, who) { const p = who || player, h = p.hp; const r = hp0.apply(this, arguments); st.dmgTaken += Math.max(0, h - p.hp); if (cur) cur.dmg += Math.max(0, h - p.hp); return r; };
     const click = sel => { const c = [...document.querySelectorAll(sel)].filter(x => !x.classList.contains('locked')); if (c.length) { c[0].click(); return true; } return false; };
     let t = performance.now(), lastLevel = -1;
@@ -67,18 +69,32 @@ const [,, DIR, SEED, CHAR, OUT, DIFF, ABL] = process.argv;   // DIFF = Index in 
       const danger = ebullets.some(bb => dist2(p.x, p.y, bb.x, bb.y) < 55 * 55) || enemies.some(e => (e.touch || e.isBoss) && dist2(p.x, p.y, e.x, e.y) < (e.r + p.r + 14) ** 2);
       if (danger && p.dashCd <= 0) { tryDash(p); st.dashes++; }
     }
+    /* Stufenaufstieg: Karte nach fester Regel (progCards liegt global in flow.js) */
+    function levelUp() {
+      const GOOD = ['might', 'haste', 'multi', 'wrathstat', 'critmult', 'vitality', 'bulwark'];   // Schadens- und Überlebens-Booster zuerst, Klassen-Booster danach
+      const bs = id => GOOD.includes(id) ? 4.6 - GOOD.indexOf(id) * 0.05 : id.startsWith('k_') ? 4.5 : 3;
+      const p = player, sc = c => { const w = c.id && weaponById(c.id);
+        if (c.kind === 'evo') return 10; if (c.kind === 'wnew') return w.melee ? -1 : 6 + rarRank(w.rk) * 0.1;
+        if (c.kind === 'wup') return w.melee ? 1 : 4.4; if (c.kind === 'bnew') return bs(c.id); if (c.kind === 'bup') return bs(c.id) + 0.1;
+        if (c.kind === 'heal') return p.hp < p.maxHP * 0.7 ? 2 : 0; return 1; };
+      let bi = 0; progCards.forEach((c, i) => { if (sc(c) > sc(progCards[bi])) bi = i; });
+      st.picks[progCards[bi].kind] = (st.picks[progCards[bi].kind] || 0) + 1;
+      document.querySelectorAll('#upgradeCards .rcard')[bi].click();
+    }
     function shop() {
-      const items = [...document.querySelectorAll('#shopItems .rcard:not(.locked):not(.sold)')];
-      for (const c of items) { c.click(); st.buys.i++; }
-      const ws = [...document.querySelectorAll('#shopCards .rcard:not(.locked)')].filter(c => { const o = shopOffer[[...c.parentNode.children].indexOf(c)]; return !(o && o.weapon && o.weapon.melee); });
-      if (ws.length) { ws[ws.length - 1].click(); st.buys.w++; return; }
+      const card = o => document.querySelectorAll('#shop .rcard')[merchWares.concat(merchSpecials).indexOf(o)];
+      const buy = o => { const c = card(o); if (!c || c.classList.contains('locked')) return false; const g = G.coins; c.click(); return G.coins < g; };
+      if (player.hp < player.maxHP * 0.6 && buy(merchWares[0])) st.buys.heal++;
+      for (const o of merchWares) if (o.kind === 'keychest' && buy(o)) st.buys.chest++;
+      for (let k = 0; k < 20; k++) { const o = merchWares.find(x => x.kind === 'chest'); if (!buy(o)) break; st.buys.chest++; }
+      for (const o of merchSpecials) if (buy(o)) st.buys.gift++;
       $('#shopSkip').click();
     }
     for (let f = 0; f < 30 * 60 * 75; f++) {      // höchstens 75 Spielminuten
       const s = G.state;
       if (s === 'gameover' || s === 'endless') break;
       if (s === 'curse') { click('#curseCards .rcard:nth-child(2)') || click('#curseCards .rcard'); continue; }
-      if (s === 'upgrade') { const c = [...document.querySelectorAll('#upgradeCards .rcard:not(.locked)')]; if (c.length) c[Math.floor(Math.random() * c.length)].click(); continue; }
+      if (s === 'upgrade') { levelUp(); continue; }
       if (s === 'ability') { click('#abilityCards .rcard'); continue; }
       if (s === 'relic') { const c = [...document.querySelectorAll('#relicCards .rcard:not(.locked)')]; if (c.length) c[0].click(); else hideAllOverlays(); continue; }
       if (s === 'shop') { shop(); continue; }
@@ -92,8 +108,8 @@ const [,, DIR, SEED, CHAR, OUT, DIFF, ABL] = process.argv;   // DIFF = Index in 
     }
     if (cur) { cur.dur = Math.round(G.time - cur.t0); st.stations.push(cur); }
     st.stations.forEach((x, i) => { const n = st.stations[i + 1]; if (n) x.dur = Math.round(n.t0 - x.t0); x.dmg = Math.round(x.dmg); });
-    return { reached: G.level, state: G.state, time: Math.round(G.time), kills: G.kills, clvl: player.level, weapons: player.weapons, items: Object.keys(player.itemsOwned || {}).length,
-      cp: [], hpLoss: Math.round(st.hpLoss), dmgTaken: Math.round(st.dmgTaken), dashes: st.dashes, buys: st.buys, stations: st.stations };
+    return { reached: G.level, state: G.state, time: Math.round(G.time), kills: G.kills, clvl: player.level, weapons: player.weapons.map(id => id + ':' + ((player.wLevel[id] || 0) + 1)), boosters: player.boosters, gold: G.run.gold,
+      cp: [], hpLoss: Math.round(st.hpLoss), dmgTaken: Math.round(st.dmgTaken), dashes: st.dashes, buys: st.buys, picks: st.picks, stations: st.stations };
   }, [SEED, ABL || '']);
   res.abl = ABL || ''; res.errors = errs; res.diff = +(DIFF || 2); res.seed = +SEED; res.char = +CHAR; res.build = require('path').resolve(DIR).split('/').pop();
   require('fs').writeFileSync(OUT, JSON.stringify(res)); console.log(res.build, 'seed', SEED, 'char', CHAR, 'diff', res.diff, '→ Station', res.reached, res.state, res.time + 's', 'errors', errs.length);

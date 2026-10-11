@@ -1,5 +1,5 @@
 "use strict";
-/* GOLGOTHA — Kodex (Sammlung aller Waffen, Gegenstände, Reliquien, Gegner, Bosse, Figuren) und weitere Erfolge.
+/* GOLGOTHA — Kodex (Sammlung aller Waffen, Booster, Reliquien, Gegner, Bosse, Figuren) und weitere Erfolge.
    Entdeckt-Status je Konto in DB.current.codex = {w:{id:1},i:{},r:{},e:{},b:{}} (wird mit dem Konto gespeichert).
    Erfasst wird nur in gewerteten Läufen (kein Admin-Eingriff). */
 const CDX_CATS=['w','i','r','e','b'];
@@ -8,7 +8,7 @@ function codexHas(cat,id){ const c=DB.current&&DB.current.codex; return !!(c&&c[
 function codexSeen(cat,id){ if(!id||!G.run||G.run.cheated||adminActive()||G.state==='paused')return;   // Pause = Admin-Panel
   const c=codexData(); if(!c)return; const m=c[cat]||(c[cat]={}); if(m[id])return; m[id]=1; R.dirty=true; }
 const cdxEnemyTypes=()=>Object.keys(ETYPES);
-function codexLists(){ return {w:WEAPONS.map(w=>w.id),i:ITEMS.map(i=>i.id),r:RELICS.map(r=>r.id),e:cdxEnemyTypes(),b:BOSS_KINDS.slice()}; }
+function codexLists(){ return {w:WEAPONS.map(w=>w.id),i:BOOSTERS.map(b=>b.id),r:RELICS.map(r=>r.id),e:cdxEnemyTypes(),b:BOSS_KINDS.slice()}; }
 function codexCount(){ const L=codexLists(); let have=0,total=0; for(const k of CDX_CATS){ total+=L[k].length; have+=L[k].filter(id=>codexHas(k,id)).length; } return {have,total}; }
 function codexPct(){ const n=codexCount(); return n.total?n.have/n.total:0; }
 
@@ -21,7 +21,7 @@ ACHIEVEMENTS.push(
  {id:'endform',    de:'Endform',                en:'Final Form',            dd:'Schmiede eine Endform aus Waffe St. 10 und Reliquie.',ed:'Forge a final form from a Lv 10 weapon and a relic.',ic:'explosion',check:s=>feat(s,'endform')},
  {id:'ab_fusion',  de:'Erwachte Einheit',       en:'Awakened Unity',        dd:'Verschmelze zwei Fähigkeiten.',                    ed:'Fuse two abilities.',                           ic:'nova',     check:s=>feat(s,'abfusion')},
  {id:'weapon_10',  de:'Bis zur Vollendung',     en:'To Perfection',         dd:'Veredle eine Waffe auf Stufe 10.',                 ed:'Refine a weapon to level 10.',                  ic:'sword',    check:s=>feat(s,'w10')},
- {id:'items_10',   de:'Krämerseele',            en:'Peddler\'s Soul',       dd:'Kaufe 10 Gegenstände in einem Lauf.',              ed:'Buy 10 items in one run.',                      ic:'weight',   check:s=>feat(s,'items10')},
+ {id:'items_10',   de:'Krämerseele',            en:'Peddler\'s Soul',       dd:'Bringe 3 Booster in einem Lauf auf Stufe 5.',      ed:'Raise 3 boosters to level 5 in one run.',       ic:'weight',   check:s=>feat(s,'boost3')},
  {id:'relics_5',   de:'Reliquienhüter',         en:'Keeper of Relics',      dd:'Trage 5 Reliquien in einem Lauf.',                 ed:'Carry 5 relics in one run.',                    ic:'eye',      check:s=>feat(s,'relics5')},
  {id:'all_played', de:'Jede Sünde getragen',    en:'Every Sin Borne',       dd:'Beginne mit jeder Figur einen Lauf.',              ed:'Start a run with every character.',             ic:'multi',    check:s=>CHARS.every(c=>s.played&&s.played[c.id])},
  {id:'boss_nohit', de:'Unberührt',              en:'Untouched',             dd:'Besiege einen Boss, ohne getroffen zu werden.',    ed:'Defeat a boss without being hit.',              ic:'shield',   check:s=>feat(s,'bossnohit')},
@@ -45,7 +45,7 @@ function achLive(){ if(!DB.current||!G.run||!runCounts())return; let n=false; co
     if(p.weapons.some(id=>has(id,true))) n=setFeat('endform')||n;
     if(p.abilities.some(a=>ABILITY_EVOS.some(r=>r.result===a.id))) n=setFeat('abfusion')||n;
     if(p.weapons.some(id=>(p.wLevel[id]||0)>=WEAPON_MAX_LEVEL-1)) n=setFeat('w10')||n;
-    let it=0; for(const k in p.itemsOwned||{}) it+=p.itemsOwned[k]; if(it>=10) n=setFeat('items10')||n;
+    if(Object.keys(p.boosters||{}).filter(k=>p.boosters[k]>=BOOSTER_MAX).length>=3) n=setFeat('boost3')||n;
     if(Object.keys(p.relics||{}).length>=5) n=setFeat('relics5')||n; }
   if(G.diff&&G.diff.id==='heresy'&&G.level>=20) n=setFeat('heresy20')||n;
   if(n) checkAchievements(); }
@@ -61,9 +61,9 @@ function runFeats(rec){ if(!rec.won)return; if(G.coop&&players.length>1)setFeat(
 /* ---------- TEXTE ---------- */
 Object.assign(I18N.de,{
   cdx_menu:'Kodex', cdx_title:'Kodex der Verdammten', cdx_back:'Zurück', cdx_sub:'{pct}% entdeckt · {have} / {total} Einträge',
-  cdx_t_w:'Waffen', cdx_t_i:'Gegenstände', cdx_t_r:'Reliquien', cdx_t_e:'Gegner', cdx_t_b:'Bosse', cdx_t_c:'Figuren', cdx_t_d:'Duo-Segen', cdx_t_s:'Sets',
+  cdx_t_w:'Waffen', cdx_t_i:'Booster', cdx_t_r:'Reliquien', cdx_t_e:'Gegner', cdx_t_b:'Bosse', cdx_t_c:'Figuren', cdx_t_d:'Duo-Segen', cdx_t_s:'Sets',
   cdx_f_all:'Alle', cdx_f_seen:'Entdeckt', cdx_f_miss:'Fehlend', cdx_cls_all:'Alle Klassen', cdx_empty:'Nichts gefunden.',
-  cdx_h_w:'Noch nie erhalten.', cdx_h_i:'Noch nie gekauft.', cdx_h_r:'Noch nie erhalten.', cdx_h_e:'Noch nie getötet.', cdx_h_b:'Noch nie besiegt.', cdx_h_x:'Noch nicht entdeckt.',
+  cdx_h_w:'Noch nie erhalten.', cdx_h_i:'Noch nie erhalten.', cdx_lv:'St. {n}', cdx_h_r:'Noch nie erhalten.', cdx_h_e:'Noch nie getötet.', cdx_h_b:'Noch nie besiegt.', cdx_h_x:'Noch nicht entdeckt.',
   cdx_evo:'Verschmelzung: {a} + {b}', cdx_bossw:'Boss-Waffe — nur mit der Boss-Figur', cdx_station:'Station {n}', cdx_everywhere:'Überall', cdx_hazard:'Gefahr: {h}', cdx_seen:'entdeckt',
   reg_h0:'Stacheldraht', reg_h1:'Einstürzende Decke', reg_h2:'Giftschwaden', reg_h3:'Blutlachen', reg_h4:'Blitzeinschläge',
   reg_hd0:'halbiert das Tempo darin', reg_hd1:'Warnkreise, dann fallen Trümmer', reg_hd2:'treibt langsam, vergiftet darin', reg_hd3:'rutschig: schwer anzulaufen, schwer zu bremsen', reg_hd4:'drei Warnkreise nacheinander',
@@ -80,9 +80,9 @@ Object.assign(I18N.de,{
 });
 Object.assign(I18N.en,{
   cdx_menu:'Codex', cdx_title:'Codex of the Damned', cdx_back:'Back', cdx_sub:'{pct}% discovered · {have} / {total} entries',
-  cdx_t_w:'Weapons', cdx_t_i:'Items', cdx_t_r:'Relics', cdx_t_e:'Enemies', cdx_t_b:'Bosses', cdx_t_c:'Characters', cdx_t_d:'Duo blessings', cdx_t_s:'Sets',
+  cdx_t_w:'Weapons', cdx_t_i:'Boosters', cdx_t_r:'Relics', cdx_t_e:'Enemies', cdx_t_b:'Bosses', cdx_t_c:'Characters', cdx_t_d:'Duo blessings', cdx_t_s:'Sets',
   cdx_f_all:'All', cdx_f_seen:'Discovered', cdx_f_miss:'Missing', cdx_cls_all:'All classes', cdx_empty:'Nothing found.',
-  cdx_h_w:'Never obtained.', cdx_h_i:'Never bought.', cdx_h_r:'Never obtained.', cdx_h_e:'Never killed.', cdx_h_b:'Never defeated.', cdx_h_x:'Not discovered yet.',
+  cdx_h_w:'Never obtained.', cdx_h_i:'Never obtained.', cdx_lv:'Lv {n}', cdx_h_r:'Never obtained.', cdx_h_e:'Never killed.', cdx_h_b:'Never defeated.', cdx_h_x:'Not discovered yet.',
   cdx_evo:'Fusion: {a} + {b}', cdx_bossw:'Boss weapon — only with the boss character', cdx_station:'Station {n}', cdx_everywhere:'Everywhere', cdx_hazard:'Hazard: {h}', cdx_seen:'discovered',
   reg_h0:'Barbed wire', reg_h1:'Collapsing ceiling', reg_h2:'Poison fumes', reg_h3:'Blood pools', reg_h4:'Lightning strikes',
   reg_hd0:'halves your speed inside', reg_hd1:'warning circles, then rubble falls', reg_hd2:'drifts slowly, poisons inside', reg_hd3:'slippery: slow to start, slow to stop', reg_hd4:'three warning circles in a row',
@@ -126,9 +126,9 @@ function cdxEntries(tab){ const L=LANG==='en', out=[];
     let extra=''; if(ev) extra='<div class="cdx-note">'+t('cdx_evo',{a:weaponById(ev.a).name,b:ev.relic?relicById(ev.relic).name:weaponById(ev.b).name})+'</div>'; else if(w.id.startsWith('bw_')) extra='<div class="cdx-note">'+t('cdx_bossw')+'</div>';
     out.push({seen,img:svgIcon(w.ic,seen?w.color:'#3a342c',30),name:w.name,meta:'<span class="rk '+w.rk+'">'+rarName(w.rk)+'</span>',
       desc:(seen?'<div class="cls-row">'+w.cls.map(c=>clsChip(c,clsName(c))).join('')+'</div>'+weaponMeta(w,Math.round(w.dmg)):t('cdx_h_w'))+extra}); }
-  else if(tab==='i') for(const it of ITEMS){ const seen=codexHas('i',it.id);
-    out.push({seen,img:svgIcon(it.ic,seen?rarColor(it.rk):'#3a342c',30),name:it.name,meta:'<span class="rk '+it.rk+'">'+rarName(it.rk)+'</span>',
-      desc:seen?'<span class="up">'+itemUp(it)+'</span>'+(it.down?'<br><span class="down">'+it.down+'</span>':''):t('cdx_h_i')}); }
+  else if(tab==='i') for(const b of BOOSTERS){ const seen=codexHas('i',b.id), col=b.cls?CLASSES[b.cls].color:C.gold2;   // Booster: Wirkung auf Stufe 1 und 5
+    out.push({seen,img:svgIcon(b.ic,seen?col:'#3a342c',30),name:boosterName(b),meta:b.cls?clsChip(b.cls,clsName(b.cls)):'<span style="color:var(--gold2)">'+t('booster_label')+'</span>',
+      desc:seen?'<span class="up">'+t('cdx_lv',{n:1})+': '+progBText(b,1)+'<br>'+t('cdx_lv',{n:BOOSTER_MAX})+': '+progBText(b,BOOSTER_MAX)+'</span>':t('cdx_h_i')}); }
   else if(tab==='r') for(const r of RELICS){ const seen=codexHas('r',r.id), hint=relicRecipeHint(r.id);
     out.push({seen,img:svgIcon(r.ic,seen?C.gold2:'#3a342c',30),name:r.name,meta:'<span style="color:var(--gold2)">✦ '+t('relic_label')+'</span>',desc:(seen?r.desc:t('cdx_h_r'))+(seen&&hint?'<div class="cdx-note">'+hint+'</div>':'')}); }
   else if(tab==='e'){ const regOf={}; REGION_TYPES.forEach((ts,i)=>ts.forEach(ty=>regOf[ty]=i));

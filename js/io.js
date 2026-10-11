@@ -76,11 +76,13 @@ addEventListener('keydown',e=>{
   }
   if(document.activeElement && document.activeElement.tagName==='INPUT') return;
   keys[e.code]=true; initAudio();
-  const deck={shop:'#shopCards',upgrade:'#upgradeCards',ability:'#abilityCards',curse:'#curseCards',relic:'#relicCards'}[G.state];
+  const deck={shop:'#shop',upgrade:'#upgradeCards',ability:'#abilityCards',curse:'#curseCards',relic:'#relicCards'}[G.state];   // Händler: Dienste und Sondergaben fortlaufend
   if(deck && !e.repeat && performance.now()-(G.menuAt||0)>250){   // Sperre: kein versehentliches Wählen beim Öffnen
-    const n=['Digit1','Digit2','Digit3','Digit4'].indexOf(e.code)>=0?+e.code.slice(5)-1:['Numpad1','Numpad2','Numpad3','Numpad4'].indexOf(e.code);
+    const m=/^(Digit|Numpad)([1-9])$/.exec(e.code), n=m?+m[2]-1:-1;
     if(n>=0){ const c=document.querySelectorAll(deck+' .rcard')[n]; if(c&&!c.classList.contains('locked'))c.click(); return; }
-    if(G.state==='shop'&&e.code==='KeyR'){ $('#shopReroll').click(); return; }
+    if(G.state==='upgrade'&&e.code==='KeyR'){ $('#upReroll').click(); return; }
+    if(G.state==='upgrade'&&e.code==='KeyB'){ $('#upBanish').click(); return; }
+    if(G.state==='upgrade'&&e.code==='Enter'){ $('#upSkip').click(); return; }
     if(G.state==='shop'&&e.code==='Enter'){ $('#shopSkip').click(); return; }
   }
   if(e.code===KEYBIND.pause){ if(G.state==='playing')togglePause(true); else if(G.state==='paused')togglePause(false); }

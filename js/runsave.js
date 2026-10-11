@@ -16,7 +16,7 @@ const RunSave=(()=>{
   const GAME=(()=>{ const s=document.querySelector('script[src*="js/data.js"]'), m=s&&/[?&]v=([^&#]+)/.exec(s.getAttribute('src')); return m?m[1]:'0'; })();
   /* G-Felder des Laufs; andere Module können eigene Felder anhängen (RunSave.gKeys.push('x')) */
   const gKeys=['level','coins','kills','time','charId','pendingChar2','coop','endless','activeMods','modMul','modEnemySpeed','modMapScale',
-    'noSave','pendingDiff','customDiff','curseSpawn','curseFire','curseHp','silence','rewardMul','run','runCommitted'];
+    'noSave','pendingDiff','customDiff','curseSpawn','curseFire','curseHp','rewardMul','run','runCommitted'];
   const key=()=>DB.current?'golgotha_run_v1:'+String(DB.current.name).toLowerCase():null;
   /* in JSON-taugliche Form: ohne Funktionen, DOM, Querverweise auf Spieler/Gegner; Sets/Maps/Unendlich markiert */
   function enc(v,seen){
@@ -53,8 +53,12 @@ const RunSave=(()=>{
     if(!s.g||!s.g.run||!(s.g.level>=1)||!Array.isArray(s.players)||!s.players.length||!s.diff||!DIFFICULTIES.some(d=>d.id===s.diff.id))return false;
     if(s.curse&&!curseById(s.curse))return false;
     return s.players.every(p=>CHARS.some(c=>c.id===p.charId)&&Array.isArray(p.weapons)&&p.weapons.length&&p.weapons.every(id=>weaponById(id))&&
-      Array.isArray(p.wCd)&&p.wCd.length===p.weapons.length&&Object.keys(p.itemsOwned||{}).every(id=>itemById(id))&&Object.keys(p.relics||{}).every(id=>relicById(id))&&
-      (p.abilities||[]).every(a=>a&&abById(a.id))&&Object.keys(p.taken||{}).every(id=>upDefById(id))); }
+      Array.isArray(p.wCd)&&p.wCd.length===p.weapons.length&&Object.keys(p.relics||{}).every(id=>relicById(id))&&
+      (p.abilities||[]).every(a=>a&&abById(a.id))&&Object.keys(p.taken||{}).every(id=>upDefById(id))&&progSaveOk(p)); }
+  /* Stufenaufstieg (Booster statt Gegenstände): Stände von vor dem Umbau haben kein p.boosters und werden verworfen */
+  function progSaveOk(p){ const b=p.boosters, ban=p.banished||{};
+    return !!b&&typeof b==='object'&&!Array.isArray(b)&&Object.keys(b).every(id=>boosterById(id)&&b[id]>=1&&b[id]<=BOOSTER_MAX)&&
+      Object.keys(ban).every(k=>k.startsWith('w:')?!!weaponById(k.slice(2)):k.startsWith('b:')&&!!boosterById(k.slice(2))); }
   /* gültigen Stand lesen, ungültigen löschen */
   function peek(){ const k=key(); if(!k)return null; let s=null;
     try{ const raw=localStorage.getItem(k); if(!raw)return null; s=JSON.parse(raw); }catch(e){ s=null; }

@@ -1,6 +1,6 @@
 "use strict";
 /* GOLGOTHA — Spieldaten: Waffen, Klassen, Reliquien, Gaben, Fähigkeiten, Charaktere und ihre Profile, Schwierigkeit, Flüche, Seelenschmiede, Erfolge; Laufwertung, Admin, globaler Zustand (Teil von game.js, Reihenfolge siehe index.html) */
-/* ---------- WEAPONS (Shop, mit Gold gekauft) ---------- */
+/* ---------- WEAPONS (über den Stufenaufstieg, höchstens 5 je Spieler) ---------- */
 const WEAPONS=[
  {id:'revolver',name:'Rostiger Revolver',rk:'common',ic:'bullet',dmg:13,fr:380,spd:620,count:1,spread:0.03,pierce:0,size:5,kb:140,color:C.bone},
  {id:'scatter',name:'Schädelbrecher',rk:'common',ic:'spread',dmg:7,fr:760,spd:560,count:6,spread:0.4,pierce:0,size:4,kb:120,life:0.5,pattern:'random',color:C.candle},
@@ -113,9 +113,8 @@ function clsDesc(c,st){ const B=CLS_BONUS[c], en=LANG==='en', pc=v=>Math.round(v
   } return ''; }
 const ROMAN=['','I','II','III','IV'];
 function clsChip(c,txt){ const k=CLASSES[c]; return '<span class="cls-chip" style="color:'+k.color+';border-color:'+k.color+'55">'+svgIcon(k.ic,k.color,11)+' '+txt+'</span>'; }
-const RARITY_PRICE=[28,52,90,150,240,400,650,1100];
 const WEAPON_CAP=5, WEAPON_MAX_LEVEL=10, EVO_LEVEL_REQ=5;
-let SHOP_CLS_BIAS=0.25;   // Chance je Shop-Angebot, eine Waffe passend zu getragenen Klassen zu ziehen
+let SHOP_CLS_BIAS=0.25;   // Chance je neuer Waffe im Stufenaufstieg, eine Waffe passend zu getragenen oder Lieblingsklassen zu ziehen
 const WEAPON_EVOS=[
  {a:'scatter',b:'plague',result:'pestburst'},
  {a:'revolver',b:'bolt',result:'reckoning'},
@@ -136,50 +135,76 @@ const RELICS=[
  {id:'mblood', name:'Märtyrerblut',           ic:'leech',    desc:'Erlittener Treffer: 2 s lang +30% Schaden'},
  {id:'confess',name:'Beichtstuhl',            ic:'shield',   desc:'Welle ohne Treffer: +5 Gold und +2 Max-LP'},
  {id:'lance',  name:'Lanze des Wächters',     ic:'lance',    desc:'Bosse beginnen mit 10% weniger Leben'},
- {id:'dice',   name:'Würfel des Soldaten',    ic:'star',     desc:'Erstes Neuwürfeln pro Waffenkammer gratis'},
+ {id:'dice',   name:'Würfel des Soldaten',    ic:'star',     desc:'Sofort 2 Neu-Würfeln-Marken, nach jeder Boss-Station 1 weitere'},
  {id:'coffer', name:'Opferstock',             ic:'crown',    desc:'Wellenende: +5% Zinsen auf dein Gold (max. 20)'},
- {id:'key',    name:'Schlüssel des Türhüters',ic:'eye',      desc:'Waffenkammer: ein 4. verdecktes Angebot zum halben Preis'},
+ {id:'key',    name:'Schlüssel des Türhüters',ic:'eye',      desc:'Händler: eine zusätzliche Truhe zum halben Preis'},
 ];
 const relicById=id=>RELICS.find(r=>r.id===id);
 const hasRelic=(p,id)=>!!(p&&p.relics&&p.relics[id]);
 
-/* ---------- GEGENSTÄNDE (wie Brotato): im Shop für Gold, stapelbar, beliebig viele Käufe pro Besuch ----------
-   up/down = Text für die Karte; cls = Klassen-Gegenstand (+Schaden für Waffen dieser Klasse); max = höchstens so oft */
+/* ---------- BOOSTER (wie Vampire Survivors): passiv, Stufe 1–5, höchstens 6 je Spieler; kommen über den Stufenaufstieg und die Händler-Truhe ----------
+   fx = [Wert, Gesamtwerte je Stufe 1..5, Art]. Art: pct = +v/100 · add = +v · hp = Max-LP und LP · mul = Faktor (1+v/100) · rate = Feuerrate +v% · cls = Klassen-Schaden.
+   Beim Aufstieg wird nur der Zuwachs von der alten zur neuen Stufe angewendet (wie Gaben und Fähigkeiten verändern Booster die Spielerwerte direkt).
+   w = Gewicht beim Ziehen (1 = normal). Klassen-Booster erscheinen nur, wenn eine getragene Waffe oder die Figur die Klasse hat (progLikedCls). */
+ICONS.chest='M4 10h16v9H4z M4 10l2-4h12l2 4 M10 13h4'; ICONS.book='M5 4h6a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H5z M19 4h-6 M19 4v14h-6';
+ICONS.rope='M12 3v6 M12 9a4 4 0 1 0 .01 0 M8 20c2-3 6-3 8 0'; ICONS.flask='M10 3h4 M10 3v5l-4 9a2 2 0 0 0 2 3h8a2 2 0 0 0 2-3l-4-9V3 M8 14h8';
+const BOOSTER_CAP=6, BOOSTER_MAX=5;
+const BOOSTERS=[
+ {id:'might',    name:'Stärke',            name_en:'Might',          ic:'sword',   fx:[['dmgMult',[12,24,36,48,60],'pct']]},
+ {id:'vitality', name:'Lebenskraft',       name_en:'Vitality',       ic:'heart',   fx:[['maxHP',[20,40,60,80,100],'hp']]},
+ {id:'bulwark',  name:'Kettenhemd',        name_en:'Chainmail',      ic:'shield',  fx:[['armor',[2,3,5,6,8],'add']]},
+ {id:'haste',    name:'Sanduhr',           name_en:'Hourglass',      ic:'clock',   fx:[['frMult',[10,20,30,40,50],'rate']]},
+ {id:'swift',    name:'Pilgersandalen',    name_en:'Pilgrim Sandals',ic:'boot',    fx:[['speed',[6,12,18,24,30],'mul']]},
+ {id:'pierce',   name:'Lupe des Inquisitors',name_en:'Inquisitor\'s Lens',ic:'pierce',fx:[['pierce',[1,1,2,2,3],'add'],['kbMult',[10,20,30,40,50],'mul']]},
+ {id:'wrathstat',name:'Rosenkranz',        name_en:'Rosary',         ic:'eye',     fx:[['crit',[5,10,15,20,25],'pct']]},
+ {id:'critmult', name:'Waage des Gerichts',name_en:'Scales of Judgement',ic:'weight',fx:[['critMult',[0.25,0.5,0.75,1,1.25],'add']]},
+ {id:'leech',    name:'Blutphiole',        name_en:'Blood Vial',     ic:'leech',   fx:[['lifesteal',[1,2,3,4,5],'add']]},
+ {id:'thorns',   name:'Dornenkrone',       name_en:'Crown of Thorns',ic:'crown',   fx:[['thorns',[15,30,45,60,75],'add']]},
+ {id:'projspd',  name:'Gesegnetes Pulver', name_en:'Blessed Powder', ic:'arrow',   fx:[['projSpeed',[12,24,36,48,60],'pct']]},
+ {id:'projsize', name:'Schweres Blei',     name_en:'Heavy Lead',     ic:'nail',    fx:[['projSize',[10,20,30,40,50],'pct']]},
+ {id:'magnet',   name:'Opferschale',       name_en:'Offering Bowl',  ic:'orbit',   fx:[['magnet',[25,50,75,100,125],'mul']]},
+ {id:'gold',     name:'Silberling',        name_en:'Silver Coin',    ic:'star',    fx:[['goldMult',[12,24,36,48,60],'pct']]},
+ {id:'xp',       name:'Gebetbuch',         name_en:'Prayer Book',    ic:'book',    fx:[['xpMult',[8,16,24,32,40],'pct']]},
+ {id:'luck',     name:'Galgenstrick',      name_en:'Hangman\'s Rope',ic:'rope',    fx:[['luck',[10,20,30,40,50],'pct']]},
+ {id:'regen',    name:'Weihwasserflasche', name_en:'Holy Water',     ic:'flask',   fx:[['regen',[0.3,0.6,0.9,1.2,1.5],'add']]},
+ {id:'multi',    name:'Vielfache Sünde',   name_en:'Manifold Sin',   ic:'multi',   w:0.4, fx:[['multishot',[1,1,1,2,2],'add'],['dmgMult',[0,5,10,10,15],'pct']]},
+ /* Klassen-Booster (früher je ein Gegenstand mit +10%): +8% Schaden für Waffen der Klasse je Stufe */
+ {id:'k_pulver',   name:'Pulverhorn',     name_en:'Powder Horn',   ic:'bullet',   cls:'pulver',   fx:[['cls:pulver',[8,16,24,32,40],'cls']]},
+ {id:'k_eisen',    name:'Wetzstein',      name_en:'Whetstone',     ic:'sword',    cls:'eisen',    fx:[['cls:eisen',[8,16,24,32,40],'cls']]},
+ {id:'k_feuer',    name:'Lampenöl',       name_en:'Lamp Oil',      ic:'flame',    cls:'feuer',    fx:[['cls:feuer',[8,16,24,32,40],'cls']]},
+ {id:'k_seuche',   name:'Giftphiole',     name_en:'Poison Vial',   ic:'plague',   cls:'seuche',   fx:[['cls:seuche',[8,16,24,32,40],'cls']]},
+ {id:'k_frost',    name:'Gletschersalz',  name_en:'Glacier Salt',  ic:'snow',     cls:'frost',    fx:[['cls:frost',[8,16,24,32,40],'cls']]},
+ {id:'k_blitz',    name:'Blitzableiter',  name_en:'Lightning Rod', ic:'lightning',cls:'blitz',    fx:[['cls:blitz',[8,16,24,32,40],'cls']]},
+ {id:'k_heilig',   name:'Reliquiar',      name_en:'Reliquary',     ic:'trinity',  cls:'heilig',   fx:[['cls:heilig',[8,16,24,32,40],'cls']]},
+ {id:'k_konstrukt',name:'Messingzahnrad', name_en:'Brass Cog',     ic:'gatling',  cls:'konstrukt',fx:[['cls:konstrukt',[8,16,24,32,40],'cls']]},
+];
+const boosterById=id=>BOOSTERS.find(b=>b.id===id);
+const boosterName=b=>LANG==='en'?b.name_en:b.name;
+const boosterLevel=(p,id)=>(p&&p.boosters&&p.boosters[id])||0;
+const boosterCount=p=>Object.keys((p&&p.boosters)||{}).length;
+const progBCap=p=>(p&&p.boosterCap)||BOOSTER_CAP;
 const addClsDmg=(p,c,v)=>{ p.clsDmg=p.clsDmg||{}; p.clsDmg[c]=(p.clsDmg[c]||0)+v; };
 const capHP=p=>{ p.maxHP=Math.max(1,Math.round(p.maxHP)); p.hp=Math.min(p.hp,p.maxHP); };
-const ITEMS=[
- {id:'i_bread',    name:'Fastenbrot',          rk:'common',   ic:'heart',    up:'+12 Max-LP', down:'−3% Tempo', apply:p=>{p.maxHP+=12;p.hp+=12;p.speed*=0.97;}},
- {id:'i_rosary',   name:'Rosenkranz',          rk:'common',   ic:'star',     up:'+4% Krit-Chance', apply:p=>{p.crit+=0.04;}},
- {id:'i_candle',   name:'Altarkerze',          rk:'common',   ic:'flame',    up:'+7% Schaden', down:'−6 Max-LP', apply:p=>{p.dmgMult+=0.07;p.maxHP-=6;capHP(p);}},
- {id:'i_sandals',  name:'Pilgersandalen',      rk:'common',   ic:'boot',     up:'+5% Tempo', apply:p=>{p.speed*=1.05;}},
- {id:'i_silver',   name:'Silberling',          rk:'common',   ic:'crown',    up:'+15% Gold', down:'−3% Schaden', apply:p=>{p.goldMult+=0.15;p.dmgMult-=0.03;}},
- {id:'i_powder',   name:'Pulverhorn',          rk:'uncommon', ic:'bullet',   cls:'pulver',   apply:p=>addClsDmg(p,'pulver',0.10)},
- {id:'i_whet',     name:'Wetzstein',           rk:'uncommon', ic:'sword',    cls:'eisen',    apply:p=>addClsDmg(p,'eisen',0.10)},
- {id:'i_oil',      name:'Lampenöl',            rk:'uncommon', ic:'flame',    cls:'feuer',    apply:p=>addClsDmg(p,'feuer',0.10)},
- {id:'i_vial',     name:'Giftphiole',          rk:'uncommon', ic:'plague',   cls:'seuche',   apply:p=>addClsDmg(p,'seuche',0.10)},
- {id:'i_salt',     name:'Gletschersalz',       rk:'uncommon', ic:'snow',     cls:'frost',    apply:p=>addClsDmg(p,'frost',0.10)},
- {id:'i_rod',      name:'Blitzableiter',       rk:'uncommon', ic:'lightning',cls:'blitz',    apply:p=>addClsDmg(p,'blitz',0.10)},
- {id:'i_reliquary',name:'Reliquiar',           rk:'uncommon', ic:'trinity',  cls:'heilig',   apply:p=>addClsDmg(p,'heilig',0.10)},
- {id:'i_cog',      name:'Messingzahnrad',      rk:'uncommon', ic:'gatling',  cls:'konstrukt',apply:p=>addClsDmg(p,'konstrukt',0.10)},
- {id:'i_mail',     name:'Kettenhemd',          rk:'uncommon', ic:'shield',   up:'+2 Rüstung', down:'−4% Tempo', apply:p=>{p.armor+=2;p.speed*=0.96;}},
- {id:'i_lens',     name:'Lupe des Inquisitors',rk:'rare',     ic:'eye',      up:'+1 Durchschlag', down:'−6% Feuerrate', apply:p=>{p.pierce+=1;p.frMult*=1.06;}},
- {id:'i_hourglass',name:'Sanduhr',             rk:'rare',     ic:'clock',    up:'+10% Feuerrate', down:'−10 Max-LP', apply:p=>{p.frMult*=0.9;p.maxHP-=10;capHP(p);}},
- {id:'i_bloodvial',name:'Blutphiole',          rk:'rare',     ic:'leech',    up:'+1 LP je Tötung', down:'−1 Rüstung', apply:p=>{p.lifesteal+=1;p.armor-=1;}},
- {id:'i_bowl',     name:'Opferschale',         rk:'rare',     ic:'orbit',    up:'+40% Sammelradius, +10% XP', apply:p=>{p.magnet=(p.magnet||1)*1.4;p.xpMult=(p.xpMult||1)+0.1;}},
- {id:'i_halo',     name:'Zerbrochener Heiligenschein',rk:'epic',ic:'wing',   up:'+18% Schaden', down:'Heilung −20%', apply:p=>{p.dmgMult+=0.18;p.healMul=(p.healMul||1)*0.8;}},
- {id:'i_scales',   name:'Waage des Gerichts',  rk:'epic',     ic:'weight',   max:1, up:'+0,5× Krit-Schaden', down:'−3% Krit-Chance', apply:p=>{p.critMult+=0.5;p.crit-=0.03;}},
- {id:'i_grail',    name:'Blutiger Kelch',      rk:'legendary',ic:'crown',    max:1, up:'+20% Schaden, +20 Max-LP', down:'Shop-Preise +15%', apply:p=>{p.dmgMult+=0.2;p.maxHP+=20;p.hp+=20;p.priceMul*=1.15;}},
-];
-const itemById=id=>ITEMS.find(i=>i.id===id);
-const itemUp=it=>it.cls?   // Klassen-Text aus clsName, damit er übersetzt wird
-  clsName(it.cls)+': +10% '+(LANG==='en'?'damage':'Schaden'):it.up;
-function itemPrice(it){ return Math.round(RARITY_PRICE[rarRank(it.rk)]*0.55*(1+G.level*0.03)*priceMul()); }
-const itemOwned=(p,id)=>(p&&p.itemsOwned&&p.itemsOwned[id])||0;
+/* Zuwachs von Gesamtstufe a auf c anwenden (a=0: neu) */
+function progBApply(p,b,a,c){ for(const [k,v,m] of b.fx){ const x=a?v[a-1]:0, y=v[c-1];
+  if(m==='pct') p[k]=(p[k]||0)+(y-x)/100; else if(m==='add') p[k]=(p[k]||0)+(y-x);
+  else if(m==='hp'){ p.maxHP+=y-x; p.hp+=y-x; } else if(m==='mul') p[k]=(p[k]||1)*(100+y)/(100+x);
+  else if(m==='rate') p.frMult*=(100+x)/(100+y); else if(m==='cls') addClsDmg(p,k.slice(4),(y-x)/100); } capHP(p); }
+/* Wirkung auf Stufe L als Text („+24% Schaden“); from = alte Stufe → „+12% → +24% Schaden“ */
+function progBText(b,L,from){ const en=LANG==='en', num=v=>en?String(v):String(v).replace('.',',');
+  return b.fx.map(([k,v,m])=>{ const y=v[L-1], x=from?v[from-1]:null; if(!y||from&&x===y)return '';   // beim Aufstieg nur, was sich ändert
+    const u=m==='pct'||m==='mul'||m==='rate'||m==='cls'?'%':k==='critMult'?'×':'', f=z=>'+'+num(z)+u;
+    const lab=m==='cls'?clsName(k.slice(4))+(en?' damage':'-Schaden'):t('bst_'+k);
+    return (x?f(x)+' → ':'')+f(y)+' '+lab; }).filter(Boolean).join(' · '); }
+Object.assign(I18N.de,{ bst_dmgMult:'Schaden', bst_maxHP:'Max-LP', bst_armor:'Rüstung', bst_frMult:'Feuerrate', bst_speed:'Tempo', bst_pierce:'Durchschlag', bst_kbMult:'Rückstoß',
+  bst_crit:'Krit-Chance', bst_critMult:'Krit-Schaden', bst_lifesteal:'LP je Tötung', bst_thorns:'Dornen', bst_projSpeed:'Geschosstempo', bst_projSize:'Geschossgröße',
+  bst_magnet:'Sammelradius', bst_goldMult:'Gold', bst_xpMult:'Erfahrung', bst_luck:'Glück', bst_regen:'LP/s Regeneration', bst_multishot:'Geschoss je Waffe' });
+Object.assign(I18N.en,{ bst_dmgMult:'damage', bst_maxHP:'max HP', bst_armor:'armor', bst_frMult:'fire rate', bst_speed:'speed', bst_pierce:'pierce', bst_kbMult:'knockback',
+  bst_crit:'crit chance', bst_critMult:'crit damage', bst_lifesteal:'HP per kill', bst_thorns:'thorns', bst_projSpeed:'projectile speed', bst_projSize:'projectile size',
+  bst_magnet:'pickup radius', bst_goldMult:'gold', bst_xpMult:'experience', bst_luck:'luck', bst_regen:'HP/s regeneration', bst_multishot:'projectile per weapon' });
+const RARITY_PRICE=[28,52,90,150,240,400,650,1100];
 const priceMul=()=>(player&&player.priceMul)||1;
-function weaponPrice(w){ return Math.round(RARITY_PRICE[rarRank(w.rk)]*(1+G.level*0.03)*priceMul()); }
-const rerollCost=()=>player&&player.freeReroll?0:Math.round((15+G.level*2)*priceMul());
 function weaponLevel(id){ return (player.wLevel[id]||0)+1; }
-function upgradePrice(w){ const lvl=weaponLevel(w.id); return Math.round(RARITY_PRICE[rarRank(w.rk)]*0.6*(1+lvl*0.28)*(1+G.level*0.02)*priceMul()); }
 function availableWeaponEvos(){
   if(!player) return [];
   return WEAPON_EVOS.filter(r=> player.weapons.includes(r.a) && !player.weapons.includes(r.result) && (r.relic
@@ -187,42 +212,31 @@ function availableWeaponEvos(){
     : player.weapons.includes(r.b) && weaponLevel(r.a)>=EVO_LEVEL_REQ && weaponLevel(r.b)>=EVO_LEVEL_REQ));
 }
 
-/* ---------- CHARAKTER-UPGRADES (Stufen, mit XP/Level) ---------- */
+/* ---------- SONDERGABEN: passen nicht in die Booster-Plätze → einmalige Waren beim Händler nach jeder Boss-Station ----------
+   Tausch-Gaben, Geschoss-Modifikatoren, Munitions-Schalter, Koop-Gaben. rk = Seltenheit (Preis), gezählt in p.taken (Sets: k 'gift'). */
 const UPGRADE_DEFS=[
- {id:'might',name:'Stärke',ic:'sword',desc:r=>'+'+(8+r*7)+'% Schaden',apply:(p,r)=>p.dmgMult+=(8+r*7)/100},
- {id:'vitality',name:'Lebenskraft',ic:'heart',desc:r=>'+'+(16+r*11)+' Max-LP',apply:(p,r)=>{const v=16+r*11;p.maxHP+=v;p.hp+=v;}},
- {id:'bulwark',name:'Schild',ic:'shield',desc:r=>'+'+(1+r)+' Rüstung',apply:(p,r)=>p.armor+=1+r},
- {id:'haste',name:'Hast',ic:'clock',desc:r=>'+'+(6+r*4)+'% Feuerrate',apply:(p,r)=>p.frMult*=1-(6+r*4)/100},
- {id:'swift',name:'Tempo',ic:'boot',desc:r=>'+'+(6+r*4)+'% Tempo',apply:(p,r)=>p.speed*=1+(6+r*4)/100},
- {id:'pierce',name:'Durchschlag',ic:'pierce',desc:r=>'+'+(1+Math.floor(r/2))+' Durchschlag',apply:(p,r)=>p.pierce+=1+Math.floor(r/2)},
- {id:'wrathstat',name:'Zorn',ic:'eye',desc:r=>'+'+(6+r*3)+'% Krit-Chance',apply:(p,r)=>p.crit+=(6+r*3)/100},
- {id:'leech',name:'Blutzehrung',ic:'leech',desc:r=>'+'+(1+r)+' LP / Tötung',apply:(p,r)=>p.lifesteal+=1+r},
- {id:'thorns',name:'Dornenkrone',ic:'crown',desc:r=>'+'+(10+r*7)+' Dornen',apply:(p,r)=>p.thorns+=10+r*7},
- {id:'projspd',name:'Gesegnetes Pulver',ic:'arrow',desc:r=>'+'+(12+r*6)+'% Projektil-Tempo',apply:(p,r)=>p.projSpeed+=(12+r*6)/100},
- {id:'projsize',name:'Schweres Blei',ic:'weight',desc:r=>'+'+(12+r*6)+'% Projektilgröße',apply:(p,r)=>p.projSize+=(12+r*6)/100},
- {id:'multi',name:'Vielfache Sünde',ic:'multi',minRank:3,desc:r=>'+1 Projektil je Waffe',apply:(p,r)=>p.multishot+=1},
- {id:'critmult',name:'Auge des Zorns',ic:'eye',minRank:3,desc:r=>'Krit-Schaden +'+(0.3+r*0.15).toFixed(2)+'×',apply:(p,r)=>p.critMult+=0.3+r*0.15},
- {id:'burn',name:'Pestodem',ic:'flame',minRank:2,desc:r=>'Schüsse entzünden Gegner',apply:(p,r)=>{p.burn=true;p.dmgMult+=0.05*r;}},
- {id:'slow',name:'Eiserne Gnade',ic:'snow',minRank:1,desc:r=>'Schüsse verlangsamen',apply:(p,r)=>{p.slow=true;}},
- {id:'explosive',name:'Höllenfeuer',ic:'explosion',minRank:4,desc:r=>'Schüsse explodieren',apply:(p,r)=>{p.explosive=true;}},
- /* --- Tausch-Gaben (Schritt 8): Vorteil mit festem Nachteil, Seltenheit wirkt nicht, je 1× pro Lauf --- */
- {id:'t_belt',  name:'Bußgürtel',      ic:'sword', trade:true,max:1,up:'+15% Schaden',down:'−10 Max-LP',apply:p=>{p.dmgMult+=0.15;p.maxHP=Math.max(1,p.maxHP-10);}},
- {id:'t_lead',  name:'Bleischuhe',     ic:'boot',  trade:true,max:1,up:'+5 Rüstung',down:'−12% Tempo',apply:p=>{p.armor+=5;p.speed*=0.88;}},
- {id:'t_staff', name:'Pilgerstab',     ic:'arrow', trade:true,max:1,up:'+10% Tempo',down:'−3 Rüstung',apply:p=>{p.speed*=1.10;p.armor-=3;}},
- {id:'t_chain', name:'Rostige Kette',  ic:'weight',trade:true,max:1,up:'+30% Rückstoß',down:'−8% Feuerrate',apply:p=>{p.kbMult*=1.3;p.frMult*=1.08;}},
- {id:'t_skull', name:'Totenschädel',   ic:'ghost', trade:true,max:1,up:'+1% Schaden je 25 Kills im Lauf (max. 40%)',down:'−10 Max-LP',apply:p=>{p.skull=true;p.maxHP=Math.max(1,p.maxHP-10);}},
- {id:'t_hood',  name:'Schwarze Kapuze', ic:'eye',   trade:true,max:1,up:'+10% Krit-Chance',down:'−20% Sammelradius',apply:p=>{p.crit+=0.10;p.magnet*=0.8;}},
- {id:'t_purse', name:'Almosenbeutel',  ic:'crown', trade:true,max:1,up:'+30% Sammelradius',down:'−5% Schaden',apply:p=>{p.magnet*=1.3;p.dmgMult-=0.05;}},
- {id:'t_letter',name:'Ablassbrief',    ic:'star',  trade:true,max:1,up:'+25% Gold',down:'Shop-Preise +10%',apply:p=>{p.goldMult+=0.25;p.priceMul*=1.10;}},
- /* --- Geschoss-Modifikatoren (Schritt 6): ändern das Geschoss statt einer Zahl, höchstens 1× pro Lauf --- */
- {id:'m_pitch',name:'Pechfass',ic:'flame',minRank:1,max:1,mod:'pitch',desc:r=>'Einschläge hinterlassen 1,5 s eine Brandpfütze (25% Schaden/s)',apply:p=>p.fxMods.push('pitch')},
- {id:'m_rico',name:'Querschläger',ic:'arrow',minRank:2,max:1,mod:'ricochet',desc:r=>'Geschosse prallen 1× von Wänden und Hindernissen ab',apply:p=>p.fxMods.push('ricochet')},
- {id:'m_ghost',name:'Geisterhand',ic:'ghost',minRank:2,max:1,mod:'ghost',desc:r=>'Geschosse fliegen durch Hindernisse · −15% Schaden',apply:p=>p.fxMods.push('ghost')},
- {id:'m_heavy',name:'Schwere Kugeln',ic:'weight',minRank:2,max:1,mod:'heavy',desc:r=>'Größer & langsamer · nah +60% Schaden, ab 600 px −30%',apply:p=>p.fxMods.push('heavy')},
+ /* --- Tausch-Gaben: Vorteil mit festem Nachteil --- */
+ {id:'t_belt',  name:'Bußgürtel',      ic:'sword', rk:'uncommon',trade:true,max:1,up:'+15% Schaden',down:'−10 Max-LP',apply:p=>{p.dmgMult+=0.15;p.maxHP=Math.max(1,p.maxHP-10);}},
+ {id:'t_lead',  name:'Bleischuhe',     ic:'boot',  rk:'uncommon',trade:true,max:1,up:'+5 Rüstung',down:'−12% Tempo',apply:p=>{p.armor+=5;p.speed*=0.88;}},
+ {id:'t_staff', name:'Pilgerstab',     ic:'arrow', rk:'uncommon',trade:true,max:1,up:'+10% Tempo',down:'−3 Rüstung',apply:p=>{p.speed*=1.10;p.armor-=3;}},
+ {id:'t_chain', name:'Rostige Kette',  ic:'weight',rk:'uncommon',trade:true,max:1,up:'+30% Rückstoß',down:'−8% Feuerrate',apply:p=>{p.kbMult*=1.3;p.frMult*=1.08;}},
+ {id:'t_skull', name:'Totenschädel',   ic:'ghost', rk:'rare',    trade:true,max:1,up:'+1% Schaden je 25 Kills im Lauf (max. 40%)',down:'−10 Max-LP',apply:p=>{p.skull=true;p.maxHP=Math.max(1,p.maxHP-10);}},
+ {id:'t_hood',  name:'Schwarze Kapuze', ic:'eye',  rk:'uncommon',trade:true,max:1,up:'+10% Krit-Chance',down:'−20% Sammelradius',apply:p=>{p.crit+=0.10;p.magnet*=0.8;}},
+ {id:'t_purse', name:'Almosenbeutel',  ic:'crown', rk:'uncommon',trade:true,max:1,up:'+30% Sammelradius',down:'−5% Schaden',apply:p=>{p.magnet*=1.3;p.dmgMult-=0.05;}},
+ {id:'t_letter',name:'Ablassbrief',    ic:'star',  rk:'uncommon',trade:true,max:1,up:'+25% Gold',down:'Händlerpreise +10%',apply:p=>{p.goldMult+=0.25;p.priceMul*=1.10;}},
+ /* --- Geschoss-Modifikatoren: ändern das Geschoss statt einer Zahl --- */
+ {id:'m_pitch',name:'Pechfass',ic:'flame',rk:'uncommon',max:1,mod:'pitch',desc:r=>'Einschläge hinterlassen 1,5 s eine Brandpfütze (25% Schaden/s)',apply:p=>p.fxMods.push('pitch')},
+ {id:'m_rico',name:'Querschläger',ic:'arrow',rk:'rare',max:1,mod:'ricochet',desc:r=>'Geschosse prallen 1× von Wänden und Hindernissen ab',apply:p=>p.fxMods.push('ricochet')},
+ {id:'m_ghost',name:'Geisterhand',ic:'ghost',rk:'rare',max:1,mod:'ghost',desc:r=>'Geschosse fliegen durch Hindernisse · −15% Schaden',apply:p=>p.fxMods.push('ghost')},
+ {id:'m_heavy',name:'Schwere Kugeln',ic:'weight',rk:'rare',max:1,mod:'heavy',desc:r=>'Größer & langsamer · nah +60% Schaden, ab 600 px −30%',apply:p=>p.fxMods.push('heavy')},
+ {id:'m_split',name:'Splitterknochen',ic:'spread',rk:'epic',max:1,mod:'split',desc:r=>'Treffer zersplittern in 3 Splitter (je 30% Schaden, erben Brand & Frost)',apply:p=>p.fxMods.push('split')},
+ /* --- Munitions-Schalter (früher Gaben im Aufstieg): an oder aus, darum keine Booster-Stufen --- */
+ {id:'burn',name:'Pestodem',ic:'flame',rk:'rare',max:1,desc:r=>'Schüsse entzünden Gegner',apply:p=>{p.burn=true;}},
+ {id:'slow',name:'Eiserne Gnade',ic:'snow',rk:'uncommon',max:1,desc:r=>'Schüsse verlangsamen',apply:p=>{p.slow=true;}},
+ {id:'explosive',name:'Höllenfeuer',ic:'explosion',rk:'epic',max:1,desc:r=>'Schüsse explodieren',apply:p=>{p.explosive=true;}},
  /* --- Koop-Gaben: nur im Koop angeboten --- */
- {id:'c_chain',name:'Verbundene Kette',ic:'weight',coop:true,minRank:1,desc:r=>'Eine Kette zwischen euch (bis 520 px) verletzt Gegner: '+(20+r*8)+' Schaden/s',apply:(p,r)=>p.linkDps+=20+r*8},
- {id:'c_bond',name:'Seelenband',ic:'wing',coop:true,minRank:2,max:1,desc:r=>'Fällt dein Gefährte, holen ihn 20 deiner Tötungen sofort zurück (50% LP)',apply:p=>{p.soulBond=true;}},
- {id:'m_split',name:'Splitterknochen',ic:'spread',minRank:4,max:1,mod:'split',desc:r=>'Treffer zersplittern in 3 Splitter (je 30% Schaden, erben Brand & Frost)',apply:p=>p.fxMods.push('split')},
+ {id:'c_chain',name:'Verbundene Kette',ic:'weight',rk:'rare',coop:true,desc:r=>'Eine Kette zwischen euch (bis 520 px) verletzt Gegner: '+(20+r*8)+' Schaden/s',apply:(p,r)=>p.linkDps+=20+r*8},
+ {id:'c_bond',name:'Seelenband',ic:'wing',rk:'rare',coop:true,max:1,desc:r=>'Fällt dein Gefährte, holen ihn 20 deiner Tötungen sofort zurück (50% LP)',apply:p=>{p.soulBond=true;}},
 ];
 const upDefById=id=>UPGRADE_DEFS.find(u=>u.id===id);
 
@@ -319,7 +333,7 @@ function charWB(p,w,k){ const pr=charProf(p); if(!pr||!pr.wb||!w)return 0; let v
   for(const c in pr.wb){ if(c!=='*'&&w.cls.includes(c)){ hit=true; v+=pr.wb[c][k]||0; } }
   if(!hit&&pr.wb['*']) v+=pr.wb['*'][k]||0; return v; }
 /* Schadensfaktor der Figur beim Abfeuern (Klasse + zustandsabhängige Sonderregeln) */
-/* Klassen-Gegenstände: +Schaden für Waffen ihrer Klasse (Summe über die Klassen der Waffe) */
+/* Klassen-Booster: +Schaden für Waffen ihrer Klasse (Summe über die Klassen der Waffe) */
 function itemClsMul(p,w){ if(!p||!p.clsDmg||!w)return 1; let v=0; for(const c of w.cls) v+=p.clsDmg[c]||0; return 1+v; }
 function charDmgMul(p,w){ return charProfMul(p,w)*itemClsMul(p,w); }
 function charProfMul(p,w){ const pr=charProf(p); if(!pr)return 1; let m=Math.max(0.1,1+charWB(p,w,'dmg'));
@@ -405,7 +419,7 @@ const CURSE_DEFS=[
  {id:'martyrdom',name:'Märtyrertum',ic:'crown',up:'+90% Schaden unter 50% LP',down:'−40% Max-LP',apply:p=>{p.maxHP=Math.round(p.maxHP*0.6);p.hp=Math.min(p.hp,p.maxHP);p.curseMartyr=true;}},
  {id:'recklessrage',name:'Rücksichtslose Wut',ic:'frenzy',up:'+45% Feuerrate',down:'−20% Max-LP & +25% Gegner-Spawn',apply:p=>{p.frMult*=0.55;p.maxHP=Math.round(p.maxHP*0.8);p.hp=Math.min(p.hp,p.maxHP);G.curseSpawn+=0.25;}},
  {id:'greedpact',name:'Pakt der Gier',ic:'crown',up:'Doppeltes Gold',down:'Gegner +30% Leben',apply:p=>{p.goldMult*=2; if(G.curseHp!==1.3){ G.curseHp=1.3; for(const e of enemies){e.maxHp*=1.3;e.hp*=1.3;} } }},   // gilt auch für die schon erschienene erste Welle
- {id:'silencepact',name:'Pakt des Schweigens',ic:'multi',up:'+1 Waffenslot',down:'Waffenkammer nur nach jeder 2. Welle',apply:p=>{p.weaponCap=capOf(p)+1;G.silence=true;}},
+ {id:'silencepact',name:'Pakt des Schweigens',ic:'multi',up:'+1 Waffenplatz',down:'−1 Booster-Platz',apply:p=>{p.weaponCap=capOf(p)+1;p.boosterCap=progBCap(p)-1;}},
 ];
 const curseById=id=>CURSE_DEFS.find(c=>c.id===id);
 const capOf=p=>(p&&p.weaponCap)||WEAPON_CAP;
