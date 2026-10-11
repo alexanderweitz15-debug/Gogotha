@@ -4,7 +4,7 @@
    den Spielcode (sprites.js, js/*.js) noch die API aus. Deshalb lädt erst diese Datei das Spiel nach.
    Als Datei geöffnet (file://) gibt es keinen Server und keine Pforte: Der Code liegt dann ohnehin lokal vor. */
 (function(){
-  const GAME=['sprites.js?v=21','js/core.js?v=21','js/data.js?v=21','js/io.js?v=21','js/player.js?v=21','js/enemies.js?v=21',
+  const GAME=['sprites.js?v=21','js/px-core.js?v=1','js/px-heroes.js?v=1','js/px-enemies.js?v=1','js/px-bosses.js?v=1','js/px-tiles.js?v=1','js/core.js?v=21','js/data.js?v=21','js/io.js?v=21','js/player.js?v=21','js/enemies.js?v=21',
     'js/combat.js?v=21','js/flow.js?v=21','js/render.js?v=21',
     'js/music.js?v=21','js/settings.js?v=21','js/gamepad.js?v=21','js/runsave.js?v=21','js/summary.js?v=21','js/map.js?v=21','js/regions.js?v=21','js/codex.js?v=21','js/synergy.js?v=21','js/melee.js?v=21',
     'js/main.js?v=21'];
