@@ -3,8 +3,8 @@
 /* =========================================================================
    PLAYER
    ========================================================================= */
-/* flacher als früher (6+5k+0,8k²): Waffen und Booster kommen jetzt nur noch über den Aufstieg (Stufe ~55–60 bei Station 50 statt ~35) */
-function xpForLevel(l){return Math.floor(5 + (l-1)*3 + (l-1)*(l-1)*0.12);}
+/* flacher als früher (6+5k+0,8k²): Waffen und Booster kommen jetzt nur über den Aufstieg und die Händler-Truhe */
+function xpForLevel(l){return Math.floor(4 + (l-1)*2 + (l-1)*(l-1)*0.08);}
 function makePlayer(charId,ctrl){
   const ch=charById(charId);
   const p={x:WORLD.w/2,y:WORLD.h/2,r:13,charId:charId,ctrl:ctrl||'solo',dead:false,pendingUp:0,pendingAb:0,

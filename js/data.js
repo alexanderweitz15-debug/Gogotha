@@ -192,10 +192,10 @@ function progBApply(p,b,a,c){ for(const [k,v,m] of b.fx){ const x=a?v[a-1]:0, y=
   else if(m==='rate') p.frMult*=(100+x)/(100+y); else if(m==='cls') addClsDmg(p,k.slice(4),(y-x)/100); } capHP(p); }
 /* Wirkung auf Stufe L als Text („+24% Schaden“); from = alte Stufe → „+12% → +24% Schaden“ */
 function progBText(b,L,from){ const en=LANG==='en', num=v=>en?String(v):String(v).replace('.',',');
-  return b.fx.map(([k,v,m])=>{ const y=v[L-1], x=from?v[from-1]:null; if(!y&&!x)return '';
+  return b.fx.map(([k,v,m])=>{ const y=v[L-1], x=from?v[from-1]:null; if(!y||from&&x===y)return '';   // beim Aufstieg nur, was sich ändert
     const u=m==='pct'||m==='mul'||m==='rate'||m==='cls'?'%':k==='critMult'?'×':'', f=z=>'+'+num(z)+u;
     const lab=m==='cls'?clsName(k.slice(4))+(en?' damage':'-Schaden'):t('bst_'+k);
-    return (x!=null&&x!==y?f(x)+' → ':'')+f(y)+' '+lab; }).filter(Boolean).join(' · '); }
+    return (x?f(x)+' → ':'')+f(y)+' '+lab; }).filter(Boolean).join(' · '); }
 Object.assign(I18N.de,{ bst_dmgMult:'Schaden', bst_maxHP:'Max-LP', bst_armor:'Rüstung', bst_frMult:'Feuerrate', bst_speed:'Tempo', bst_pierce:'Durchschlag', bst_kbMult:'Rückstoß',
   bst_crit:'Krit-Chance', bst_critMult:'Krit-Schaden', bst_lifesteal:'LP je Tötung', bst_thorns:'Dornen', bst_projSpeed:'Geschosstempo', bst_projSize:'Geschossgröße',
   bst_magnet:'Sammelradius', bst_goldMult:'Gold', bst_xpMult:'Erfahrung', bst_luck:'Glück', bst_regen:'LP/s Regeneration', bst_multishot:'Geschoss je Waffe' });

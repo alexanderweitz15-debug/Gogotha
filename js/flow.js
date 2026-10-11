@@ -269,7 +269,7 @@ let merchWares=[], merchSpecials=[], merchChests=0;
 const merchMul=()=>(1+G.level*0.05)*priceMul();
 function merchPrice(o){ const m=merchMul();
   switch(o.kind){ case 'heal': return Math.round(25*m); case 'reroll': return Math.round(20*m); case 'banish': return Math.round(30*m);
-    case 'chest': return Math.round(45*m*Math.pow(1.5,merchChests)); case 'keychest': return Math.round(45*m*0.5);
+    case 'chest': return Math.round(45*m*Math.pow(1.4,merchChests)); case 'keychest': return Math.round(45*m*0.5);
     case 'gift': return Math.round(RARITY_PRICE[rarRank(o.def.rk||'common')]*0.7*m); } return 0; }
 /* Sondergaben: bevorzugt ein fehlendes Teil eines angefangenen Sets */
 function merchRollSpecials(p){ const pool=UPGRADE_DEFS.filter(upAvail), out=[];

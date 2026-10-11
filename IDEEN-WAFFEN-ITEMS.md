@@ -448,8 +448,9 @@ Fähigkeiten (Stufe 10/20/30/40/50) und die Verschmelzungen bleiben. Code: `BOOS
 - Knöpfe: **Neu würfeln** (Marke), **Verbannen** (Marke; Karte wählen, sie kommt im Lauf nie wieder, dann wird neu gezogen), **Überspringen** (+Gold).
   Start: 2 Würfel-, 1 Bannmarke je Spieler. Tasten 1–4, R, B, Enter; Pad: A wählen, X neu würfeln, Y verbannen, B überspringen.
 - Koop: Aufstiege bleiben pro Spieler in der Warteschlange nach der Welle (`pendingUp`); jeder wählt selbst, Marken je Spieler.
-- XP-Kurve flacher (`xpForLevel` 5+3k+0,12k² statt 6+5k+0,8k²): der Bot erreicht Stufe ~48–55 statt ~32–35 bei Station 50.
-  Nebenwirkung: alle fünf Fähigkeiten (Stufe 10–50) kommen jetzt im Lauf an, vorher meist drei.
+- XP-Kurve flacher (`xpForLevel` 4+2k+0,08k² statt 6+5k+0,8k²): der Bot erreicht Stufe ~51–57 statt ~32–35 bei Station 50; alles ist etwa ab Station 40 ausgebaut.
+  Nebenwirkungen: alle fünf Fähigkeiten (Stufe 10–50) kommen im Lauf an (vorher meist drei); Figuren-Freischaltungen über die Höchststufe
+  (Kreuzritter 10 … Geheiligter 50) gehen schneller, und `awardSouls` gibt je Lauf mehr Seelen (Stufen × 2). Schwellen nicht angepasst.
 
 ### 13.2 Booster (Stufe 1–5, Wirkung insgesamt)
 
@@ -485,7 +486,7 @@ Stufe 5 entspricht etwa der Summe, die man früher über viele Karten und Gegens
 |---|---|---|
 | Heiltrank | 25 | 40 % Max-LP (mehrfach) |
 | Würfelmarke / Bannsiegel | 20 / 30 | +1 Neu-Würfeln / +1 Verbannen |
-| Truhe | 45, jede weitere im Besuch ×1,5 | Verschmelzung, sonst +1 Stufe auf Eigenes, sonst ein neues Teil |
+| Truhe | 45, jede weitere im Besuch ×1,4 | Verschmelzung, sonst +1 Stufe auf Eigenes, sonst ein neues Teil |
 | Truhe des Türhüters (nur mit Schlüssel) | 22,5, einmal je Besuch | wie Truhe |
 | 2 Sondergaben, je einmal | 0,7 × Seltenheitspreis | siehe 13.4; mit 60 % ist ein fehlendes Teil eines angefangenen Sets dabei |
 
@@ -506,16 +507,20 @@ Shop zwischen den Wellen (Waffenkauf, Veredeln, Neuwürfeln für Gold, verdeckte
 (gingen in Booster auf), die Werte-Karten mit Seltenheit (Seltenheit wirkt nur noch bei Waffen), die Gabe Gnadenquell (→ Weihwasserflasche),
 Nachteile der Gegenstände (Altarkerze, Sanduhr, Kelch …). Erfolg „Krämerseele“ heißt jetzt: 3 Booster auf Stufe 5 in einem Lauf.
 
-### 13.7 Messung (`tools/bot-run.js`, Mittel, je 1 Lauf)
-Bot-Regel: Verschmelzung > neue Fernkampfwaffe > Schadens-/Überlebens-Booster > Waffen-Stufe > Klassen-Booster > Rest; beim Händler Heiltrank unter 60 %, dann Truhen, dann Sondergaben.
+### 13.7 Messung (`tools/bot-run.js`, Mittel, je 1 Lauf, Endstand)
+Bot-Regel: Verschmelzung > neue Fernkampfwaffe > Schadens-/Überlebens- und Klassen-Booster > Waffen-Stufe > übrige Booster; beim Händler Heiltrank unter 60 %, dann Truhen, dann Sondergaben.
 
 | Lauf | vorher (Shop) | jetzt |
 |---|---|---|
-| Seed 1, Büßer | Station 50, 1024 s, Stufe 35 | Station 50, 1075 s, Stufe 50, Endform Scheiterhaufen-Salve, 40 Truhen |
-| Seed 2, Ketzerin | Station 50, 929 s | Station 39 (gestorben; erste Bot-Regel ohne Booster-Vorrang, Truhen füllten Plätze zufällig — seither geändert) |
-| Seed 3, Pestpriester | Station 50, 1335 s | Station 50, 1156 s |
+| Seed 1, Büßer | Station 50, 1024 s, Stufe 35 | gestorben auf Station 44 (936 s, Stufe 51, alles ausgebaut; 4 Klassen-Booster + Stärke + Sanduhr, kein Leben/Rüstung) |
+| Seed 2, Ketzerin | Station 50, 929 s, Stufe 32 | Station 50, 793 s, Stufe 55, 0 LP verloren |
+| Seed 3, Pestpriester | Station 50, 1335 s, Stufe 32 | Station 50, 864 s, Stufe 57, Endform Schwarzer Tod |
+| Seed 4, Henker | hängt am ersten Boss | hängt am ersten Boss (bekannte Bot-Schwäche mit Kurzstrecken-Waffe) |
 
-Ungemessen in echten Läufen; zu wenige Bot-Läufe für eine Aussage über Schwierigkeit. Stellschrauben: `xpForLevel`, `PROG_W`, `merchPrice`, Booster-Werte.
+Zwischenstände zeigen, wie stark die Wahl zählt: mit einer Bot-Regel, die freie Booster-Plätze mit allem füllte (Gold, Erfahrung, Sammelradius),
+starben Ketzerin und Pestpriester auf Station 14 und 17; mit der ersten, steileren XP-Kurve auf 28. Bis Station 40 ist der neue Stand für den Bot eher leichter,
+in Golgotha (41–50) fehlt das endlose Stapeln der Gegenstände: ein voll ausgebauter Bau ist die Obergrenze.
+Ungemessen in echten Läufen, zu wenige Läufe für eine Aussage über Schwierigkeit. Stellschrauben: `xpForLevel`, `PROG_W`, `merchPrice`, Booster-Werte.
 
 ---
 
