@@ -3,14 +3,11 @@
    Einstiegspunkte aus dem Spielcode (alle zur Laufzeit):
      damageEnemy → synDmgMul (vor dem Abzug), synOnHit (danach) · killEnemy → synOnKill · hurtPlayer setzt p.hurtT
      updateBullets → updateSynergy (pro Bild) · drawPlayer → drawSynergyMarks · openRelic → duoOffer
-     buyItem / giveUpgradeDef / giveRelic → checkSets · Shop-/Gaben-/Reliquienkarten → setTagHtml · fillStats → synStatRows/synStatsHtml
+     giveBooster / giveUpgradeDef / giveRelic → checkSets · Aufstiegs-/Händler-/Reliquienkarten → setTagHtml · fillStats → synStatRows/synStatsHtml
    Auslöser-Bremse: Schaden aus einem Duo-Effekt läuft mit G._duoD (Tiefe). Treffer-Effekte feuern nur bei Tiefe 0 und nicht
    aus Reliquien-Schaden (G._relicD); Schwefel-Explosionen lösen aus Tiefe 1 nur mit 20 % weitere aus, ab Tiefe 2 nie. */
 
-/* ---------- LEBENSREGENERATION: über healPlayer (Heilungsfaktor der Figur), pausiert 2 s nach einem erlittenen Treffer ---------- */
-ICONS.flask='M10 3h4 M10 3v5l-4 9a2 2 0 0 0 2 3h8a2 2 0 0 0 2-3l-4-9V3 M8 14h8';
-ITEMS.push({id:'i_holywater',name:'Weihwasserflasche',rk:'uncommon',ic:'flask',up:'+0,4 LP/s Regeneration',down:'pausiert 2 s nach Treffer',apply:p=>{p.regen=(p.regen||0)+0.4;}});
-UPGRADE_DEFS.push({id:'regen',name:'Gnadenquell',ic:'flask',minRank:1,desc:r=>'+'+(0.3+r*0.1).toFixed(1)+' LP/s Regeneration',apply:(p,r)=>{p.regen=(p.regen||0)+0.3+r*0.1;}});
+/* ---------- LEBENSREGENERATION (Booster Weihwasserflasche, p.regen): über healPlayer (Heilungsfaktor der Figur), pausiert 2 s nach einem erlittenen Treffer ---------- */
 const REGEN_PAUSE=2;
 const regenRate=p=>(p.regen||0)+(hasSet(p,'pilgrim')&&p.moving?0.8:0);
 const regenPaused=p=>G.time-(p.hurtT!=null?p.hurtT:-99)<REGEN_PAUSE;
@@ -110,38 +107,39 @@ function synOnSwing(p,w,ang,dmg){ if(!hasDuo(p,'blades'))return; p._bladeN=(p._b
   bullets.push({id:uid++,x:p.x+Math.cos(ang)*16,y:p.y+Math.sin(ang)*16,vx:Math.cos(ang)*620,vy:Math.sin(ang)*620,dmg:dmg*0.9,r:7,pierce:3,life:0.7,kb:80,color:'#cfd6d0',crit:false,fx:[],owner:p,depth:1,wid:'duo_blades',hitIds:new Set()}); }
 PROJ_SHAPE.duo_blades='scythe'; PROJ_SHAPE.duo_shrapnel='pellet';
 
-/* ---------- SET-VERWANDLUNGEN (Isaac): 3 Teile aus Gegenständen, Gaben und Reliquien → dauerhafte Verwandlung + Merkmal an der Figur ---------- */
+/* ---------- SET-VERWANDLUNGEN (Isaac): 3 Teile aus Boostern (Stufenaufstieg), Sondergaben (Händler) und Reliquien (Boss) → dauerhafte Verwandlung + Merkmal ----------
+   Je Set höchstens eine Sondergabe, damit es über die neuen Wege sicher vollständig werden kann (der Händler bevorzugt fehlende Set-Teile). */
 const SETS=[
  {id:'penitent',name:'Der Büßer',name_en:'The Penitent',ic:'crown',color:'#c01f24',mark:'thorns',
-   parts:[{k:'gift',id:'t_belt'},{k:'item',id:'i_bread'},{k:'relic',id:'mblood'}],
+   parts:[{k:'gift',id:'t_belt'},{k:'booster',id:'vitality'},{k:'relic',id:'mblood'}],
    desc:'Unter 30% LP: +50% Schaden und +20% Tempo · Dornenkrone', desc_en:'Below 30% HP: +50% damage and +20% speed · crown of thorns'},
  {id:'headsman',name:'Der Henker',name_en:'The Headsman',ic:'scythe',color:'#8a1418',mark:'hood',
-   parts:[{k:'gift',id:'t_hood'},{k:'gift',id:'t_chain'},{k:'gift',id:'t_skull'}],
+   parts:[{k:'gift',id:'t_hood'},{k:'booster',id:'wrathstat'},{k:'relic',id:'hammer'}],
    desc:'Hinrichtungs-Schwelle +10%, jede Hinrichtung heilt 2 LP · Henkerskapuze', desc_en:'Execution threshold +10%, every execution heals 2 HP · executioner\'s hood',
    apply:p=>{ p._execRaw=p.execPct; p.execPct=Math.min(0.6,p.execPct+0.1); p._execShow=p.execPct; }},
  {id:'doctor',name:'Der Pestdoktor',name_en:'The Plague Doctor',ic:'plague',color:'#9bbf3a',mark:'beak',
-   parts:[{k:'item',id:'i_vial'},{k:'relic',id:'urn'},{k:'gift',id:'t_purse'}],
+   parts:[{k:'booster',id:'k_seuche'},{k:'relic',id:'urn'},{k:'booster',id:'magnet'}],
    desc:'Vergiftete Gegner lassen doppelt Gold fallen und hinterlassen beim Tod eine Giftwolke · Schnabelmaske', desc_en:'Poisoned enemies drop double gold and leave a toxic cloud on death · beak mask'},
  {id:'pilgrim',name:'Der Pilger',name_en:'The Pilgrim',ic:'wing',color:'#e0b25a',mark:'halo',
-   parts:[{k:'gift',id:'t_staff'},{k:'item',id:'i_sandals'},{k:'item',id:'i_holywater'}],
+   parts:[{k:'gift',id:'t_staff'},{k:'booster',id:'swift'},{k:'booster',id:'regen'}],
    desc:'+10% Tempo, in Bewegung +0,8 LP/s, Ausweichen lädt 40% schneller · Heiligenschein', desc_en:'+10% speed, +0.8 HP/s while moving, dodge recharges 40% faster · halo',
    apply:p=>{ p.speed*=1.1; }},
  {id:'pyre',name:'Der Scheiterhaufen',name_en:'The Pyre',ic:'flame',color:'#e08a2f',mark:'flames',
-   parts:[{k:'item',id:'i_oil'},{k:'item',id:'i_candle'},{k:'gift',id:'m_pitch'}],
+   parts:[{k:'booster',id:'k_feuer'},{k:'booster',id:'might'},{k:'gift',id:'m_pitch'}],
    desc:'Brennende Gegner nehmen +25% Schaden; Brand springt beim Tod auf 2 Nachbarn · Flammenkrone', desc_en:'Burning enemies take +25% damage; burn jumps to 2 neighbours on death · crown of flames'},
 ];
 const setById=id=>SETS.find(s=>s.id===id);
 const setName=s=>LANG==='en'?s.name_en:s.name, setDesc=s=>LANG==='en'?s.desc_en:s.desc;
 const hasSet=(p,id)=>!!(p&&p.sets&&p.sets[id]);
-function setPartOwned(p,pt){ return pt.k==='item'?itemOwned(p,pt.id)>0:pt.k==='relic'?hasRelic(p,pt.id):!!(p.taken&&p.taken[pt.id]); }
-function setPartName(pt){ const o=pt.k==='item'?itemById(pt.id):pt.k==='relic'?relicById(pt.id):upDefById(pt.id); return o?o.name:pt.id; }
+function setPartOwned(p,pt){ return pt.k==='booster'?boosterLevel(p,pt.id)>0:pt.k==='relic'?hasRelic(p,pt.id):!!(p.taken&&p.taken[pt.id]); }
+function setPartName(pt){ if(pt.k==='booster'){ const b=boosterById(pt.id); return b?boosterName(b):pt.id; } const o=pt.k==='relic'?relicById(pt.id):upDefById(pt.id); return o?o.name:pt.id; }
 const setCount=(p,s)=>s.parts.filter(pt=>setPartOwned(p,pt)).length;
 function checkSets(p){ if(!p)return;
   for(const s of SETS){ if(hasSet(p,s.id)||setCount(p,s)<s.parts.length)continue;
     (p.sets||(p.sets={}))[s.id]=true; codexSeen('s',s.id); if(s.apply)s.apply(p); Audio2.ability(); G.shake=Math.max(G.shake,6);
     for(let i=0;i<30;i++)spawnParticle(p.x,p.y,s.color,rand(1.5,3.5),rand(80,220));
     showToast(t('set_toast'),'<b style="color:'+s.color+'">'+setName(s)+'</b> · '+setDesc(s)); updateHP(); } }
-/* Karten-Hinweis: „Teil von Set X (n/3)“ (k = item | gift | relic) */
+/* Karten-Hinweis: „Teil von Set X (n/3)“ (k = booster | gift | relic) */
 function setTagHtml(k,id){ if(!player)return ''; return SETS.filter(s=>s.parts.some(pt=>pt.k===k&&pt.id===id)).map(s=>
   '<div class="set-tag" style="color:'+s.color+'">'+t('set_part',{name:setName(s),n:setCount(player,s),m:s.parts.length})+(hasSet(player,s.id)?' ✦':'')+'</div>').join(''); }
 
@@ -188,13 +186,13 @@ function synStatsHtml(p){ const h=[];
 
 Object.assign(I18N.de,{
   duo_hint:'1–4 wählen', duo_label:'Duo-Segen', duos_label:'Duo-Segen', sets_label:'Sets', set_toast:'✦ Verwandlung', set_part:'Teil von Set {name} ({n}/{m})',
-  s_regen:'Regeneration', regen_unit:'LP/s', regen_paused:'pausiert', set_k_item:'Gegenstand', set_k_gift:'Gabe', set_k_relic:'Reliquie',
+  s_regen:'Regeneration', regen_unit:'LP/s', regen_paused:'pausiert', set_k_booster:'Booster', set_k_gift:'Gabe', set_k_relic:'Reliquie',
   src_duo_sulfur:'Schwefel (Duo)', src_duo_plaguecarrier:'Seuchenträger (Duo)', src_duo_supercond:'Supraleiter (Duo)', src_duo_hellstorm:'Höllengewitter (Duo)',
   src_duo_thermal:'Thermoschock (Duo)', src_duo_tribunal:'Strafgericht (Duo)', src_duo_shrapnel:'Schrapnell (Duo)', src_duo_blades:'Wurfklingen (Duo)', src_set_doctor:'Pestdoktor (Set)',
 });
 Object.assign(I18N.en,{
   duo_hint:'1–4 choose', duo_label:'Duo Boon', duos_label:'Duo boons', sets_label:'Sets', set_toast:'✦ Transformation', set_part:'Part of set {name} ({n}/{m})',
-  s_regen:'Regeneration', regen_unit:'HP/s', regen_paused:'paused', set_k_item:'Item', set_k_gift:'Boon', set_k_relic:'Relic',
+  s_regen:'Regeneration', regen_unit:'HP/s', regen_paused:'paused', set_k_booster:'Booster', set_k_gift:'Boon', set_k_relic:'Relic',
   src_duo_sulfur:'Brimstone (duo)', src_duo_plaguecarrier:'Plague carrier (duo)', src_duo_supercond:'Superconductor (duo)', src_duo_hellstorm:'Hellstorm (duo)',
   src_duo_thermal:'Thermal shock (duo)', src_duo_tribunal:'Tribunal (duo)', src_duo_shrapnel:'Shrapnel (duo)', src_duo_blades:'Throwing blades (duo)', src_set_doctor:'Plague doctor (set)',
 });

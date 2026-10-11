@@ -330,8 +330,9 @@ function updateHP(){ const p1=players[0]; if(!p1)return; fillHpEls(p1,'#hpFill',
 function updateXPBar(){ const p1=players[0]; if(!p1)return; $('#xpFill').style.width=clamp(p1.xp/p1.xpNext*100,0,100)+'%'; $('#lvlTag').textContent=p1.level;
   if(G.coop&&players[1]&&$('#lvlTag2')) $('#lvlTag2').textContent=players[1].level; }
 function updateWeaponBar(){ const p=players[0]||player; if(!p)return;const bar=$('#weaponbar');bar.innerHTML='';
-  p.weapons.forEach(id=>{const w=weaponById(id);const l=p.wLevel[id]||0;const el=document.createElement('div');el.className='wslot';
-    el.innerHTML='<span>'+svgIcon(w.ic,w.color,16)+'</span><span class="wn">'+w.name+'</span>'+(l?'<span class="wl">+'+l+'</span>':'')+'<i class="wcd"></i>';bar.appendChild(el);});
+  p.weapons.forEach(id=>{const w=weaponById(id);const l=(p.wLevel[id]||0)+1;const el=document.createElement('div');el.className='wslot';
+    el.innerHTML='<span>'+svgIcon(w.ic,w.color,16)+'</span><span class="wn">'+w.name+'</span><span class="wl">'+(l>=WEAPON_MAX_LEVEL?'MAX':t('lvl_short')+l)+'</span><i class="wcd"></i>';bar.appendChild(el);});
+  for(let i=p.weapons.length;i<capOf(p);i++){ const el=document.createElement('div'); el.className='wslot empty'; bar.appendChild(el); }   // freie Waffenplätze
   autoCollapse('weaponDock',p.weapons.length,5);
   const cb=$('#clsBar'); if(cb) cb.innerHTML=Object.keys(p.clsSt||{}).filter(c=>p.clsSt[c]>0).map(c=>clsChip(c,clsName(c)+' '+ROMAN[p.clsSt[c]])).join(''); }
 /* pro Frame: Abklingzeiten (Ausweichen, Waffen ab 0,3 s) und verbleibende Gegner */
@@ -339,9 +340,14 @@ function updateHudLive(){ const p=players[0]; if(!p)return;
   const dr=Admin.dash?1:clamp(1-p.dashCd/DASH_CD,0,1); $('#dashFill').style.width=dr*100+'%'; $('#dashBtn').style.setProperty('--cd',dr);
   document.querySelectorAll('#weaponbar .wcd').forEach((el,i)=>{ const mx=(p.wCdMax&&p.wCdMax[i])||0; el.style.width=(mx>0.3?clamp(1-p.wCd[i]/mx,0,1)*100:100)+'%'; });
   const n=enemies.length; if(n!==G._foeN){ G._foeN=n; $('#foeLabel').innerHTML=t('hud_foes',{n:'<b>'+n+'</b>'}); } }
-function updateItemPills(){ if(!player)return;const wrap=$('#itemPills');wrap.innerHTML='';
-  player.items.forEach(it=>{const el=document.createElement('div');el.className='ipill'+(it.ability?' ab':'')+(it.relic?' rl':'');el.innerHTML=svgIcon(it.ic,it.color,14);wrap.appendChild(el);});
-  autoCollapse('itemDock',player.items.length,10); }
+/* oben links: Booster-Plätze (Stufe 1–5, freie Plätze leer), darunter Reliquien, Fähigkeiten, Sondergaben, Duo-Segen */
+function updateItemPills(){ const p=players[0]||player; if(!p)return;const wrap=$('#itemPills');wrap.innerHTML='';
+  const bs=document.createElement('div'); bs.className='bslots'; const bl=Object.keys(p.boosters||{});
+  for(let i=0;i<progBCap(p);i++){ const b=boosterById(bl[i]), el=document.createElement('div'); el.className='bslot'+(b?'':' empty');
+    if(b){ const L=p.boosters[b.id]; el.title=boosterName(b)+' '+t('lvl_short')+L; el.innerHTML=svgIcon(b.ic,b.cls?CLASSES[b.cls].color:C.gold2,14)+'<b'+(L>=BOOSTER_MAX?' class="max"':'')+'>'+L+'</b>'; } bs.appendChild(el); }
+  wrap.appendChild(bs);
+  p.items.forEach(it=>{const el=document.createElement('div');el.className='ipill'+(it.ability?' ab':'')+(it.relic?' rl':'');el.innerHTML=svgIcon(it.ic,it.color,14);wrap.appendChild(el);});
+  autoCollapse('itemDock',p.items.length,10); }
 function autoCollapse(dockId,count,threshold){ const d=$('#'+dockId); if(!d)return; if(count>threshold && !d.dataset.user) d.classList.add('collapsed'); }
 function setDock(dockId,collapsed){ const d=$('#'+dockId); if(!d)return; d.classList.toggle('collapsed',collapsed); }
 $('#weaponToggle').onclick=()=>{const d=$('#weaponDock');d.classList.toggle('collapsed');d.dataset.user='1';};

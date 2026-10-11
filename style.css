@@ -244,9 +244,6 @@ body.touch #hud.show ~ #touchUI{display:block}
 .ipill{width:24px;height:24px;border-radius:5px;display:grid;place-items:center;background:rgba(10,8,6,.65);border:1px solid var(--line)}
 .ipill.rl{border-color:var(--gold2);box-shadow:0 0 8px rgba(224,178,90,.4)}
 .rcard.relic{border-color:var(--gold);background:linear-gradient(180deg,#1c160d,#0c0906);box-shadow:0 0 0 1px rgba(224,178,90,.15),0 0 18px rgba(224,178,90,.08) inset}
-.rcard.hidden-offer{border-style:dashed;border-color:var(--gold)}
-#shopCards.four{grid-template-columns:repeat(4,1fr);max-width:920px}
-@media (max-width:760px){ #shopCards.four{grid-template-columns:repeat(2,1fr)} }
 .ipill.ab{border-color:var(--epic);box-shadow:0 0 8px rgba(177,95,224,.4)}
 
 .boss-bar-wrap{position:absolute;top:60px;left:50%;transform:translateX(-50%);width:min(560px,80%);display:none}
@@ -312,7 +309,7 @@ body.touch #hud.show ~ #touchUI{display:block}
   #dashBtn{width:60px;height:60px;bottom:30px}
 }
 
-/* GEGENSTÄNDE im Shop (Brotato-Stil): kleinere Karten, eigene Reihe */
+/* HÄNDLER: kleinere Karten (Dienste und Sondergaben in eigener Reihe) */
 .shop-items-title{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--bone-dim);margin:-6px 0 8px}
 .reward-cards.items{grid-template-columns:repeat(2,minmax(0,220px));justify-content:center;gap:12px}
 .rcard.item{padding:10px 10px 12px}
@@ -426,3 +423,22 @@ body.touch #hud.show ~ #touchUI{display:block}
   .cdx-tabs,.cdx-filters{flex-wrap:nowrap;overflow-x:auto;max-width:100%;justify-content:flex-start;margin-bottom:5px;padding-bottom:2px} .cdx-sep{display:none}
   .cdx-tab{padding:4px 8px;font-size:.66rem;flex-shrink:0;white-space:nowrap} .cdx-chip{padding:3px 8px;font-size:10px;white-space:nowrap}
   #codex .cdx-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px} .cdx-card{padding:6px 7px;gap:7px} #codex .menu-btns{margin-top:6px} }
+
+/* STUFENAUFSTIEG (Waffen/Booster, VS-Stil) und HÄNDLER */
+.dock-items .bslots{display:flex;gap:5px;flex-basis:100%;margin-bottom:3px}
+.bslot{position:relative;width:26px;height:26px;border-radius:5px;display:grid;place-items:center;background:rgba(10,8,6,.72);border:1px solid rgba(224,178,90,.55)}
+.bslot.empty{border:1px dashed var(--line);background:rgba(10,8,6,.3)}
+.bslot b{position:absolute;right:-4px;bottom:-5px;min-width:11px;font-family:var(--mono);font-size:9px;line-height:11px;padding:0 2px;border-radius:3px;background:#0b0907;color:var(--gold2);border:1px solid var(--line);text-align:center}
+.bslot b.max{color:#160f08;background:var(--gold2);border-color:var(--gold2)}
+.wslot.empty{width:30px;align-self:stretch;min-height:28px;border-style:dashed;background:rgba(10,8,6,.3)}
+#upgradeCards.four{grid-template-columns:repeat(4,1fr);max-width:920px}
+@media (max-width:760px){ #upgradeCards.four{grid-template-columns:repeat(2,1fr)} }
+#upgradeCards.banish .rcard:not(.locked){border-color:#e0405f !important;box-shadow:0 0 0 1px rgba(224,64,95,.4),0 0 18px rgba(224,64,95,.15) inset}
+.rcard .prog-new{color:var(--gold2)}
+.rcard .prog-lv{color:var(--gold2);font-family:var(--mono);font-size:.78rem;white-space:nowrap}
+.rcard .prog-slot{color:#7a7262;font-size:10px}
+.rcard .prog-brk{color:#d8c8a0}
+.rcard.booster .rd .up{color:#7fcf6a}
+.amini.on{border-color:#e0405f;color:#e0405f}
+.amini:disabled{opacity:.4;cursor:not-allowed}
+#shopCards.merch{grid-template-columns:repeat(auto-fit,minmax(130px,170px));justify-content:center;max-width:920px;gap:10px}

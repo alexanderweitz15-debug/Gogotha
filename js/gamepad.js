@@ -1,12 +1,12 @@
 "use strict";
 /* GOLGOTHA — Gamepad-Steuerung (Spiel und Menüs, Koop mit zwei Pads)
    Standard-Belegung (Gamepad-API „standard“): Stick/Steuerkreuz bewegen, A ausweichen/wählen, B zurück/weiter,
-   X im Shop neu würfeln, Start Pause. Pad 1 steuert Spieler 1, Pad 2 Spieler 2. Bewegung liest moveInput (io.js) über Pads.axis. */
+   X im Stufenaufstieg neu würfeln, Y verbannen, Start Pause. Pad 1 steuert Spieler 1, Pad 2 Spieler 2. Bewegung liest moveInput (io.js) über Pads.axis. */
 Object.assign(I18N.de,{ pad_title:'Gamepad', pad_on:'Pad {n} verbunden', pad_off:'Pad {n} getrennt' });
 Object.assign(I18N.en,{ pad_title:'Gamepad', pad_on:'Pad {n} connected', pad_off:'Pad {n} disconnected' });
 const Pads=(()=>{
-  const DZ=0.3, A=0, B=1, X=2, START=9, UP=12, DOWN=13, LEFT=14, RIGHT=15;
-  const BACK={shop:'#shopSkip',how:'#howBack',charselect:'#charBack',modifiers:'#modBack',profile:'#profileClose',meta:'#metaBack',achievements:'#achBack',
+  const DZ=0.3, A=0, B=1, X=2, Y=3, START=9, UP=12, DOWN=13, LEFT=14, RIGHT=15;
+  const BACK={shop:'#shopSkip',upgrade:'#upSkip',how:'#howBack',charselect:'#charBack',modifiers:'#modBack',profile:'#profileClose',meta:'#metaBack',achievements:'#achBack',
     stats:'#statsClose',pause:'#resumeBtn',settings:'#setBack',gameover:'#goMenu',adminGate:'#adminGateCancel'};
   const CAND='.rcard:not(.locked),.char-card:not(.locked),.diff-card,.mod-chip,button,input[type=range]';
   let slots=[], prev=[], known={}, focusEl=null, focusIx=0, lastOv=null, navDir='', navT=0, lastT=performance.now();
@@ -59,7 +59,8 @@ const Pads=(()=>{
       if(!dir){ const a=stick(g); if(Math.abs(a.x)>0.5||Math.abs(a.y)>0.5) dir=Math.abs(a.x)>Math.abs(a.y)?(a.x>0?'right':'left'):(a.y>0?'down':'up'); }
       if(edge(A)&&!locked()){ ensureFocus(ov); if(focusEl&&!focusEl.matches('input[type=range]'))focusEl.click(); }
       else if(edge(B)&&!locked()) goBack(ov);
-      else if(edge(X)&&G.state==='shop'){ const r=$('#shopReroll'); if(r)r.click(); }
+      else if(edge(X)&&G.state==='upgrade'&&!locked()) $('#upReroll').click();
+      else if(edge(Y)&&G.state==='upgrade'&&!locked()) $('#upBanish').click();
     });
     if(!ov||G.state==='playing'){ if(focusEl)setFocus(null); lastOv=null; navDir=''; return; }
     ensureFocus(ov);

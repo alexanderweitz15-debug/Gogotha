@@ -3,7 +3,8 @@
 /* =========================================================================
    PLAYER
    ========================================================================= */
-function xpForLevel(l){return Math.floor(6 + (l-1)*5 + (l-1)*(l-1)*0.8);}
+/* flacher als früher (6+5k+0,8k²): Waffen und Booster kommen jetzt nur noch über den Aufstieg (Stufe ~55–60 bei Station 50 statt ~35) */
+function xpForLevel(l){return Math.floor(5 + (l-1)*3 + (l-1)*(l-1)*0.12);}
 function makePlayer(charId,ctrl){
   const ch=charById(charId);
   const p={x:WORLD.w/2,y:WORLD.h/2,r:13,charId:charId,ctrl:ctrl||'solo',dead:false,pendingUp:0,pendingAb:0,
@@ -14,7 +15,7 @@ function makePlayer(charId,ctrl){
     luck:0,goldMult:1,xpMult:1,
     weapons:[ch.weapon],wLevel:{},wCd:[0],heldTime:0,
     invuln:0,dashCd:0,dashTime:0,dashDir:{x:1,y:0},aim:0,
-    level:1,xp:0,xpNext:xpForLevel(1),items:[],abilities:[],taken:{},fxMods:[],magnet:1,priceMul:1,skull:false,relics:{},featherNext:{},mbloodT:0,waveHit:false,
+    level:1,xp:0,xpNext:xpForLevel(1),items:[],abilities:[],taken:{},boosters:{},banished:{},rerolls:2,banishes:1,fxMods:[],magnet:1,priceMul:1,skull:false,relics:{},featherNext:{},mbloodT:0,waveHit:false,
     /* ability state */
     orbitN:0,orbitDmg:0,orbitR:46,orbitAng:0,linkDps:0,soulBond:false,bondKills:0,
     novaDmg:0,novaCd:3,novaR:120,novaT:3,novaColor:C.gold2,
@@ -44,7 +45,10 @@ function giveWeapon(id){ if(!player)return; codexSeen('w',id);
   if(!player.weapons.includes(id)){player.weapons.push(id);player.wCd.push(0);}
   else {player.wLevel[id]=Math.min(WEAPON_MAX_LEVEL-1,(player.wLevel[id]||0)+1);}
   recalcClasses(player); updateWeaponBar(); }
-function giveUpgradeDef(def,rk){ if(!player||!upAvail(def))return; const r=rarRank(rk); def.apply(player,r); player.taken[def.id]=(player.taken[def.id]||0)+1; player.hp=clamp(player.hp,0,player.maxHP);
+/* Booster: neu (Stufe 1, wenn ein Platz frei ist) oder eine Stufe höher (bis 5) */
+function giveBooster(p,id){ const b=boosterById(id), L=boosterLevel(p,id); if(!p||!b||L>=BOOSTER_MAX||(!L&&boosterCount(p)>=progBCap(p)))return false;
+  progBApply(p,b,L,L+1); p.boosters[id]=L+1; codexSeen('i',id); updateItemPills(); updateHP(); checkSets(p); return true; }
+function giveUpgradeDef(def,rk){ if(!player||!upAvail(def))return; rk=rk||def.rk||'common'; const r=rarRank(rk); def.apply(player,r); player.taken[def.id]=(player.taken[def.id]||0)+1; player.hp=clamp(player.hp,0,player.maxHP);
   player.items.push({ic:def.ic,color:rarColor(rk)}); updateItemPills(); updateHP(); checkSets(player); }
 function giveAbility(def,rk){ if(!player)return; const r=rarRank(rk);
   const existing=player.abilities.find(a=>a.id===def.id);
@@ -58,7 +62,6 @@ function performWeaponEvolution(r){
   giveWeapon(r.result); Audio2.ability();
   const res=weaponById(r.result);
   showToast(t('shop_evo'),'<b style="color:'+rarColor(res.rk)+'">'+res.name+'</b> '+t('evo_done'));
-  advancePost();
 }
 function checkAbilityEvolution(){
   for(const r of ABILITY_EVOS){
