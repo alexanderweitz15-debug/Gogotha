@@ -319,7 +319,7 @@ Die Shop-Neigung bietet zusätzlich die Klassen an, die die Figur mag.
 
 Werte sind Startwerte; sie sind nicht in echten Läufen gemessen.
 
-### 11.2 Gegenstände im Shop (09.10.2026, umgesetzt)
+### 11.2 Gegenstände im Shop (09.10.2026, umgesetzt — am 11.10. durch Booster ersetzt, siehe 13)
 
 Wie in Brotato: 21 Gegenstände (`ITEMS` in `js/data.js`), zwei Angebote je Shop-Besuch in einer eigenen Reihe, **beliebig viele Käufe** –
 der Besuch endet erst mit einem Waffenkauf oder „Weiter“ (Waffen bleiben bei einem Kauf pro Besuch). Stapelbar, Kelch und Waage höchstens 1×.
@@ -430,7 +430,96 @@ wirkt, Flagellant also 70 %), pausiert 2 s nach jedem erlittenen Treffer; das We
 
 ---
 
-## 13. Reihenfolge
+## 13. Ausbau wie Vampire Survivors (11.10.2026, umgesetzt)
+
+Der Shop zwischen den Wellen und die Gegenstände (11.2) sind weg. Waffen und Werte kommen jetzt über den **Stufenaufstieg**;
+Gold hat eine neue Rolle beim **Händler nach jeder Boss-Station**. Figuren-Profile, Klassen und Klassenboni, Duo-Segen, Sets, Reliquien,
+Fähigkeiten (Stufe 10/20/30/40/50) und die Verschmelzungen bleiben. Code: `BOOSTERS`, `progBApply`, `progBText` (`js/data.js`),
+`giveBooster` (`js/player.js`), `progRoll`, `openUpgrade`, `renderUpgrade`, `openMerchant`, `merchBuy` (`js/flow.js`).
+
+### 13.1 Stufenaufstieg
+- 1 aus 3 Karten, mit 10 % + Glück (Galgenstrick, höchstens 60 %) 1 aus 4. Je Platz wird eine Art gezogen: **neue Waffe**, **neuer Booster**,
+  **+1 Stufe** auf eigene Waffe (bis 10) oder eigenen Booster (bis 5). Neue Waffen: Seltenheit gewürfelt (Glück zählt), mit 25 % aus getragenen
+  bzw. Lieblingsklassen der Figur (`progLikedCls`, die alte Shop-Neigung). Nicht angeboten: Verschmelzungs-, Endform- und Boss-Waffen.
+- Plätze: **5 Waffen** (Inquisitor 4, Pakt des Schweigens +1) und **6 Booster** (Pakt des Schweigens −1). Volle Plätze → nur noch Stufen-Ups.
+  Alles ausgebaut oder verbannt → Karten „+Gold“ und „Heilung 30 %“.
+- **Verschmelzungen** (`WEAPON_EVOS`) stehen als erste Karte im Aufstieg, sobald möglich (2 Waffen ab St. 5; Endform: Waffe St. 10 + Reliquie).
+  Die Händler-Truhe verschmilzt ebenfalls zuerst.
+- Knöpfe: **Neu würfeln** (Marke), **Verbannen** (Marke; Karte wählen, sie kommt im Lauf nie wieder, dann wird neu gezogen), **Überspringen** (+Gold).
+  Start: 2 Würfel-, 1 Bannmarke je Spieler. Tasten 1–4, R, B, Enter; Pad: A wählen, X neu würfeln, Y verbannen, B überspringen.
+- Koop: Aufstiege bleiben pro Spieler in der Warteschlange nach der Welle (`pendingUp`); jeder wählt selbst, Marken je Spieler.
+- XP-Kurve flacher (`xpForLevel` 5+3k+0,12k² statt 6+5k+0,8k²): der Bot erreicht Stufe ~48–55 statt ~32–35 bei Station 50.
+  Nebenwirkung: alle fünf Fähigkeiten (Stufe 10–50) kommen jetzt im Lauf an, vorher meist drei.
+
+### 13.2 Booster (Stufe 1–5, Wirkung insgesamt)
+
+| Booster | Stufe 1 | Stufe 5 | früher |
+|---|---|---|---|
+| Stärke | +12 % Schaden | +60 % | Stärke, Altarkerze, Heiligenschein, Kelch |
+| Lebenskraft | +20 Max-LP | +100 | Lebenskraft, Fastenbrot |
+| Kettenhemd | +2 Rüstung | +8 | Schild, Kettenhemd |
+| Sanduhr | +10 % Feuerrate | +50 % | Hast, Sanduhr |
+| Pilgersandalen | +6 % Tempo | +30 % | Tempo, Sandalen |
+| Lupe des Inquisitors | +1 Durchschlag, +10 % Rückstoß | +3, +50 % | Durchschlag, Lupe |
+| Rosenkranz | +5 % Krit-Chance | +25 % | Zorn, Rosenkranz |
+| Waage des Gerichts | +0,25× Krit-Schaden | +1,25× | Auge des Zorns, Waage |
+| Blutphiole | +1 LP je Tötung | +5 | Blutzehrung, Blutphiole |
+| Dornenkrone | +15 Dornen | +75 | Dornenkrone |
+| Gesegnetes Pulver | +12 % Geschosstempo | +60 % | Gesegnetes Pulver |
+| Schweres Blei | +10 % Geschossgröße | +50 % | Schweres Blei |
+| Opferschale | +25 % Sammelradius | +125 % | Opferschale |
+| Silberling | +12 % Gold | +60 % | Silberling |
+| Gebetbuch | +8 % Erfahrung | +40 % | (neu) |
+| Galgenstrick | +10 % Glück (Seltenheit, 4. Karte) | +50 % | (neu; `p.luck` war vorher nie gesetzt) |
+| Weihwasserflasche | +0,3 LP/s | +1,5 LP/s | Gnadenquell, Weihwasserflasche |
+| Vielfache Sünde (seltener) | +1 Geschoss je Waffe | +2 Geschosse, +15 % Schaden | Vielfache Sünde |
+| 8 Klassen-Booster (Pulverhorn, Wetzstein, Lampenöl, Giftphiole, Gletschersalz, Blitzableiter, Reliquiar, Messingzahnrad) | +8 % Schaden der Klasse | +40 % | je ein Klassen-Gegenstand (+10 % stapelbar) |
+
+**Klassen-Booster verwässern den Pool nicht:** sie werden nur angeboten, wenn eine getragene Waffe oder die Figur (Lieblingsklasse,
+positive Klassenboni) die Klasse hat — meist 2–4 von 8. Ohne diese Sperre wäre jeder dritte neue Booster einer für eine Klasse, die man nicht spielt.
+Stufe 5 entspricht etwa der Summe, die man früher über viele Karten und Gegenstände stapelte; Nachteile der alten Gegenstände sind entfallen.
+
+### 13.3 Händler (nach jeder Boss-Station, nach der Reliquie, vor den Aufstiegen)
+
+| Ware | Preis (× (1 + 0,05 × Station) × Preisfaktor) | Wirkung |
+|---|---|---|
+| Heiltrank | 25 | 40 % Max-LP (mehrfach) |
+| Würfelmarke / Bannsiegel | 20 / 30 | +1 Neu-Würfeln / +1 Verbannen |
+| Truhe | 45, jede weitere im Besuch ×1,5 | Verschmelzung, sonst +1 Stufe auf Eigenes, sonst ein neues Teil |
+| Truhe des Türhüters (nur mit Schlüssel) | 22,5, einmal je Besuch | wie Truhe |
+| 2 Sondergaben, je einmal | 0,7 × Seltenheitspreis | siehe 13.4; mit 60 % ist ein fehlendes Teil eines angefangenen Sets dabei |
+
+### 13.4 Wo die Sonderkarten jetzt sind
+Tausch-Gaben (8), Geschoss-Modifikatoren (5), die Munitions-Schalter Pestodem/Eiserne Gnade/Höllenfeuer und die Koop-Gaben passen nicht in
+6 Booster-Plätze mit Stufen (sie sind einmalig bzw. an/aus). Sie sind **Sondergaben beim Händler** (`UPGRADE_DEFS`, gezählt in `p.taken`).
+Nicht in der Reliquienwahl: deren 4. Platz gehört schon dem Duo-Segen.
+
+### 13.5 Gold-Inhalte umgestellt
+- Würfel des Soldaten: sofort 2 Würfelmarken, nach jeder weiteren Boss-Station 1. Schlüssel des Türhüters: zusätzliche Truhe zum halben Preis.
+- Opferstock (Zinsen), Beichtstuhl (+5 Gold), Pakt der Gier, Eiserne Gier, Schrein der Gier (Gold ×2): unverändert, Gold geht an den Händler.
+- Pakt des Schweigens: +1 Waffenplatz, **−1 Booster-Platz** (statt „Shop nur jede 2. Welle“). Ablassbrief: Händlerpreise +10 %.
+- Sets: je höchstens eine Sondergabe pro Set — Büßer = Bußgürtel + Lebenskraft + Märtyrerblut; Henker = Schwarze Kapuze + Rosenkranz + Hammer des Zimmermanns;
+  Pestdoktor = Giftphiole + Aschenurne + Opferschale; Pilger = Pilgerstab + Pilgersandalen + Weihwasserflasche; Scheiterhaufen = Lampenöl + Stärke + Pechfass.
+
+### 13.6 Entfallen
+Shop zwischen den Wellen (Waffenkauf, Veredeln, Neuwürfeln für Gold, verdecktes Schlüssel-Angebot), alle 22 Gegenstände als eigene Liste
+(gingen in Booster auf), die Werte-Karten mit Seltenheit (Seltenheit wirkt nur noch bei Waffen), die Gabe Gnadenquell (→ Weihwasserflasche),
+Nachteile der Gegenstände (Altarkerze, Sanduhr, Kelch …). Erfolg „Krämerseele“ heißt jetzt: 3 Booster auf Stufe 5 in einem Lauf.
+
+### 13.7 Messung (`tools/bot-run.js`, Mittel, je 1 Lauf)
+Bot-Regel: Verschmelzung > neue Fernkampfwaffe > Schadens-/Überlebens-Booster > Waffen-Stufe > Klassen-Booster > Rest; beim Händler Heiltrank unter 60 %, dann Truhen, dann Sondergaben.
+
+| Lauf | vorher (Shop) | jetzt |
+|---|---|---|
+| Seed 1, Büßer | Station 50, 1024 s, Stufe 35 | Station 50, 1075 s, Stufe 50, Endform Scheiterhaufen-Salve, 40 Truhen |
+| Seed 2, Ketzerin | Station 50, 929 s | Station 39 (gestorben; erste Bot-Regel ohne Booster-Vorrang, Truhen füllten Plätze zufällig — seither geändert) |
+| Seed 3, Pestpriester | Station 50, 1335 s | Station 50, 1156 s |
+
+Ungemessen in echten Läufen; zu wenige Bot-Läufe für eine Aussage über Schwierigkeit. Stellschrauben: `xpForLevel`, `PROG_W`, `merchPrice`, Booster-Werte.
+
+---
+
+## 14. Reihenfolge
 
 | Schritt | Inhalt | Aufwand | Fertig, wenn |
 |---|---|---|---|
