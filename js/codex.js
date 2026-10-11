@@ -115,7 +115,10 @@ const cdxEsc=s=>String(s).replace(/[<>&"]/g,ch=>'&#'+ch.charCodeAt(0)+';');
 function cdxCanvas(w,h,draw,seen){ const c=document.createElement('canvas'); c.width=w; c.height=h; c.className='cdx-cv'; const g=c.getContext('2d');
   try{ draw(g,w,h); }catch(e){}
   if(!seen){ g.setTransform(1,0,0,1,0,0); g.globalCompositeOperation='source-atop'; g.fillStyle='#231f1b'; g.fillRect(0,0,w,h); } return c; }
-function cdxEnemyImg(g,w,h,ty){ const t=ETYPES[ty], spr=enemySprite(ty,t.r,t.color,0,false), s=Math.min(2.2,(w-6)/spr.width);
+function cdxEnemyImg(g,w,h,ty){ const t=ETYPES[ty], px=PX_ENEMY[ty];
+  if(px){ const fw=(px.w+4)*PX_S, fh=(px.h+4)*PX_S, s=Math.min(2,(w-6)/fw,(h-6)/fh);   // Pixel-Figur (px-enemies.js), mittig
+    pxDraw(g,px,px.frames.walk?'walk':'idle',0,w/2+(px.ax+2-(px.w+4)/2)*PX_S*s,h/2+(px.ay+2-(px.h+4)/2)*PX_S*s,{scale:s}); return; }
+  const spr=enemySprite(ty,t.r,t.color,0,false), s=Math.min(2.2,(w-6)/spr.width);
   g.translate(w/2,h/2); g.scale(s,s); g.drawImage(spr,-spr._pad,-spr._pad); }
 /* Bosse 1–5 zeichnet render.js direkt auf die Spiel-Leinwand: dort kurz zeichnen und herauskopieren (das Menü übermalt sie im nächsten Bild) */
 function cdxBossImg(g,w,h,k){ const S=150, e={r:36,bossKind:k,spin:0.6,moveT:0,hp:1,maxHp:1,shieldT:0};
