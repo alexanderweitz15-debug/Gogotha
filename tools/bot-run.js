@@ -3,7 +3,7 @@
    (Lebensverlust je Station, getrennt nach Treffern und Gift/Brand/Boden, Dauer, Gegnerzahl; bei einer Station
    über 5 Minuten die übrigen Gegner). Der Bot kitet im Kreis, weicht Geschossen, Gefahrenzonen und giftigem Boden
    aus, nimmt keine Nahkampfwaffen und geht über das Wegraster auf Gegner zu, wenn er 8 s nichts trifft.
-   Stufenaufstieg (feste Regel): Verschmelzung > neue Fernkampfwaffe (bis die Plätze voll sind) > Waffen-Stufe > Booster (neu/Stufe) > Heilung/Gold.
+   Stufenaufstieg (feste Regel): Verschmelzung > neue Fernkampfwaffe (bis die Plätze voll sind) > Schadens-/Überlebens-Booster > Waffen-Stufe > Klassen-Booster > übrige Booster > Heilung/Gold.
    Händler: Heiltrank unter 60% LP, dann Truhen solange das Gold reicht, dann Sondergaben.
    Er spielt besser ausweichend und schlechter taktisch als ein Mensch: gut für Vergleiche zwischen zwei Ständen,
    kein Ersatz für echte Läufe. Bekannte Schwäche: mit nur einer Kurzstrecken-Waffe hängt er an Bossen fest.
@@ -71,9 +71,11 @@ const [,, DIR, SEED, CHAR, OUT, DIFF, ABL] = process.argv;   // DIFF = Index in 
     }
     /* Stufenaufstieg: Karte nach fester Regel (progCards liegt global in flow.js) */
     function levelUp() {
+      const GOOD = ['might', 'haste', 'multi', 'wrathstat', 'critmult', 'vitality', 'bulwark'];   // Schadens- und Überlebens-Booster zuerst, Klassen-Booster danach
+      const bs = id => GOOD.includes(id) ? 4.6 - GOOD.indexOf(id) * 0.05 : id.startsWith('k_') ? 4.2 : 3;
       const p = player, sc = c => { const w = c.id && weaponById(c.id);
         if (c.kind === 'evo') return 10; if (c.kind === 'wnew') return w.melee ? -1 : 6 + rarRank(w.rk) * 0.1;
-        if (c.kind === 'wup') return w.melee ? 1 : 5; if (c.kind === 'bnew') return 3; if (c.kind === 'bup') return 3.5;
+        if (c.kind === 'wup') return w.melee ? 1 : 4.4; if (c.kind === 'bnew') return bs(c.id); if (c.kind === 'bup') return bs(c.id) + 0.1;
         if (c.kind === 'heal') return p.hp < p.maxHP * 0.7 ? 2 : 0; return 1; };
       let bi = 0; progCards.forEach((c, i) => { if (sc(c) > sc(progCards[bi])) bi = i; });
       st.picks[progCards[bi].kind] = (st.picks[progCards[bi].kind] || 0) + 1;

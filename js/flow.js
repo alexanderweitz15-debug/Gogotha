@@ -189,7 +189,9 @@ function progBoosterPool(p,used){ const own=progLikedCls(p);
   return BOOSTERS.filter(b=>!boosterLevel(p,b.id)&&!used.has('b:'+b.id)&&!progBanned(p,'b',b.id)&&(!b.cls||own.has(b.cls))); }
 const progWUp=(p,used)=>p.weapons.filter(id=>weaponLevel(id)<WEAPON_MAX_LEVEL&&!used.has('w:'+id)&&!progBanned(p,'w',id));
 const progBUp=(p,used)=>Object.keys(p.boosters).filter(id=>p.boosters[id]<BOOSTER_MAX&&!used.has('b:'+id)&&!progBanned(p,'b',id));
-function progRoll(p,n){ const cards=[], used=new Set(), dead=new Set(); let guard=0;
+/* upOnly (Truhe): nur Aufwertungen, Neues erst, wenn nichts mehr aufzuwerten ist — sonst füllt der Zufall die Plätze */
+function progRoll(p,n,upOnly){ const cards=[], used=new Set(), dead=new Set(); let guard=0;
+  if(upOnly&&(progWUp(p,used).length||progBUp(p,used).length)) dead.add('wnew').add('bnew');
   for(const r of availableWeaponEvos()) if(cards.length<Math.max(1,n-1)) cards.push({kind:'evo',evo:r});
   while(cards.length<n&&guard++<40){
     const wu=progWUp(p,used), bu=progBUp(p,used);
@@ -281,8 +283,8 @@ function openMerchant(){
   if(hasRelic(player,'dice')&&player.diceAt!==G.level){ player.rerolls=(player.rerolls||0)+1; showToast(relicById('dice').name,t('merch_dice')); }
   merchWares=[{kind:'heal'},{kind:'reroll'},{kind:'banish'},{kind:'chest'}]; if(hasRelic(player,'key')) merchWares.push({kind:'keychest'});
   merchSpecials=merchRollSpecials(player); Audio2.lvl(); renderMerchant(); $('#shop').classList.add('show'); }
-/* Truhe: Verschmelzung, sonst eine zufällige Karte des Stufenaufstiegs (respektiert Plätze und Verbannungen) */
-function merchChest(){ const ev=availableWeaponEvos(), c=ev.length?{kind:'evo',evo:pick(ev)}:progRoll(player,1)[0]; if(c.kind==='gold')return false;
+/* Truhe: Verschmelzung, sonst +1 Stufe auf eine eigene Waffe/einen Booster, sonst ein neues Teil (respektiert Plätze und Verbannungen) */
+function merchChest(){ const ev=availableWeaponEvos(), c=ev.length?{kind:'evo',evo:pick(ev)}:progRoll(player,1,true)[0]; if(c.kind==='gold')return false;
   progApply(c); const lv=c.kind==='wup'?' '+t('lvl_short')+weaponLevel(c.id):c.kind==='bup'?' '+t('lvl_short')+boosterLevel(player,c.id):c.kind[1]==='n'?' · '+t('up_new'):'';
   showToast(t('merch_chest'),'<b style="color:var(--gold2)">'+progLabel(c)+'</b>'+lv); return true; }
 function merchUseful(o){ const p=player;
@@ -428,9 +430,9 @@ Object.assign(I18N.de,{
   merch_k_heal:'Dienst', merch_k_reroll:'Marke', merch_k_banish:'Marke', merch_k_chest:'Truhe', merch_k_keychest:'Schlüssel',
   merch_n_heal:'Heiltrank', merch_n_reroll:'Würfelmarke', merch_n_banish:'Bannsiegel', merch_n_chest:'Truhe', merch_n_keychest:'Truhe des Türhüters',
   merch_d_heal:'Heilt 40% deiner Max-LP.', merch_d_reroll:'+1 Neu-Würfeln im Stufenaufstieg.', merch_d_banish:'+1 Verbannen: entfernt eine Karte für den ganzen Lauf.',
-  merch_d_chest:'Zufällig: Verschmelzung, neues Teil oder eine Stufe höher. Jede weitere Truhe kostet mehr.', merch_d_keychest:'Wie eine Truhe, zum halben Preis (einmal je Besuch).',
+  merch_d_chest:'Verschmelzung, sonst +1 Stufe auf Eigenes, sonst ein neues Teil. Jede weitere Truhe kostet mehr.', merch_d_keychest:'Wie eine Truhe, zum halben Preis (einmal je Besuch).',
   merch_have:'Du hast {n}', merch_chest_n:'{n}× gekauft', merch_chest:'Truhe', merch_useless:'Nichts zu tun', merch_mod:'Modifikator', merch_coop:'Koop', merch_ammo:'Munition',
-  merch_dice:'+1 Würfelmarke', s_tokens:'Marken', tokens_val:'{r}× Neu würfeln · {b}× Verbannen', boosters_label:'Booster', gifts_label:'Sondergaben',
+  merch_dice:'+1 Würfelmarke', s_tokens:'Marken (Würfeln · Bann)', tokens_val:'{r} · {b}', boosters_label:'Booster', gifts_label:'Sondergaben',
 });
 Object.assign(I18N.en,{
   up_new:'New', booster_label:'Booster', up_wslot:'Weapon slot {n}/{m}', up_bslot:'Booster slot {n}/{m}',
@@ -441,7 +443,7 @@ Object.assign(I18N.en,{
   merch_k_heal:'Service', merch_k_reroll:'Token', merch_k_banish:'Token', merch_k_chest:'Chest', merch_k_keychest:'Key',
   merch_n_heal:'Healing draught', merch_n_reroll:'Dice token', merch_n_banish:'Banishing seal', merch_n_chest:'Chest', merch_n_keychest:'Gatekeeper\'s chest',
   merch_d_heal:'Heals 40% of your max HP.', merch_d_reroll:'+1 reroll on level-up.', merch_d_banish:'+1 banish: removes a card for the whole run.',
-  merch_d_chest:'Random: a fusion, a new part or one level up. Each further chest costs more.', merch_d_keychest:'Like a chest, at half price (once per visit).',
+  merch_d_chest:'A fusion, else +1 level on something you own, else a new part. Each further chest costs more.', merch_d_keychest:'Like a chest, at half price (once per visit).',
   merch_have:'You have {n}', merch_chest_n:'{n}× bought', merch_chest:'Chest', merch_useless:'Nothing to do', merch_mod:'Modifier', merch_coop:'Co-op', merch_ammo:'Ammo',
-  merch_dice:'+1 dice token', s_tokens:'Tokens', tokens_val:'{r}× reroll · {b}× banish', boosters_label:'Boosters', gifts_label:'Special wares',
+  merch_dice:'+1 dice token', s_tokens:'Tokens (reroll · banish)', tokens_val:'{r} · {b}', boosters_label:'Boosters', gifts_label:'Special wares',
 });
