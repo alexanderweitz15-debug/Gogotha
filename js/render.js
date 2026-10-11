@@ -187,13 +187,14 @@ function drawEnemy(e){
   if(e.elite){ cx.save();cx.globalAlpha=0.5+Math.sin(G.uiTime*5+e.wob)*0.22;cx.strokeStyle=C.gold2;cx.lineWidth=2.5;cx.shadowColor=C.gold2;cx.shadowBlur=8;cx.beginPath();cx.arc(0,0,e.r+5,0,TAU);cx.stroke();cx.restore(); }
   const hf=e.hitFlash>0&&!SETTINGS.lowFlash, col=hf?'#fff':e.color;
   if(e.isBoss){ drawBoss(e,col); }
-  else if(ENEMY_ART[e.type]){   // vorgezeichnete Figur (sprites.js), schaut zum nächsten Spieler
-    const tg=nearestPlayer(e.x,e.y)||player, face=e.faceX||(tg&&tg.x<e.x?-1:1), nf=ENEMY_FRAMES[e.type]||1;
-    const spr=enemySprite(e.type,Math.round(e.r),e.color,nf>1?Math.floor(G.uiTime*8+e.wob)%nf:0,hf);
+  else if(PX_ENEMY[e.type]||ENEMY_ART[e.type]){   // Pixel-Figur (px-enemies.js), sonst vorgezeichnete Figur (sprites.js); schaut zum nächsten Spieler
+    const tg=nearestPlayer(e.x,e.y)||player, face=e.faceX||(tg&&tg.x<e.x?-1:1), nf=ENEMY_FRAMES[e.type]||1, px=PX_ENEMY[e.type];
+    const spr=px?null:enemySprite(e.type,Math.round(e.r),e.color,nf>1?Math.floor(G.uiTime*8+e.wob)%nf:0,hf);
     if(e.type==='exploder'){ const pulse=0.5+Math.sin(G.uiTime*10+e.wob)*0.5; cx.globalAlpha=0.25+pulse*0.35; cx.fillStyle=C.candle; cx.beginPath(); cx.arc(face*e.r*0.35,e.r*0.15,e.r*(0.7+pulse*0.25),0,TAU); cx.fill(); cx.globalAlpha=1; }
     if(e.type==='summoner'){ cx.save(); cx.translate(0,-e.r*1.45); cx.rotate(G.uiTime*1.4); cx.strokeStyle='rgba(208,168,255,.7)'; cx.lineWidth=1.5; cx.beginPath(); for(let k=0;k<=3;k++){const a=k/3*TAU; cx.lineTo(Math.cos(a)*e.r*0.5,Math.sin(a)*e.r*0.5);} cx.stroke(); cx.beginPath(); cx.arc(0,0,e.r*0.55,0,TAU); cx.stroke(); cx.restore(); }
     if(e.type==='healer'){ cx.save(); cx.globalAlpha=0.3+Math.sin(G.uiTime*4+e.wob)*0.2; cx.strokeStyle='#bfeacf'; cx.lineWidth=2; cx.beginPath(); cx.arc(0,0,e.r*1.35,0,TAU); cx.stroke(); cx.restore(); }
-    cx.save(); cx.scale(face,1); if(e.alpha!=null)cx.globalAlpha=e.alpha; cx.drawImage(spr,-spr._pad,-spr._pad); cx.restore();
+    if(px) pxDrawEnemy(cx,px,e,face,hf,G.uiTime);
+    else { cx.save(); cx.scale(face,1); if(e.alpha!=null)cx.globalAlpha=e.alpha; cx.drawImage(spr,-spr._pad,-spr._pad); cx.restore(); }
     if(e.type==='exploder'&&Math.random()<0.5) spawnParticle(e.x+face*e.r*0.5,e.y-e.r*0.75,'#ffd27a',1.2,30);
   }
   else {
@@ -217,6 +218,7 @@ function drawEnemy(e){
 }
 function drawBoss(e,col){
   const s=e.r, k=e.bossKind, t=G.uiTime;
+  if(PX_BOSS[k]){ PX_BOSS[k].draw(cx,e,col==='#fff',t); return; }   // Pixel-Boss (px-bosses.js)
   if(BOSS_ART[k]){ BOSS_ART[k](cx,e,col,t); return; }   // Bosse 6–10 (sprites.js)
   if(k==='maggot'){
     // segmentierter Wurm-Körper
@@ -252,6 +254,7 @@ function drawBoss(e,col){
 
 /* ---------- HERO RENDER ---------- */
 function drawHero(g,id,x,y,s,t,moving,aim){
+  if(PX_HERO[id]){ pxDrawHero(g,PX_HERO[id],x,y,s,t,moving,aim); return; }   // Pixel-Figur (px-heroes.js)
   const sk=(charById(id)&&charById(id).skin)||id;   // freischaltbare Chars nutzen ein Basis-Design
   const bob=moving?Math.sin(t*12)*0.14*s:Math.sin(t*2.5)*0.07*s;
   const sw=Math.sin(t*2.5)*0.06*s;
