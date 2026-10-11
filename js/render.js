@@ -181,7 +181,7 @@ function drawPlayer(){
 }
 function drawEnemy(e){
   if(e.x<cam.x-60||e.x>cam.x+W+60||e.y<cam.y-60||e.y>cam.y+H+60) { if(!e.isBoss) return; }
-  const bob=Math.sin(G.uiTime*8+e.wob)*1.5;
+  const bob=PX_ENEMY[e.type]?0:Math.sin(G.uiTime*8+e.wob)*1.5;   // Pixel-Figuren heben sich in ihren Laufbildern selbst
   cx.save();cx.translate(e.x,e.y+ (e.isBoss?0:bob));
   cx.fillStyle='rgba(0,0,0,.4)';cx.beginPath();cx.ellipse(0,e.r*0.8,e.r*0.9,e.r*0.35,0,0,TAU);cx.fill();
   if(e.elite){ cx.save();cx.globalAlpha=0.5+Math.sin(G.uiTime*5+e.wob)*0.22;cx.strokeStyle=C.gold2;cx.lineWidth=2.5;cx.shadowColor=C.gold2;cx.shadowBlur=8;cx.beginPath();cx.arc(0,0,e.r+5,0,TAU);cx.stroke();cx.restore(); }
