@@ -6,7 +6,8 @@
    Stufenaufstieg (feste Regel): Verschmelzung > neue Fernkampfwaffe > Schadens-/Überlebens- und Klassen-Booster (neu oder Stufe) > Waffen-Stufe > übrige Booster > Heilung/Gold.
    Händler: Heiltrank unter 60% LP, dann Truhen solange das Gold reicht, dann Sondergaben.
    Er spielt besser ausweichend und schlechter taktisch als ein Mensch: gut für Vergleiche zwischen zwei Ständen,
-   kein Ersatz für echte Läufe. Bekannte Schwäche: mit nur einer Kurzstrecken-Waffe hängt er an Bossen fest.
+   kein Ersatz für echte Läufe. Achtung (11.10.2026): Zwei Läufe mit gleicher Zufallsfolge weichen derzeit oft ab Station 2 voneinander ab,
+   besonders bei mehreren Läufen gleichzeitig; die Ursache ist noch nicht gefunden. Deshalb nur über viele Läufe (Figuren × Zufallsfolgen) vergleichen. Bekannte Schwäche: mit nur einer Kurzstrecken-Waffe hängt er an Bossen fest.
    Aufruf (braucht Playwright):
      node tools/bot-run.js <Ordner mit index.html> <seed> <Figur-Index> <ausgabe.json> [Grad-Index, 2 = Mittel] [noenemies|nohazards|nomap]
    Beispiel: node tools/bot-run.js . 1 0 /tmp/lauf.json 3 */
