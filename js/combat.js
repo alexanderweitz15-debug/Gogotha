@@ -88,6 +88,7 @@ function relicOnKill(e,o){ if(!o||!o.relics||G._relicD)return; G._relicD=1;
       for(const n of enemies.slice()) if(n!==e&&dist2(e.x,e.y,n.x,n.y)<60*60) damageEnemy(n,d,Math.atan2(n.y-e.y,n.x-e.x),40,false,'r_urn',o); } }
   } finally { G._relicD=0; } }
 function giveRelic(p,id){ const r=relicById(id); if(!p||!r||hasRelic(p,id))return; p.relics[id]=true; codexSeen('r',id);
+  if(id==='dice'){ p.rerolls=(p.rerolls||0)+2; p.diceAt=G.level; }   // Würfel: 2 Marken sofort, 1 je weiterer Boss-Station (openMerchant)
   p.items.push({ic:r.ic,color:C.gold2,relic:true}); updateItemPills(); checkSets(p); }
 function relicRecipeHint(id){ const rc=WEAPON_EVOS.find(x=>x.relic===id); return rc?t('relic_recipe',{w:weaponById(rc.a).name,r:weaponById(rc.result).name}):''; }
 

@@ -568,6 +568,7 @@ function projSprite(shape,r,col){ const key=shape+'|'+r+'|'+col; let c=PROJ_CACH
 /* Zeichnet ein Spieler-Geschoss; unbekannte Waffen bleiben ein leuchtender Punkt */
 function drawProjectile(g,b,time){ const shp=PROJ_SHAPE[b.wid];
   if(b.crit){ g.globalAlpha=0.35; spCirc(g,b.x,b.y,b.r*2.1,'#fff'); g.globalAlpha=1; }
+  const px=shp&&PX_PROJ[shp]; if(px){ const sp=PROJ_SPIN[shp]; pxDrawProj(g,px,b,sp?time*sp+b.id:Math.atan2(b.vy,b.vx)); return; }   // Pixel-Geschoss (px-heroes.js)
   if(!shp){ g.globalAlpha=0.18; spCirc(g,b.x,b.y,b.r*1.6,b.color); g.globalAlpha=1; spCirc(g,b.x,b.y,b.r,b.crit?'#fff':b.color); return; }
   const spr=projSprite(shp,Math.max(2,Math.round(b.r)),b.color);
   if(PROJ_ROUND[shp]){ g.drawImage(spr,b.x-spr._ox,b.y-spr._oy); return; }

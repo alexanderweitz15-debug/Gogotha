@@ -24,5 +24,5 @@ Ohne Server (Datei öffnen oder statisch hosten) läuft das Spiel auch; Konten u
 - `index.html`, `style.css`, `gate.js` (Pforte, lädt danach den Spielcode)
 - `sprites.js` – alle Figuren, Gegner, Bosse, Geschosse
 - `js/` – Spielcode in Ladereihenfolge: core, data, io, player, enemies, combat, flow, render, main
-- `tools/` (brauchen Playwright): `weapon-audit.js` (Funktionsprüfung aller Waffen), `balance-bench.js` (Schaden pro Sekunde je Waffe), `synergy-bench.js` (Duo-Segen mit und ohne), `bot-run.js` (Bot spielt ganze Läufe; für Vergleiche zwischen zwei Ständen)
+- `tools/` (brauchen Playwright): `weapon-audit.js` (Funktionsprüfung aller Waffen), `balance-bench.js` (Schaden pro Sekunde je Waffe), `synergy-bench.js` (Duo-Segen mit und ohne), `bot-run.js` (Bot spielt ganze Läufe; für Vergleiche zwischen zwei Ständen), `px-sheet.js` (alle Pixel-Figuren als Bogen, prüft die Raster), `px-shot.js` (Spielbild mit gewählten Gegnern und Boss), `map-check.js` (wie oft Raumvorlagen die Prüfung bestehen)
 - `IST-ZUSTAND.md`, `IDEEN-WAFFEN-ITEMS.md` – Befunde und Plan

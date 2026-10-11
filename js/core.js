@@ -1,7 +1,7 @@
 "use strict";
 /* =========================================================================
    GOLGOTHA — grimdark roguelike
-   Features: Login/DB, große Map + Kamera + Minimap, Gold-Waffenshop,
+   Features: Login/DB, große Map + Kamera + Minimap, Stufenaufstieg mit Waffen und Boostern, Händler nach Bossen,
    Stufen-Upgrades, Fähigkeiten (Lvl 10/20/30/40/50), 8 Seltenheitsstufen,
    verschiedene Bosse mit eigenen Mustern, einklappbares HUD, Endlos-Modus.
    ========================================================================= */
@@ -42,11 +42,8 @@ const I18N={
   mod_char:'{name} — wähle deinen Schwierigkeitsgrad. Je härter, desto mehr Gegner, Leben, Schaden und Feuer — aber bessere Beute.',
   diff_note:'Gewählt: <b style="color:{color}">{name}</b> — {pct}% Chance, dass dir ein <b style="color:#e0405f">Fluch</b> angeboten wird (deutlich härter, dafür ×1,35 Beute — du entscheidest).',
   dc_enemies:'Gegner', dc_hp:'LP', dc_dmg:'Schaden', dc_fire:'Feuer', dc_reward:'Beute', dc_curse:'Fluch',
-  shop_title:'Waffenkammer', shop_skip:'Weiter', shop_gold:'Gold:',
-  shop_sub_full:'Arsenal voll ({cap} Waffen) — veredle sie (bis Stufe 10). Ein Kauf pro Markt.',
-  shop_sub_buy:'Welle überstanden. Kaufe EINE Waffe mit Gold — oder ziehe weiter.',
-  shop_nothing:'Nichts mehr feilzubieten — ziehe weiter.', shop_reroll:'Neu würfeln ({cost} Gold)', shop_items:'Gegenstände — beliebig viele Käufe, der Besuch geht weiter', shop_owned:'{n}× besessen', shop_sold:'Gekauft', items_label:'Gegenstände',
-  up_title:'Aufstieg', up_sub:'Stufe {lvl} — wähle eine Verbesserung.',
+  shop_title:'Händler', shop_skip:'Weiter', shop_gold:'Gold:', shop_items:'Sondergaben — je einmal', shop_sold:'Gekauft',
+  up_title:'Aufstieg', up_sub:'Stufe {lvl} — neue Waffe, neuer Booster oder eine Stufe höher.',
   ab_title:'Erwachte Gabe', ab_sub:'Stufe {lvl} — eine Macht erwacht. Wähle eine von dreien.',
   stats_title:'Aktuelle Werte', stats_close:'Zurück', prof_title:'Pilgerbuch', prof_close:'Zurück',
   pause_title:'Innehalten', pause_resume:'Fortsetzen', pause_stats:'Werte ansehen', pause_admin:'Admin-Panel', pause_quit:'Aufgeben',
@@ -56,7 +53,7 @@ const I18N={
   hud_station:'Station', hud_endless:'Endlos',
   s_hp:'Leben', s_shield:'Schild', s_dmg:'Schaden', s_fr:'Feuerrate', s_speed:'Tempo', s_armor:'Rüstung',
   s_crit:'Krit-Chance', s_pierce:'Durchschlag', s_multi:'Mehrschuss', s_leech:'Lebensraub', s_thorns:'Dornen',
-  s_ammo:'Munition', s_luck:'Glück', s_xp:'XP', s_items:'Gaben',
+  s_ammo:'Munition', s_luck:'Glück', s_xp:'XP', s_items:'Booster',
   ammo_burn:'Brand', ammo_slow:'Verlangsamung', ammo_explosive:'Explosiv', val_none:'—', val_no:'Nein',
   weapons_label:'Waffen', abilities_label:'Fähigkeiten',
   p_runs:'Läufe', p_wins:'Siege', p_deaths:'Tode', p_kills:'Tötungen gesamt', p_bosses:'Bosse erlegt',
@@ -80,11 +77,8 @@ const I18N={
   mod_char:'{name} — choose your difficulty. The harder it is, the more enemies, health, damage and fire — but better loot.',
   diff_note:'Selected: <b style="color:{color}">{name}</b> — {pct}% chance to be offered a <b style="color:#e0405f">Curse</b> (much harder, but ×1.35 loot — your choice).',
   dc_enemies:'Enemies', dc_hp:'HP', dc_dmg:'Damage', dc_fire:'Fire', dc_reward:'Loot', dc_curse:'Curse',
-  shop_title:'Armory', shop_skip:'Continue', shop_gold:'Gold:',
-  shop_sub_full:'Arsenal full ({cap} weapons) — refine them (up to level 10). One purchase per market.',
-  shop_sub_buy:'Wave survived. Buy ONE weapon with gold — or move on.',
-  shop_nothing:'Nothing left to offer — move on.', shop_reroll:'Reroll ({cost} gold)', shop_items:'Items — buy as many as you like, the visit goes on', shop_owned:'{n}× owned', shop_sold:'Bought', items_label:'Items',
-  up_title:'Ascension', up_sub:'Level {lvl} — choose an upgrade.',
+  shop_title:'Merchant', shop_skip:'Continue', shop_gold:'Gold:', shop_items:'Special wares — one each', shop_sold:'Bought',
+  up_title:'Ascension', up_sub:'Level {lvl} — a new weapon, a new booster or one level up.',
   ab_title:'Awakened Gift', ab_sub:'Level {lvl} — a power awakens. Choose one of three.',
   stats_title:'Current Stats', stats_close:'Back', prof_title:'Pilgrim Book', prof_close:'Back',
   pause_title:'Pause', pause_resume:'Resume', pause_stats:'View stats', pause_admin:'Admin panel', pause_quit:'Give up',
@@ -94,7 +88,7 @@ const I18N={
   hud_station:'Station', hud_endless:'Endless',
   s_hp:'Health', s_shield:'Shield', s_dmg:'Damage', s_fr:'Fire rate', s_speed:'Speed', s_armor:'Armor',
   s_crit:'Crit chance', s_pierce:'Pierce', s_multi:'Multishot', s_leech:'Lifesteal', s_thorns:'Thorns',
-  s_ammo:'Ammo', s_luck:'Luck', s_xp:'XP', s_items:'Gifts',
+  s_ammo:'Ammo', s_luck:'Luck', s_xp:'XP', s_items:'Boosters',
   ammo_burn:'Burn', ammo_slow:'Slow', ammo_explosive:'Explosive', val_none:'—', val_no:'No',
   weapons_label:'Weapons', abilities_label:'Abilities',
   p_runs:'Runs', p_wins:'Wins', p_deaths:'Deaths', p_kills:'Total kills', p_bosses:'Bosses slain',
@@ -113,7 +107,8 @@ function applyLang(){
   if(player&&$('#diffTag')) $('#diffTag').textContent=diffName(G.diff);
   if(G.state==='modifiers'){ renderDiffCards(); updateDiffNote(); $('#modChar').textContent=t('mod_char',{name:charById(G.pendingChar).name}); }
   G._foeN=-1;
-  if(G.state==='shop') renderShop();
+  if(G.state==='shop') renderMerchant();
+  if(G.state==='upgrade') renderUpgrade();
   if(G.state==='charselect') renderCharCards();
   if(G.state==='meta') renderMeta();
   if(G.state==='achievements') renderAchievements();
@@ -146,11 +141,11 @@ Object.assign(I18N.de,{
   trade_label:'Tausch', s_magnet:'Sammelradius', affinity:'Affinität', mal_heal:'Heilung −30%', mal_hp:'Max-LP −15%',
   shrine_greed_done:'Gegner gestärkt — Gold dieser Welle ×2',
   relic_title:'Reliquie', relic_sub:'Der Boss ist gefallen. Wähle eine Reliquie — sie bleibt für den ganzen Lauf.', relic_label:'Reliquie', relics_label:'Reliquien',
-  relic_recipe:'Verschmilzt mit {w} (St. 10) zu {r}', key_label:'Verdeckt', key_hidden:'Unbekannte Ware zum halben Preis',
+  relic_recipe:'Verschmilzt mit {w} (St. 10) zu {r}',
   src_r_hammer:'Hammer (Reliquie)', src_r_bell:'Totenglocke (Reliquie)', src_r_urn:'Aschenurne (Reliquie)',
   hud_foes:'Gegner: {n}', gate_err:'Falsche Losung', rotate_hint:'Bitte Gerät quer halten',
-  hint_shop:'1–{n} kaufen · R neu würfeln · Enter weiter', hint_pick:'1–3 wählen', endless_sub:'Der Gipfel ist erreicht',
-  shop_evo:'Verschmelzung', shop_evo_free:'Verschmelzen (gratis)', shop_refine:'Veredeln', shop_max:'✦ MAX · Stufe 10', lvl_short:'St.',
+  hint_pick:'1–3 wählen', endless_sub:'Der Gipfel ist erreicht',
+  shop_evo:'Verschmelzung', lvl_short:'St.',
   w_proj:'{n} Projektile', w_single:'Einzelschuss', w_pierce:'durchbohrt', w_chain:'Blitz', w_explosive:'explosiv', w_deploy:'platzierbar',
   evo_done:'ist entstanden!', ab_evo:'Erwachte Verschmelzung', ab_evo_done:'entfesselt!', ab_card:'Fähigkeit', ab_owned:'Verstärkt deine Fähigkeit',
   end_all50:'Du hast alle 50 Stationen überstanden.', end_clvl:'Charakterstufe', end_station:'Erreichte Station', end_class:'Klasse', endless_q:'Wie weit reicht die Gnade?',
@@ -180,11 +175,11 @@ Object.assign(I18N.en,{
   trade_label:'Trade', s_magnet:'Pickup radius', affinity:'Affinity', mal_heal:'Healing −30%', mal_hp:'Max HP −15%',
   shrine_greed_done:'Enemies empowered — gold this wave ×2',
   relic_title:'Relic', relic_sub:'The boss has fallen. Choose a relic — it stays for the whole run.', relic_label:'Relic', relics_label:'Relics',
-  relic_recipe:'Fuses with {w} (Lv 10) into {r}', key_label:'Hidden', key_hidden:'Unknown goods at half price',
+  relic_recipe:'Fuses with {w} (Lv 10) into {r}',
   src_r_hammer:'Hammer (relic)', src_r_bell:'Death knell (relic)', src_r_urn:'Ash urn (relic)',
   hud_foes:'Enemies: {n}', gate_err:'Wrong watchword', rotate_hint:'Please turn your device sideways',
-  hint_shop:'1–{n} buy · R reroll · Enter continue', hint_pick:'1–3 choose', endless_sub:'The summit is reached',
-  shop_evo:'Fusion', shop_evo_free:'Fuse (free)', shop_refine:'Refine', shop_max:'✦ MAX · Level 10', lvl_short:'Lv',
+  hint_pick:'1–3 choose', endless_sub:'The summit is reached',
+  shop_evo:'Fusion', lvl_short:'Lv',
   w_proj:'{n} projectiles', w_single:'Single shot', w_pierce:'piercing', w_chain:'lightning', w_explosive:'explosive', w_deploy:'deployable',
   evo_done:'has been forged!', ab_evo:'Awakened fusion', ab_evo_done:'unleashed!', ab_card:'Ability', ab_owned:'Strengthens your ability',
   end_all50:'You survived all 50 stations.', end_clvl:'Character level', end_station:'Station reached', end_class:'Class', endless_q:'How far does grace reach?',

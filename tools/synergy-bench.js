@@ -17,11 +17,11 @@ const SECS = +process.argv[2] || 30, HP = +process.argv[3] || 150;   // Leben de
     const dt = 1 / 60, ring = 380;
     const seeded = a => () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
     const median = a => a.sort((x, y) => x - y)[Math.floor(a.length / 2)];
-    const shopW = WEAPONS.filter(w => !w.evo && !w.beam);
+    const poolW = WEAPONS.filter(w => !w.evo && !w.beam);   // Waffen aus dem Stufenaufstieg (ohne Strahl)
     /* zwei Waffen je Klasse, möglichst ohne die andere Klasse des Duos; „nahkampf“ = Nahkampfwaffen */
     function pickFor(c, other, used) {
       const has = w => c === 'nahkampf' ? !!w.melee : w.cls.includes(c) && !w.melee;
-      const pool = shopW.filter(w => has(w) && !used.has(w.id)).sort((x, y) => (x.cls.includes(other) - y.cls.includes(other)) || (rarRank(x.rk) - rarRank(y.rk)));
+      const pool = poolW.filter(w => has(w) && !used.has(w.id)).sort((x, y) => (x.cls.includes(other) - y.cls.includes(other)) || (rarRank(x.rk) - rarRank(y.rk)));
       return pool.slice(0, 2).map(w => w.id); }
     function sim(weps, duo, mode) {
       WORLD = { w: 1820, h: 1180 }; ROOM = { x: 40, y: 40, w: WORLD.w - 80, h: WORLD.h - 80 }; obstacles = [];

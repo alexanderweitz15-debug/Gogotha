@@ -1,7 +1,7 @@
 "use strict";
 /* GOLGOTHA — Zusammenfassung am Ende eines Laufs (Game-Over- und Gipfel-Bildschirm)
    Schaden je Quelle aus G.run.dmg (wie das F3-Overlay), Kills je Waffe, Zeit, Gold, und je Spieler Figur, Waffen,
-   Gegenstände, Reliquien, Fähigkeiten. Hängt sich an renderGameOver/renderEndless, die applyLang beim Sprachwechsel aufruft. */
+   Booster, Sondergaben, Reliquien, Fähigkeiten. Hängt sich an renderGameOver/renderEndless, die applyLang beim Sprachwechsel aufruft. */
 Object.assign(I18N.de,{
   sum_dmg:'Schaden je Quelle', sum_time:'Spielzeit', sum_gold:'Gold gesammelt', sum_bosses:'Bosse', sum_total:'Gesamt',
   sum_build:'Figur & Ausrüstung', sum_nodmg:'Kein Schaden verursacht.', sum_more:'+ {n} weitere', sum_diff:'Grad', sum_curse:'Fluch',
@@ -28,19 +28,20 @@ const Summary=(()=>{
     if(rows.length>MAX_ROWS){ const rest=rows.slice(MAX_ROWS); h+='<div class="sum-row sum-rest"><span class="sum-n"><span>'+t('sum_more',{n:rest.length})+'</span></span><span></span>'+
       '<span class="sum-v"><b>'+(rest.reduce((s,r)=>s+r.d,0)/tot*100).toFixed(1)+'%</b></span><span class="sum-k">'+rest.reduce((s,r)=>s+r.n,0)+' ✝</span></div>'; }
     return h+'<div class="sum-row sum-tot"><span class="sum-n"><span>Σ '+t('sum_total')+'</span></span><span></span><span class="sum-v"><b>'+fmtNum(tot)+'</b> · '+(tot/Math.max(1,G.time)).toFixed(1)+' DPS</span><span class="sum-k">'+rows.reduce((s,r)=>s+r.n,0)+' ✝</span></div>'; }
-  /* Bau eines Spielers: Figur mit Stärken/Schwächen, Waffen (Stufe, Kills), Gegenstände, Reliquien, Fähigkeiten */
+  /* Bau eines Spielers: Figur mit Stärken/Schwächen, Waffen (Stufe, Kills), Booster (Stufe), Sondergaben, Reliquien, Fähigkeiten */
   function playerHtml(p,i,run){ const ch=charById(p.charId), wk=run.weaponKills||{};
     const tag=players.length>1?'<span class="sum-ptag">'+t('coop_player')+' '+(i+1)+'</span> ':'';
     const wl=p.weapons.map(id=>{ const w=weaponById(id); if(!w)return ''; const n=wk[id]||0;
       return '<span class="sum-w">'+svgIcon(w.ic,w.color,13)+'<span style="color:'+rarColor(w.rk)+'">'+w.name+'</span> <em>'+t('lvl_short')+((p.wLevel[id]||0)+1)+'</em>'+(n?' <em>'+n+' ✝</em>':'')+'</span>'; }).join('');
-    const il=Object.keys(p.itemsOwned||{}).map(id=>{ const it=itemById(id); return it?'<span style="color:'+rarColor(it.rk)+'">'+it.name+(p.itemsOwned[id]>1?' ×'+p.itemsOwned[id]:'')+'</span>':''; }).filter(Boolean);
+    const il=Object.keys(p.boosters||{}).map(id=>{ const b=boosterById(id); return b?'<span style="color:'+(b.cls?CLASSES[b.cls].color:'var(--gold2)')+'">'+boosterName(b)+' <em>'+t('lvl_short')+p.boosters[id]+'</em></span>':''; }).filter(Boolean);
+    const gl=Object.keys(p.taken||{}).map(id=>{ const u=upDefById(id); return u?'<span>'+u.name+(p.taken[id]>1?' ×'+p.taken[id]:'')+'</span>':''; }).filter(Boolean);
     const rl=Object.keys(p.relics||{}).map(id=>{ const r=relicById(id); return r?'<span style="color:var(--gold2)">'+r.name+'</span>':''; }).filter(Boolean);
     const al=(p.abilities||[]).map(a=>'<span style="color:'+rarColor(a.rk)+'">'+a.name+(a.level>1?' '+t('lvl_short')+a.level:'')+'</span>');
     const line=(l,arr)=>arr.length?'<div class="sum-line"><span class="sum-l">'+l+'</span> '+arr.join(' · ')+'</div>':'';
     return '<div class="sum-player">'+
       '<div class="sum-who">'+tag+'<b>'+ch.name+'</b> <span class="sum-role">'+(ch.role||'')+'</span> · '+t('hud_level')+' <b>'+p.level+'</b>'+(p.dead?' <span class="sum-dead">'+t('coop_dead')+'</span>':'')+'</div>'+
       (typeof charPerkHtml==='function'?charPerkHtml(p.charId):'')+
-      '<div class="sum-weps">'+wl+'</div>'+line(t('items_label'),il)+line(t('relics_label'),rl)+line(t('abilities_label'),al)+'</div>'; }
+      '<div class="sum-weps">'+wl+'</div>'+line(t('boosters_label'),il)+line(t('gifts_label'),gl)+line(t('relics_label'),rl)+line(t('abilities_label'),al)+'</div>'; }
   function html(){ const run=G.run; if(!run||!players.length) return '';
     const chips=chip(t('sum_time'),fmtTime(G.time))+chip(t('sum_gold'),fmtNum(run.gold||0))+chip(t('hud_kills'),fmtNum(G.kills))+chip(t('sum_bosses'),run.bossKills||0)+
       (G.diff?chip(t('sum_diff'),'<span style="color:'+G.diff.color+'">'+diffName(G.diff)+'</span>'):'')+(G.activeCurse?chip(t('sum_curse'),'<span style="color:#e0405f">'+G.activeCurse.name+'</span>'):'');

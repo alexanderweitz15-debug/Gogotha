@@ -7,6 +7,11 @@ Im Test traten keine JavaScript-Fehler auf.
 > **Hinweis (09.10.2026):** `game.js` ist in neun Dateien unter `js/` aufgeteilt (core, data, io, player, enemies, combat, flow, render, main; Reihenfolge in `index.html`).
 > Zeilenangaben wie `game.js:1436` in diesem Dokument beziehen sich auf den Stand davor.
 
+> **Hinweis (11.10.2026):** Großer Umbau, Abschnitt 1 ist in diesen Punkten überholt:
+> - **Kein Waffenshop mehr zwischen den Wellen.** Stattdessen gibt es Aufstiege wie in Vampire Survivors (5 Waffen, 6 Booster mit je 5 Stufen) und einen Händler nach jedem Boss. Details stehen in `IDEEN-WAFFEN-ITEMS.md`, Abschnitt 13.
+> - **Alle Figuren, Bosse, Geschosse, Böden und Wände sind Pixelkunst** (`js/px-*.js`, Regeln in `PIXEL-STIL.md`). Dazu kommen neue Raumvorlagen und eine eigene Bossarena je Region (`KARTEN-VORBILDER.md`).
+> - **Alte Spielstände laufender Läufe** werden mit diesem Stand verworfen.
+
 ## Status der Korrekturen (08.10.2026)
 
 | Punkt | Status |

@@ -246,13 +246,14 @@ $('#aCure').onclick=()=>{if(player)clearStatuses();};
 $('#aWeaponGive').onclick=()=>giveWeapon($('#aWeaponSel').value);
 $('#aAllWeapons').onclick=()=>{WEAPONS.forEach(w=>giveWeapon(w.id));};
 $('#aRelicGive').onclick=()=>{ if(player) giveRelic(player,$('#aRelicSel').value); };
-$('#aItemGive').onclick=()=>{const def=upDefById($('#aItemSel').value);if(def)giveUpgradeDef(def,'rare');};
+$('#aItemGive').onclick=()=>{ if(!player)return; const v=$('#aItemSel').value; if(v.startsWith('b:'))giveBooster(player,v.slice(2)); else { const def=upDefById(v.slice(2)); if(def)giveUpgradeDef(def); } };   // Booster (+1 Stufe) oder Sondergabe
 $('#aClear').onclick=()=>{if(G.state==='playing')enemies.length=0;};
 $('#aNext').onclick=()=>{if(G.state==='playing'||G.state==='paused'){G.boss=null;G.bossMode=false;$('#bossBarWrap').classList.remove('show');if(G.state==='paused')togglePause(false);nextLevel();}};
 $('#aBoss').onclick=()=>{if(G.state==='playing'){enemies.length=0;spawnBoss(Math.max(5,G.level));}};
 (function(){const ws=$('#aWeaponSel');WEAPONS.forEach(w=>{const o=document.createElement('option');o.value=w.id;o.textContent=w.name+' ('+rarName(w.rk)+')';ws.appendChild(o);});
   const rs=$('#aRelicSel'); RELICS.forEach(r=>{const o=document.createElement('option');o.value=r.id;o.textContent=r.name;rs.appendChild(o);});
-  const is=$('#aItemSel');UPGRADE_DEFS.forEach(it=>{const o=document.createElement('option');o.value=it.id;o.textContent=it.name;is.appendChild(o);});})();
+  const is=$('#aItemSel');BOOSTERS.forEach(b=>{const o=document.createElement('option');o.value='b:'+b.id;o.textContent='Booster: '+b.name;is.appendChild(o);});
+  UPGRADE_DEFS.forEach(it=>{const o=document.createElement('option');o.value='u:'+it.id;o.textContent=it.name;is.appendChild(o);});})();
 
 [['cGod','change'],['cOne','change'],['cDash','change'],['cNoFire','change'],['cNoSpawn','change'],['cNoObs','change'],['cDmg','input'],['cLuck','input'],
  ['aHeal','click'],['aHP','click'],['aMoney','click'],['aXP','click'],['aCure','click'],['aWeaponGive','click'],['aAllWeapons','click'],['aItemGive','click'],['aRelicGive','click'],
