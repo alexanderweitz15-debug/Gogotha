@@ -107,8 +107,8 @@ function updateShrine(dt){ const sh=G.shrine; if(!sh||sh.used)return;
   if(!pl){ sh.prog=Math.max(0,sh.prog-dt*2); return; }
   sh.prog+=dt; if(sh.prog<1.5)return; sh.used=true; Audio2.ability(); G.shake=Math.max(G.shake,5);
   for(let i=0;i<24;i++)spawnParticle(sh.x,sh.y,SHRINES[sh.kind].color,rand(1.5,3),rand(80,200));
-  if(sh.kind==='greed'){ for(const e of enemies){ if(e.isBoss)continue; e.maxHp*=1.5; e.hp*=1.5; } G.waveGoldMul=2; showToast(SHRINES.greed.name,t('shrine_greed_done')); }
-  else { pl.maxHP=Math.max(1,pl.maxHP-10); pl.hp=Math.min(pl.hp,pl.maxHP); updateHP(); player=pl;
+  if(sh.kind==='greed'){ for(const e of enemies){ if(e.isBoss)continue; e.maxHp*=1.5; e.hp*=1.5; } G.waveGoldMul=2; showToast(SHRINES.greed.name,t('shrine_greed_done')); guiltAdd(10,SHRINES.greed.name); }
+  else { pl.maxHP=Math.max(1,pl.maxHP-10); pl.hp=Math.min(pl.hp,pl.maxHP); updateHP(); player=pl; guiltAdd(10,SHRINES.blood.name);
     openRelic(()=>{ hideAllOverlays(); player=players[0]; G.state='playing'; $('#hud').classList.add('show'); last=performance.now(); }); } }
 function drawShrine(){ const sh=G.shrine; if(!sh)return; const k=SHRINES[sh.kind], tt=G.uiTime;
   cx.save(); cx.translate(sh.x,sh.y);

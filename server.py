@@ -184,7 +184,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
              **{"/js/%s.js" % n: "/js/%s.js" % n for n in ("px-core", "px-heroes", "px-enemies", "px-bosses", "px-tiles")},
              **{"/js/%s.js" % n: "/js/%s.js" % n for n in
                 ("core", "data", "io", "player", "enemies", "combat", "flow", "render",
-                 "music", "settings", "gamepad", "runsave", "summary", "map", "regions", "codex", "synergy", "melee", "main")}}
+                 "music", "settings", "gamepad", "runsave", "summary", "map", "regions", "guilt", "codex", "synergy", "melee", "main")}}
 
     def _ip(self):
         if TRUST_PROXY and self.headers.get("X-Forwarded-For"):

@@ -130,7 +130,7 @@ function updatePlayer(dt){
 }
 const skullMul=p=>p.skull&&G.run?1+Math.min(0.4,G.run.kills/25*0.01):1;
 /* Zusatz-Schadensfaktoren aus Gaben/Reliquien: Totenschädel, Märtyrerblut */
-const bonusMul=p=>skullMul(p)*(p.mbloodT>0?1.3:1);
+const bonusMul=p=>skullMul(p)*(p.mbloodT>0?1.3:1)*guiltBonus();   // Sündenlohn (guilt.js)
 function weaponDamage(w){ const lvl=player.wLevel[w.id]||0; return w.dmg*(1+lvl*0.22); }
 function fireWeapon(w,base){
   if(w.beam){ fireBeam(w,base); return; }

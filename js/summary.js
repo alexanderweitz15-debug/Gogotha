@@ -43,7 +43,7 @@ const Summary=(()=>{
       (typeof charPerkHtml==='function'?charPerkHtml(p.charId):'')+
       '<div class="sum-weps">'+wl+'</div>'+line(t('boosters_label'),il)+line(t('gifts_label'),gl)+line(t('relics_label'),rl)+line(t('abilities_label'),al)+'</div>'; }
   function html(){ const run=G.run; if(!run||!players.length) return '';
-    const chips=chip(t('sum_time'),fmtTime(G.time))+chip(t('sum_gold'),fmtNum(run.gold||0))+chip(t('hud_kills'),fmtNum(G.kills))+chip(t('sum_bosses'),run.bossKills||0)+
+    const chips=chip(t('sum_time'),fmtTime(G.time))+chip(t('sum_gold'),fmtNum(run.gold||0))+chip(t('hud_kills'),fmtNum(G.kills))+chip(t('sum_bosses'),run.bossKills||0)+(run.guiltMax?chip(t('sum_guilt'),Math.round(run.guiltMax))+chip(t('sum_hunts'),(run.huntKills||0)+'/'+(run.hunts||0)):'')+
       (G.diff?chip(t('sum_diff'),'<span style="color:'+G.diff.color+'">'+diffName(G.diff)+'</span>'):'')+(G.activeCurse?chip(t('sum_curse'),'<span style="color:#e0405f">'+G.activeCurse.name+'</span>'):'');
     return '<div class="sum-chips">'+chips+'</div>'+
       '<div class="sum-box"><div class="sum-h">'+t('sum_dmg')+'</div>'+dmgHtml(run)+'</div>'+

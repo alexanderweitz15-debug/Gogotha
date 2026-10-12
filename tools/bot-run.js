@@ -33,7 +33,7 @@ const [,, DIR, SEED, CHAR, OUT, DIFF, ABL] = process.argv;   // DIFF = Index in 
     if (ABL === 'nomap') { buildMap = () => buildObstacles(); }
     G.level = 0; nextLevel();   // Station 1 mit frischem Zufall neu aufbauen
     renderGame = () => {}; if (typeof renderMinimap === 'function') renderMinimap = () => {};
-    const st = { cp: [], hpLoss: 0, stations: [], dmgTaken: 0, dashes: 0, buys: { chest: 0, heal: 0, gift: 0, blood: 0, opfer: 0 }, picks: {} }; let cur = null;
+    const st = { cp: [], hpLoss: 0, stations: [], dmgTaken: 0, dashes: 0, buys: { chest: 0, heal: 0, gift: 0, blood: 0, opfer: 0, ablass: 0 }, picks: {} }; let cur = null;
     const hp0 = hurtPlayer; hurtPlayer = function (d, who) { const p = who || player, h = p.hp; const r = hp0.apply(this, arguments); st.dmgTaken += Math.max(0, h - p.hp); if (cur) cur.dmg += Math.max(0, h - p.hp); return r; };
     const click = sel => { const c = [...document.querySelectorAll(sel)].filter(x => !x.classList.contains('locked')); if (c.length) { c[0].click(); return true; } return false; };
     let t = performance.now(), lastLevel = -1;
@@ -94,6 +94,7 @@ const [,, DIR, SEED, CHAR, OUT, DIFF, ABL] = process.argv;   // DIFF = Index in 
       const full = player.weapons.length >= capOf(player), lowW = full && player.weapons.filter(id => weaponLevel(id) <= 2 && player.weapons.length > 1).sort((a, b) => weaponLevel(a) - weaponLevel(b))[0];
       const bfull = boosterCount(player) >= progBCap(player), lowB = bfull && Object.keys(player.boosters).filter(id => boosterLevel(player, id) <= 1 && !altarLock(player, 'b', id))[0];
       for (const k of [lowW && 'w:' + lowW, lowB && 'b:' + lowB].filter(Boolean)) for (let n = 0; n < 2; n++) { const el = document.querySelector('#shopAltar .altar-chip[data-k="' + k + '"]'); if (el && !el.disabled) el.click(); if (n === 1 && el) st.buys.opfer = (st.buys.opfer || 0) + 1; }
+      for (let k = 0; k < 6 && guiltOf() >= 40; k++) { const ab = merchWares.find(x => x.kind === 'ablass'); if (!buy(ab)) break; st.buys.ablass++; }   // Ablass, bis kein Inquisitor mehr jagt
       $('#shopSkip').click();
     }
     for (let f = 0; f < 30 * 60 * 75; f++) {      // höchstens 75 Spielminuten
@@ -104,7 +105,7 @@ const [,, DIR, SEED, CHAR, OUT, DIFF, ABL] = process.argv;   // DIFF = Index in 
       if (s === 'ability') { click('#abilityCards .rcard'); continue; }
       if (s === 'relic') { const c = [...document.querySelectorAll('#relicCards .rcard:not(.locked)')]; if (c.length) c[0].click(); else hideAllOverlays(); continue; }
       if (s === 'shop') { shop(); continue; }
-      if (G.level !== lastLevel && s === 'playing') { lastDmgT = G.time; if (cur) st.stations.push(cur); lastLevel = G.level; cur = { lvl: G.level, t0: G.time, hp0: Math.round(player.hp), max: player.maxHP, dmg: 0, foesMax: 0 }; }
+      if (G.level !== lastLevel && s === 'playing') { lastDmgT = G.time; if (cur) st.stations.push(cur); lastLevel = G.level; cur = { lvl: G.level, t0: G.time, hp0: Math.round(player.hp), max: player.maxHP, dmg: 0, foesMax: 0, guilt: Math.round(guiltOf()), hunter: enemies.some(e => e.hunter) }; }
       if (s === 'playing') { steer(players[0]); if (cur) cur.foesMax = Math.max(cur.foesMax, enemies.length); }
       if (cur && s === 'playing' && G.time - cur.t0 > 300) { cur.stuck = true;
         const pl = players[0]; cur.left = enemies.map(e => ({ t: e.type, hp: Math.round(e.hp), max: Math.round(e.maxHp), d: Math.round(Math.hypot(e.x - pl.x, e.y - pl.y)), inObs: obstacles.some(ob => dist2(e.x, e.y, ob.x, ob.y) < (ob.r + e.r + 2) * (ob.r + e.r + 2)), los: typeof mapLos === 'function' ? mapLos(e.x, e.y, pl.x, pl.y) : true, boss: !!e.isBoss, ghost: !!e.ghost, x: Math.round(e.x), y: Math.round(e.y) }));
@@ -114,7 +115,7 @@ const [,, DIR, SEED, CHAR, OUT, DIFF, ABL] = process.argv;   // DIFF = Index in 
     }
     if (cur) { cur.dur = Math.round(G.time - cur.t0); st.stations.push(cur); }
     st.stations.forEach((x, i) => { const n = st.stations[i + 1]; if (n) x.dur = Math.round(n.t0 - x.t0); x.dmg = Math.round(x.dmg); });
-    return { reached: G.level, state: G.state, time: Math.round(G.time), kills: G.kills, clvl: player.level, weapons: player.weapons.map(id => id + ':' + ((player.wLevel[id] || 0) + 1)), boosters: player.boosters, gold: G.run.gold,
+    return { reached: G.level, guiltMax: Math.round(G.run.guiltMax || 0), hunts: G.run.hunts || 0, huntKills: G.run.huntKills || 0, state: G.state, time: Math.round(G.time), kills: G.kills, clvl: player.level, weapons: player.weapons.map(id => id + ':' + ((player.wLevel[id] || 0) + 1)), boosters: player.boosters, gold: G.run.gold,
       cp: [], hpLoss: Math.round(st.hpLoss), dmgTaken: Math.round(st.dmgTaken), dashes: st.dashes, buys: st.buys, picks: st.picks, stations: st.stations };
   }, [SEED, ABL || '']);
   res.abl = ABL || ''; res.errors = errs; res.diff = +(DIFF || 2); res.seed = +SEED; res.char = +CHAR; res.build = require('path').resolve(DIR).split('/').pop();
