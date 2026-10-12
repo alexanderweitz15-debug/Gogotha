@@ -328,7 +328,8 @@ function srcName(k){ const w=weaponById(k); return w?w.name:t('src_'+k); }
 function logBalance(died,won){ if(!G.run)return; let h=[]; try{h=JSON.parse(localStorage.getItem(BAL_KEY))||[];}catch(e){}
   const rec={id:G.run.id,date:new Date().toISOString(),char:G.charId,diff:G.diff&&G.diff.id,mods:G.activeMods.slice(),curse:G.activeCurse&&G.activeCurse.id,
     station:G.level,charLevel:Math.max.apply(null,players.map(p=>p.level)),time:Math.round(G.time),died:!!died,won:!!won,unranked:!runCounts(),
-    weapons:player?player.weapons.slice():[],dmg:G.run.dmg};
+    weapons:player?player.weapons.slice():[],boosters:player?Object.assign({},player.boosters):{},dmg:G.run.dmg,
+    guilt:Math.round(G.run.guilt||0),guiltMax:Math.round(G.run.guiltMax||0),hunts:G.run.hunts||0,huntKills:G.run.huntKills||0,ablass:G.run.ablass||0,opfer:G.run.opfer||0,blood:G.run.blood||0,chests:G.run.chests||0};
   h=h.filter(r=>r.id!==rec.id); h.push(rec); while(h.length>50)h.shift();
   try{localStorage.setItem(BAL_KEY,JSON.stringify(h));}catch(e){} }
 function exportBalance(){ let h='[]'; try{h=localStorage.getItem(BAL_KEY)||'[]';}catch(e){}

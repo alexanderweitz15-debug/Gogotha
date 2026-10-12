@@ -441,7 +441,7 @@ body.touch #hud.show ~ #touchUI{display:block}
 .rcard.booster .rd .up{color:#7fcf6a}
 .amini.on{border-color:#e0405f;color:#e0405f}
 .amini:disabled{opacity:.4;cursor:not-allowed}
-#shopCards.merch{grid-template-columns:repeat(auto-fit,minmax(120px,160px));justify-content:center;max-width:920px;gap:10px}
+#shopCards.merch{grid-template-columns:repeat(auto-fit,minmax(120px,160px));justify-content:center;max-width:1030px;gap:10px}
 /* Ablasshändler: Blutpreis und Opferaltar */
 .rcard.item.blood{border-color:rgba(192,31,36,.7);background:linear-gradient(180deg,rgba(60,8,10,.55),rgba(20,8,8,.6))}
 .price.blood{color:#ff5a4a}
@@ -455,3 +455,6 @@ body.touch #hud.show ~ #touchUI{display:block}
 .altar-chip.locked{opacity:.4;cursor:default}
 .altar-chip.locked .ap{color:var(--bone-dim)}
 @media (max-height:520px){ .altar-chip{padding:3px 6px;font-size:11px} }
+/* Schuld im HUD (guilt.js) */
+.guilt-box b{color:#e0405f}
+.guilt-box.hunted b{color:#ff5a4a;text-shadow:0 0 6px rgba(255,60,40,.7)}

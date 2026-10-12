@@ -509,7 +509,30 @@ Stufe 5 entspricht etwa der Summe, die man früher über viele Karten und Gegens
   - 11/12 Siege
   - 21–31 Truhen je Lauf, vorher ~20; mehr Silber durch Opfer und frei gewordene Plätze
   - 3–10 Opfer je Lauf
-- **Schritt 2 (geplant):** Schuld als Wert im Lauf, Ablass gegen Silber, der Inquisitor als Jäger.
+
+### 13.3b Der Ablasshändler, Schritt 2: Schuld, Ablass, Inquisitor (12.10.2026) — `js/guilt.js`
+- **Schuld (`G.run.guilt`):**
+  - Sie entsteht durch einen angenommenen Pakt (+20), Blutschrein oder Schrein der Gier (+10) und den Blutpreis (+15).
+  - Sie wird im HUD neben dem Silber angezeigt, sobald im Lauf Schuld entstanden ist.
+- **Sündenlohn:** +0,25 % Schaden je Punkt, bis +25 % bei 100 Punkten. Das wird live in `bonusMul` gelesen und nicht gespeichert.
+- **Eliten:** +0,2 Prozentpunkte Elite-Chance je Punkt, bis +20 %. Das gilt auch vor Station 8.
+- **Großinquisitor:**
+  - Ab 40 Schuld erscheint er auf der nächsten normalen Station, danach alle 3 Stationen (ab 80 Schuld alle 2), solange die Schuld bei 40 oder mehr bleibt.
+  - Er hält Abstand, schießt Bannbolzen im Fächer und legt alle 6–8 s ein Feuerkreuz auf den Spieler.
+  - Er hat 150 Grundleben × Stationsfaktor × (1 + Schuld/100), zählt als Elite und trägt den goldenen Ring.
+  - Getötet bringt er −25 Schuld und ein Kopfgeld von Station × 6 Silber.
+  - Ist die Welle vorher besiegt, entkommt er; die Station wartet nicht auf ihn.
+- **Abbauen:**
+  - Ablassbrief beim Händler: −20 Schuld, 30 Silber × Stationsfaktor, je weiterem Brief im Besuch ×1,25.
+  - Opfer am Altar: −4 Schuld je Stufe.
+- **Aufzeichnung:**
+  - Zusammenfassung: höchste Schuld, getötete von erschienenen Inquisitoren.
+  - F3-Export: Schuld, höchste Schuld, Jagden, Ablass, Opfer, Blutpreis, Truhen, Booster.
+- **Bot-Regel:** Er kauft Ablass, bis die Schuld unter 40 liegt. Dadurch kommt es beim Bot nie zu einer Jagd; die Jagd ist nur per Skript geprüft (Erscheinen, Entkommen, Tod, −25 Schuld).
+- **Messung** (Mittel, 4 Grundfiguren × Zufallsfolgen 1–3, gleiche Last):
+  - Schritt 2: 6/12 Siege, höchste Schuld 0–49, 0 Jagden.
+  - Schritt 1 im selben Durchgang: ebenfalls 6/12. Vorher hatte derselbe Stand 11/12 geschafft.
+  - Die Streuung des Bots ist also zu groß, um einen Unterschied zwischen den Stufen zu messen.
 
 ### 13.4 Wo die Sonderkarten jetzt sind
 Tausch-Gaben (8), Geschoss-Modifikatoren (5), die Munitions-Schalter Pestodem/Eiserne Gnade/Höllenfeuer und die Koop-Gaben passen nicht in

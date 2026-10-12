@@ -58,7 +58,7 @@ function openCurseOffer(c){ G.state='curse'; G.menuAt=performance.now(); $('#hud
   acc.innerHTML='<div class="ic">'+svgIcon(c.ic,'#e0405f',34)+'</div><div class="rk">'+t('curse_label')+'</div><div class="rn">'+c.name+'</div>'+
     '<div class="rd"><span style="color:#5fbf52">'+c.up+'</span><span class="curse-down">'+c.down+'</span><span style="color:var(--gold2);display:block;margin-top:6px">'+t('curse_reward')+'</span></div>'+
     '<div class="price">'+t('curse_accept')+'</div>';
-  acc.onclick=()=>{ players.forEach(pl=>c.apply(pl)); G.activeCurse=c; G.rewardMul*=1.35; updateHP(); closeCurseOffer(); };
+  acc.onclick=()=>{ players.forEach(pl=>c.apply(pl)); G.activeCurse=c; G.rewardMul*=1.35; updateHP(); guiltAdd(20,c.name); closeCurseOffer(); };
   const dec=document.createElement('div'); dec.className='rcard'; dec.dataset.key=2;
   dec.innerHTML='<div class="ic">'+svgIcon('shield',C.bone,34)+'</div><div class="rk" style="color:var(--bone-dim)">—</div><div class="rn">'+t('curse_decline')+'</div><div class="rd">'+t('curse_decline_d')+'</div>';
   dec.onclick=closeCurseOffer;
@@ -78,7 +78,8 @@ function buildLevel(lvl){
   buildDecor(region); buildMap(lvl,region);   // Raumaufbau, Boden, Hindernisse je Region (map.js)
   G.waveGoldMul=1; G.shrine=null;
   G.hazards=[];
-  if(lvl%5===0) spawnBoss(lvl); else { spawnWave(lvl); maybeShrine(); }   // auch im Endlos-Modus alle 5 Stationen ein Boss
+  if(lvl%5===0) spawnBoss(lvl); else { spawnWave(lvl); maybeShrine(); }
+  guiltStation(lvl);   // Schuld: fällige Jagd (guilt.js)   // auch im Endlos-Modus alle 5 Stationen ein Boss
   updateCamera(true);
 }
 function spawnWave(lvl){
@@ -95,7 +96,7 @@ function spawnWave(lvl){
   if(lvl>=11)pool.push('exploder');
   if(lvl>=11)pool.push('summoner');
   regionPool(lvl,pool);
-  const eliteChance=lvl>=8?Math.min(0.32,0.08+lvl*0.006):0;
+  const eliteChance=(lvl>=8?Math.min(0.32,0.08+lvl*0.006):0)+guiltElite();   // Schuld zieht Eliten an (guilt.js)
   for(let i=0;i<count;i++){
     const edge=randInt(0,3);let x,y;
     if(edge===0){x=rand(ROOM.x+20,ROOM.x+ROOM.w-20);y=ROOM.y+20;}
@@ -109,7 +110,7 @@ function spawnWave(lvl){
 }
 function checkCleared(dt){
   if(G.cleared){G.clearTimer-=dt;if(G.clearTimer<=0)onCleared();return;}
-  if(enemies.length===0){ G.cleared=true; G.clearTimer=0.6; }
+  if(!enemies.some(e=>!e.hunter)){ huntEscape(); G.cleared=true; G.clearTimer=0.6; }   // ein jagender Inquisitor hält die Station nicht auf
 }
 function onCleared(){
   for(const pl of players) healPlayer(pl,pl.maxHP*0.10);   // alle lebenden Spieler (früher nur Spieler 1)
@@ -268,7 +269,7 @@ $('#upSkip').onclick=()=>{ if(G.state!=='upgrade')return; const g=Math.round(pro
    - Blutpreis: einmal je Besuch eine Reliquie gegen Max-LP (sind alle Reliquien da: zwei Truhen-Ziehungen)
    - Opferaltar: eine Waffe oder einen Booster aufgeben, gibt Silber je Stufe und macht den Platz frei (zweimal klicken)
    Preise wachsen mit der Station; der Wucherbrief (priceMul) verteuert. G.state bleibt 'shop' (Overlay #shop). */
-let merchWares=[], merchSpecials=[], merchChests=0, altarArm='';
+let merchWares=[], merchSpecials=[], merchChests=0, merchAblass=0, altarArm='';
 const merchMul=()=>(1+G.level*0.05)*priceMul();
 const bloodCost=p=>Math.max(10,Math.round(p.maxHP*0.15));
 function merchPrice(o){ const m=merchMul();
@@ -276,6 +277,7 @@ function merchPrice(o){ const m=merchMul();
     case 'chest': return Math.round(45*m*Math.pow(1.4,merchChests)*Math.pow(1.1,(G.run&&G.run.chests)||0));   /* teurer je Truhe im Besuch und im ganzen Lauf, sonst wird Silber zur Aufstiegsmaschine */
     case 'keychest': return Math.round(45*m*0.5);
     case 'blood': return 0;
+    case 'ablass': return Math.round(30*m*Math.pow(1.25,merchAblass));
     case 'gift': return Math.round(RARITY_PRICE[rarRank(o.def.rk||'common')]*0.7*m); } return 0; }
 /* Sondergaben: bevorzugt ein fehlendes Teil eines angefangenen Sets */
 function merchRollSpecials(p){ const pool=UPGRADE_DEFS.filter(upAvail), out=[];
@@ -285,11 +287,11 @@ function merchRollSpecials(p){ const pool=UPGRADE_DEFS.filter(upAvail), out=[];
   for(const u of shuffle(pool.slice())) if(out.length<2&&!out.includes(u)) out.push(u);
   return out.map(def=>({kind:'gift',def})); }
 function openMerchant(){
-  G.state='shop'; G.menuAt=performance.now(); $('#hud').classList.remove('show'); merchChests=0; altarArm='';
+  G.state='shop'; G.menuAt=performance.now(); $('#hud').classList.remove('show'); merchChests=0; merchAblass=0; altarArm='';
   if(hasRelic(player,'dice')&&player.diceAt!==G.level){ player.rerolls=(player.rerolls||0)+1; showToast(relicById('dice').name,t('merch_dice')); }
   const free=RELICS.filter(r=>!hasRelic(player,r.id));
   merchWares=[{kind:'heal'},{kind:'reroll'},{kind:'banish'},{kind:'chest'}]; if(hasRelic(player,'key')) merchWares.push({kind:'keychest'});
-  merchWares.push({kind:'blood',relic:free.length?pick(free).id:null});
+  merchWares.push({kind:'blood',relic:free.length?pick(free).id:null},{kind:'ablass'});
   merchSpecials=merchRollSpecials(player); Audio2.lvl(); renderMerchant(); $('#shop').classList.add('show'); }
 /* Truhe: Verschmelzung, sonst +1 Stufe auf eine eigene Waffe/einen Booster, sonst ein neues Teil (respektiert Plätze und Verbannungen) */
 function merchChest(){ const ev=availableWeaponEvos(), c=ev.length?{kind:'evo',evo:pick(ev)}:progRoll(player,1,true)[0]; if(c.kind==='gold')return false;
@@ -298,10 +300,11 @@ function merchChest(){ const ev=availableWeaponEvos(), c=ev.length?{kind:'evo',e
 function merchUseful(o){ const p=player;
   if(o.kind==='heal') return p.hp<p.maxHP-0.5; if(o.kind==='chest'||o.kind==='keychest') return !o.sold&&progCanGrow(p); if(o.kind==='gift') return !o.sold&&upAvail(o.def);
   if(o.kind==='blood') return !o.sold&&p.maxHP-bloodCost(p)>=30&&(o.relic?!hasRelic(p,o.relic):progCanGrow(p));
+  if(o.kind==='ablass') return guiltOf()>0;
   return true; }
 /* Blutpreis: Max-LP für eine Reliquie (oder zwei Truhen-Ziehungen, wenn alle Reliquien da sind) */
 function merchBlood(o){ const p=player, cost=bloodCost(p);
-  p.maxHP-=cost; p.hp=Math.min(p.hp,p.maxHP); G.run.blood=(G.run.blood||0)+1;
+  p.maxHP-=cost; p.hp=Math.min(p.hp,p.maxHP); G.run.blood=(G.run.blood||0)+1; guiltAdd(15,t('merch_n_blood'));
   for(let i=0;i<18;i++) spawnParticle(p.x,p.y,C.blood2,rand(1.5,3),rand(60,160));
   if(o.relic){ giveRelic(p,o.relic); showToast(t('merch_n_blood'),'<b style="color:var(--gold2)">'+relicById(o.relic).name+'</b> · −'+cost+' '+t('maxhp_short')); }
   else { merchChest(); merchChest(); }
@@ -312,6 +315,7 @@ function merchBuy(o){ const price=merchPrice(o), p=player; if(o.sold||G.coins<pr
   else if(o.kind==='reroll') p.rerolls=(p.rerolls||0)+1;
   else if(o.kind==='banish') p.banishes=(p.banishes||0)+1;
   else if(o.kind==='blood') merchBlood(o);
+  else if(o.kind==='ablass'){ guiltAdd(-20); merchAblass++; G.run.ablass=(G.run.ablass||0)+1; }
   else if(o.kind==='gift'){ giveUpgradeDef(o.def); o.sold=true; }
   G.coins-=price; $('#coinTag').textContent=G.coins; Audio2.buy(); renderMerchant(); }
 function merchCardHtml(o){ const p=player;
@@ -321,8 +325,8 @@ function merchCardHtml(o){ const p=player;
   if(o.kind==='blood'){ const r=o.relic&&relicById(o.relic);
     return '<div class="ic">'+svgIcon(r?r.ic:'leech',C.blood2,28)+'</div><div class="rk" style="color:var(--blood2)">'+t('merch_k_blood')+'</div><div class="rn">'+(r?r.name:t('merch_n_blood2'))+'</div>'+
       '<div class="rd">'+(r?r.desc:t('merch_d_blood2'))+(r?setTagHtml('relic',r.id):'')+'</div>'; }
-  const M={heal:['heart',C.blood2],reroll:['star',C.gold2],banish:['scythe','#e0405f'],chest:['chest',C.gold2],keychest:['eye',C.gold2]}[o.kind];
-  const sub=o.kind==='reroll'?t('merch_have',{n:p.rerolls||0}):o.kind==='banish'?t('merch_have',{n:p.banishes||0}):o.kind==='chest'&&merchChests?t('merch_chest_n',{n:merchChests}):'';
+  const M={heal:['heart',C.blood2],reroll:['star',C.gold2],banish:['scythe','#e0405f'],chest:['chest',C.gold2],keychest:['eye',C.gold2],ablass:['book',C.gold2]}[o.kind];
+  const sub=o.kind==='reroll'?t('merch_have',{n:p.rerolls||0}):o.kind==='banish'?t('merch_have',{n:p.banishes||0}):o.kind==='chest'&&merchChests?t('merch_chest_n',{n:merchChests}):o.kind==='ablass'?t('merch_guilt',{n:Math.round(guiltOf())}):'';
   return '<div class="ic">'+svgIcon(M[0],M[1],28)+'</div><div class="rk" style="color:var(--gold2)">'+t('merch_k_'+o.kind)+'</div><div class="rn">'+t('merch_n_'+o.kind)+'</div>'+
     '<div class="rd">'+t('merch_d_'+o.kind)+(sub?'<br><span class="prog-slot">'+sub+'</span>':'')+'</div>'; }
 /* ---------- OPFERALTAR: Waffe oder Booster aufgeben ---------- */
@@ -335,14 +339,14 @@ function altarSacrifice(kind,id){ const p=player, lvl=kind==='w'?weaponLevel(id)
   if(kind==='w'){ const i=p.weapons.indexOf(id); if(i<0||p.weapons.length<=1)return;
     p.weapons.splice(i,1); p.wCd.splice(i,1); if(p.wCdMax)p.wCdMax.splice(i,1); delete p.wLevel[id]; recalcClasses(p); updateWeaponBar(); }
   else { const b=boosterById(id), L=boosterLevel(p,id); if(!b||!L)return; progBApply(p,b,L,0); delete p.boosters[id]; updateItemPills(); updateHP(); }
-  G.coins+=refund; $('#coinTag').textContent=G.coins; G.run.opfer=(G.run.opfer||0)+1; G.run.opferSilver=(G.run.opferSilver||0)+refund;
+  G.coins+=refund; $('#coinTag').textContent=G.coins; G.run.opfer=(G.run.opfer||0)+1; G.run.opferSilver=(G.run.opferSilver||0)+refund; if(guiltOf()>0) guiltAdd(-4*lvl);
   showToast(t('altar_done'),'<b>'+(kind==='w'?weaponById(id).name:boosterName(boosterById(id)))+'</b> · +'+refund+' '+t('hud_gold')); Audio2.buy(); }
 function renderAltar(){ const p=player, wrap=$('#shopAltar'); wrap.innerHTML='';
   for(const it of altarList(p)){ const k=it.kind+':'+it.id, lock=altarLock(p,it.kind,it.id), armed=altarArm===k, el=document.createElement('button');
     const nm=it.kind==='w'?weaponById(it.id).name:boosterName(boosterById(it.id)), ic=it.kind==='w'?weaponById(it.id).ic:boosterById(it.id).ic, col=it.kind==='w'?weaponById(it.id).color:C.gold2;
     el.className='altar-chip'+(armed?' armed':'')+(lock?' locked':''); el.disabled=!!lock; el.dataset.k=k;
     el.innerHTML='<span class="ai">'+svgIcon(ic,col,16)+'</span><span class="an">'+nm+' <i>'+t('lvl_short')+it.lvl+'</i></span><span class="ap">'+
-      (lock?lock:armed?t('altar_confirm'):'+'+altarRefund(it.kind,it.lvl)+' '+t('hud_gold'))+'</span>';
+      (lock?lock:armed?t('altar_confirm'):'+'+altarRefund(it.kind,it.lvl)+' '+t('hud_gold')+(guiltOf()>0?' · '+t('altar_guilt',{n:4*it.lvl}):''))+'</span>';
     if(!lock) el.onclick=()=>{ if(altarArm===k){ altarArm=''; altarSacrifice(it.kind,it.id); } else altarArm=k; renderMerchant(); };
     wrap.appendChild(el); } }
 function renderMerchant(){
