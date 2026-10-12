@@ -490,6 +490,27 @@ Stufe 5 entspricht etwa der Summe, die man früher über viele Karten und Gegens
 | Truhe des Türhüters (nur mit Schlüssel) | 22,5, einmal je Besuch | wie Truhe |
 | 2 Sondergaben, je einmal | 0,7 × Seltenheitspreis | siehe 13.4; mit 60 % ist ein fehlendes Teil eines angefangenen Sets dabei |
 
+### 13.3a Der Ablasshändler, Schritt 1 (12.10.2026)
+- **Währung:** Gold heißt im Spiel jetzt **Silber** (die 30 Silberlinge). Intern bleibt `G.coins`.
+- **Blutpreis:**
+  - Einmal je Besuch gibt es eine Reliquie gegen 15 % der Max-LP, mindestens 10. Danach müssen mindestens 30 Max-LP bleiben.
+  - Hat man schon alle Reliquien, gibt es stattdessen zwei Truhen-Ziehungen.
+  - Gezählt in `G.run.blood`.
+- **Opferaltar:**
+  - Eine Waffe oder einen Booster aufgeben; dafür wird zweimal geklickt. Das gibt Silber, Waffen 12 und Booster 10 je Stufe, mal dem Stationsfaktor, und macht den Platz frei.
+  - Die letzte Waffe kann man nicht opfern.
+  - Ebenso keinen Booster, der zu einem vollendeten Set gehört, weil Sets nicht zurückgenommen werden.
+  - Gezählt in `G.run.opfer` und `G.run.opferSilver`. Opfer-Silber zählt nicht als „gesammelt“.
+- **Umbenennung:** Die Tausch-Gabe „Ablassbrief“ heißt jetzt **Wucherbrief**, weil der Ablass Schritt 2 gehört.
+- **Bot-Regel:**
+  - Blutpreis kauft er, wenn danach noch 100 Max-LP bleiben.
+  - Bei vollen Plätzen opfert er die schwächste Waffe der Stufe 1–2 und einen Booster der Stufe 1.
+- **Messung** (Mittel, 4 Grundfiguren × Zufallsfolgen 1–3):
+  - 11/12 Siege
+  - 21–31 Truhen je Lauf, vorher ~20; mehr Silber durch Opfer und frei gewordene Plätze
+  - 3–10 Opfer je Lauf
+- **Schritt 2 (geplant):** Schuld als Wert im Lauf, Ablass gegen Silber, der Inquisitor als Jäger.
+
 ### 13.4 Wo die Sonderkarten jetzt sind
 Tausch-Gaben (8), Geschoss-Modifikatoren (5), die Munitions-Schalter Pestodem/Eiserne Gnade/Höllenfeuer und die Koop-Gaben passen nicht in
 6 Booster-Plätze mit Stufen (sie sind einmalig bzw. an/aus). Sie sind **Sondergaben beim Händler** (`UPGRADE_DEFS`, gezählt in `p.taken`).

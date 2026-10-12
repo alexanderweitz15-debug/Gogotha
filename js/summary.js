@@ -3,11 +3,11 @@
    Schaden je Quelle aus G.run.dmg (wie das F3-Overlay), Kills je Waffe, Zeit, Gold, und je Spieler Figur, Waffen,
    Booster, Sondergaben, Reliquien, Fähigkeiten. Hängt sich an renderGameOver/renderEndless, die applyLang beim Sprachwechsel aufruft. */
 Object.assign(I18N.de,{
-  sum_dmg:'Schaden je Quelle', sum_time:'Spielzeit', sum_gold:'Gold gesammelt', sum_bosses:'Bosse', sum_total:'Gesamt',
+  sum_dmg:'Schaden je Quelle', sum_time:'Spielzeit', sum_gold:'Silber gesammelt', sum_bosses:'Bosse', sum_total:'Gesamt',
   sum_build:'Figur & Ausrüstung', sum_nodmg:'Kein Schaden verursacht.', sum_more:'+ {n} weitere', sum_diff:'Grad', sum_curse:'Fluch',
 });
 Object.assign(I18N.en,{
-  sum_dmg:'Damage by source', sum_time:'Play time', sum_gold:'Gold gathered', sum_bosses:'Bosses', sum_total:'Total',
+  sum_dmg:'Damage by source', sum_time:'Play time', sum_gold:'Silver gathered', sum_bosses:'Bosses', sum_total:'Total',
   sum_build:'Character & gear', sum_nodmg:'No damage dealt.', sum_more:'+ {n} more', sum_diff:'Diff', sum_curse:'Curse',
 });
 const Summary=(()=>{

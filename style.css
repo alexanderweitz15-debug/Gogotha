@@ -442,3 +442,16 @@ body.touch #hud.show ~ #touchUI{display:block}
 .amini.on{border-color:#e0405f;color:#e0405f}
 .amini:disabled{opacity:.4;cursor:not-allowed}
 #shopCards.merch{grid-template-columns:repeat(auto-fit,minmax(120px,160px));justify-content:center;max-width:920px;gap:10px}
+/* Ablasshändler: Blutpreis und Opferaltar */
+.rcard.item.blood{border-color:rgba(192,31,36,.7);background:linear-gradient(180deg,rgba(60,8,10,.55),rgba(20,8,8,.6))}
+.price.blood{color:#ff5a4a}
+.altar{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;max-width:760px;margin:0 auto 10px}
+.altar-chip{display:flex;align-items:center;gap:6px;padding:5px 9px;border:1px solid rgba(216,205,184,.18);border-radius:3px;background:rgba(10,8,8,.6);color:var(--bone);font:12px var(--mono);cursor:pointer}
+.altar-chip .an i{font-style:normal;color:var(--bone-dim)}
+.altar-chip .ap{color:var(--gold2)}
+.altar-chip:hover:not(.locked){border-color:var(--gold2)}
+.altar-chip.armed{border-color:#ff5a4a;background:rgba(80,10,12,.7)}
+.altar-chip.armed .ap{color:#ff5a4a}
+.altar-chip.locked{opacity:.4;cursor:default}
+.altar-chip.locked .ap{color:var(--bone-dim)}
+@media (max-height:520px){ .altar-chip{padding:3px 6px;font-size:11px} }

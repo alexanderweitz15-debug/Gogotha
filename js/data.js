@@ -133,10 +133,10 @@ const RELICS=[
  {id:'urn',    name:'Aschenurne',             ic:'explosion',desc:'Kill eines brennenden Gegners: Explosion (60 px) mit 40% des letzten Treffers'},
  {id:'feather',name:'Krähenfeder',            ic:'wing',     desc:'Kritischer Treffer: nächste Salve derselben Waffe +2 Durchschlag'},
  {id:'mblood', name:'Märtyrerblut',           ic:'leech',    desc:'Erlittener Treffer: 2 s lang +30% Schaden'},
- {id:'confess',name:'Beichtstuhl',            ic:'shield',   desc:'Welle ohne Treffer: +5 Gold und +2 Max-LP'},
+ {id:'confess',name:'Beichtstuhl',            ic:'shield',   desc:'Welle ohne Treffer: +5 Silber und +2 Max-LP'},
  {id:'lance',  name:'Lanze des Wächters',     ic:'lance',    desc:'Bosse beginnen mit 10% weniger Leben'},
  {id:'dice',   name:'Würfel des Soldaten',    ic:'star',     desc:'Sofort 2 Neu-Würfeln-Marken, nach jeder Boss-Station 1 weitere'},
- {id:'coffer', name:'Opferstock',             ic:'crown',    desc:'Wellenende: +5% Zinsen auf dein Gold (max. 20)'},
+ {id:'coffer', name:'Opferstock',             ic:'crown',    desc:'Wellenende: +5% Zinsen auf dein Silber (max. 20)'},
  {id:'key',    name:'Schlüssel des Türhüters',ic:'eye',      desc:'Händler: eine zusätzliche Truhe zum halben Preis'},
 ];
 const relicById=id=>RELICS.find(r=>r.id===id);
@@ -185,8 +185,8 @@ const boosterCount=p=>Object.keys((p&&p.boosters)||{}).length;
 const progBCap=p=>(p&&p.boosterCap)||BOOSTER_CAP;
 const addClsDmg=(p,c,v)=>{ p.clsDmg=p.clsDmg||{}; p.clsDmg[c]=(p.clsDmg[c]||0)+v; };
 const capHP=p=>{ p.maxHP=Math.max(1,Math.round(p.maxHP)); p.hp=Math.min(p.hp,p.maxHP); };
-/* Zuwachs von Gesamtstufe a auf c anwenden (a=0: neu) */
-function progBApply(p,b,a,c){ for(const [k,v,m] of b.fx){ const x=a?v[a-1]:0, y=v[c-1];
+/* Zuwachs von Gesamtstufe a auf c anwenden (a=0: neu, c=0: entfernen) */
+function progBApply(p,b,a,c){ for(const [k,v,m] of b.fx){ const x=a?v[a-1]:0, y=c?v[c-1]:0;   // c=0: Booster ganz entfernen (Opferaltar)
   if(m==='pct') p[k]=(p[k]||0)+(y-x)/100; else if(m==='add') p[k]=(p[k]||0)+(y-x);
   else if(m==='hp'){ p.maxHP+=y-x; p.hp+=y-x; } else if(m==='mul') p[k]=(p[k]||1)*(100+y)/(100+x);
   else if(m==='rate') p.frMult*=(100+x)/(100+y); else if(m==='cls') addClsDmg(p,k.slice(4),(y-x)/100); } capHP(p); }
@@ -223,7 +223,7 @@ const UPGRADE_DEFS=[
  {id:'t_skull', name:'Totenschädel',   ic:'ghost', rk:'rare',    trade:true,max:1,up:'+1% Schaden je 25 Kills im Lauf (max. 40%)',down:'−10 Max-LP',apply:p=>{p.skull=true;p.maxHP=Math.max(1,p.maxHP-10);}},
  {id:'t_hood',  name:'Schwarze Kapuze', ic:'eye',  rk:'uncommon',trade:true,max:1,up:'+10% Krit-Chance',down:'−20% Sammelradius',apply:p=>{p.crit+=0.10;p.magnet*=0.8;}},
  {id:'t_purse', name:'Almosenbeutel',  ic:'crown', rk:'uncommon',trade:true,max:1,up:'+30% Sammelradius',down:'−5% Schaden',apply:p=>{p.magnet*=1.3;p.dmgMult-=0.05;}},
- {id:'t_letter',name:'Ablassbrief',    ic:'star',  rk:'uncommon',trade:true,max:1,up:'+25% Gold',down:'Händlerpreise +10%',apply:p=>{p.goldMult+=0.25;p.priceMul*=1.10;}},
+ {id:'t_letter',name:'Wucherbrief',    ic:'star',  rk:'uncommon',trade:true,max:1,up:'+25% Silber',down:'Händlerpreise +10%',apply:p=>{p.goldMult+=0.25;p.priceMul*=1.10;}},
  /* --- Geschoss-Modifikatoren: ändern das Geschoss statt einer Zahl --- */
  {id:'m_pitch',name:'Pechfass',ic:'flame',rk:'uncommon',max:1,mod:'pitch',desc:r=>'Einschläge hinterlassen 1,5 s eine Brandpfütze (25% Schaden/s)',apply:p=>p.fxMods.push('pitch')},
  {id:'m_rico',name:'Querschläger',ic:'arrow',rk:'rare',max:1,mod:'ricochet',desc:r=>'Geschosse prallen 1× von Wänden und Hindernissen ab',apply:p=>p.fxMods.push('ricochet')},
@@ -250,7 +250,7 @@ const ABILITIES=[
  {id:'revenant',name:'Wiedergänger',ic:'wing',desc:r=>'Auferstehung ('+(1+Math.floor(r/3))+'×)',apply:(p,r)=>{p.revive+=1+Math.floor(r/3);}},
  {id:'plagueaura',name:'Pestaura',ic:'plague',desc:r=>'Giftaura '+(10+r*8)+' SpS',apply:(p,r)=>{p.auraDps+=10+r*8+G.level*0.3;p.auraR=Math.max(p.auraR,74);}},
  {id:'juggernaut',name:'Koloss',ic:'shield',desc:r=>'+'+(60+r*30)+' LP & +'+(2+r)+' Rüstung',apply:(p,r)=>{const v=60+r*30;p.maxHP+=v;p.hp+=v;p.armor+=2+r;}},
- {id:'soulharvest',name:'Seelenernte',ic:'ghost',desc:r=>'+'+(3+r)+' LP/Tötung & +Gold',apply:(p,r)=>{p.lifesteal+=3+r;p.goldMult+=0.3+r*0.1;}},
+ {id:'soulharvest',name:'Seelenernte',ic:'ghost',desc:r=>'+'+(3+r)+' LP/Tötung & +Silber',apply:(p,r)=>{p.lifesteal+=3+r;p.goldMult+=0.3+r*0.1;}},
  {id:'overload',name:'Überladung',ic:'lightning',desc:r=>'+'+(25+r*15)+'% Schaden & +1 Projektil',apply:(p,r)=>{p.dmgMult+=(25+r*15)/100;p.multishot+=1;}},
  {id:'thornmantle',name:'Dornenmantel',ic:'crown',desc:r=>'+'+(30+r*20)+' Dornen & +'+(1+r)+' Rüstung',apply:(p,r)=>{p.thorns+=30+r*20;p.armor+=1+r;}},
  {id:'volley',name:'Salve',ic:'multi',desc:r=>'+2 Projektile & +'+(10+r*5)+'% Projektil-Tempo',apply:(p,r)=>{p.multishot+=2;p.projSpeed+=(10+r*5)/100;}},
@@ -415,10 +415,10 @@ const CURSE_DEFS=[
  {id:'glasssin',name:'Sünde aus Glas',ic:'eye',up:'+25% Krit & +0.6× Krit-Schaden',down:'−25% Max-LP',apply:p=>{p.crit+=0.25;p.critMult+=0.6;p.maxHP=Math.round(p.maxHP*0.75);p.hp=Math.min(p.hp,p.maxHP);}},
  {id:'swarmcall',name:'Ruf der Verdammten',ic:'plague',up:'+55% Schaden',down:'+35% Gegner-Spawn',apply:p=>{p.dmgMult+=0.55;G.curseSpawn+=0.35;}},
  {id:'forbidden',name:'Verbotenes Wissen',ic:'eye',up:'+1 Projektil & +30% Schaden',down:'Gegner feuern +30%',apply:p=>{p.multishot+=1;p.dmgMult+=0.3;G.curseFire+=0.3;}},
- {id:'irongreed',name:'Eiserne Gier',ic:'weight',up:'+60% Schaden & +0.6 Gold',down:'Rüstung dauerhaft 0',apply:p=>{p.dmgMult+=0.6;p.goldMult+=0.6;p.armorLocked=true;}},
+ {id:'irongreed',name:'Eiserne Gier',ic:'weight',up:'+60% Schaden & +0.6 Silber',down:'Rüstung dauerhaft 0',apply:p=>{p.dmgMult+=0.6;p.goldMult+=0.6;p.armorLocked=true;}},
  {id:'martyrdom',name:'Märtyrertum',ic:'crown',up:'+90% Schaden unter 50% LP',down:'−40% Max-LP',apply:p=>{p.maxHP=Math.round(p.maxHP*0.6);p.hp=Math.min(p.hp,p.maxHP);p.curseMartyr=true;}},
  {id:'recklessrage',name:'Rücksichtslose Wut',ic:'frenzy',up:'+45% Feuerrate',down:'−20% Max-LP & +25% Gegner-Spawn',apply:p=>{p.frMult*=0.55;p.maxHP=Math.round(p.maxHP*0.8);p.hp=Math.min(p.hp,p.maxHP);G.curseSpawn+=0.25;}},
- {id:'greedpact',name:'Pakt der Gier',ic:'crown',up:'Doppeltes Gold',down:'Gegner +30% Leben',apply:p=>{p.goldMult*=2; if(G.curseHp!==1.3){ G.curseHp=1.3; for(const e of enemies){e.maxHp*=1.3;e.hp*=1.3;} } }},   // gilt auch für die schon erschienene erste Welle
+ {id:'greedpact',name:'Pakt der Gier',ic:'crown',up:'Doppeltes Silber',down:'Gegner +30% Leben',apply:p=>{p.goldMult*=2; if(G.curseHp!==1.3){ G.curseHp=1.3; for(const e of enemies){e.maxHp*=1.3;e.hp*=1.3;} } }},   // gilt auch für die schon erschienene erste Welle
  {id:'silencepact',name:'Pakt des Schweigens',ic:'multi',up:'+1 Waffenplatz',down:'−1 Booster-Platz',apply:p=>{p.weaponCap=capOf(p)+1;p.boosterCap=progBCap(p)-1;}},
 ];
 const curseById=id=>CURSE_DEFS.find(c=>c.id===id);

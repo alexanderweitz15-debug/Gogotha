@@ -261,16 +261,21 @@ $('#upReroll').onclick=()=>{ const p=player; if(G.state!=='upgrade'||!(p.rerolls
 $('#upBanish').onclick=()=>{ if(G.state!=='upgrade')return; if(!progBanishMode&&!(player.banishes>0))return; progBanishMode=!progBanishMode; renderUpgrade(); };
 $('#upSkip').onclick=()=>{ if(G.state!=='upgrade')return; const g=Math.round(progFillGold()/2); G.coins+=g; if(G.run)G.run.gold+=g; $('#coinTag').textContent=G.coins; advancePost(); };
 
-/* ---------- HÄNDLER nach jeder Boss-Station (ersetzt den Shop zwischen den Wellen) ----------
-   Dienste (mehrfach kaufbar): Heilung, Neu-Würfeln- und Verbannen-Marke, Truhe (Preis steigt je Kauf im Besuch).
-   Schlüssel des Türhüters: zusätzliche Truhe zum halben Preis. Dazu 2 einmalige Sondergaben (Tausch, Modifikator, Munition, Koop).
-   Preise wachsen mit der Station; Ablassbrief (priceMul) verteuert. G.state bleibt 'shop' (Overlay #shop). */
-let merchWares=[], merchSpecials=[], merchChests=0;
+/* ---------- ABLASSHÄNDLER nach jeder Boss-Station (ersetzt den Shop zwischen den Wellen) ----------
+   Drei Theken:
+   - Silber: Heilung, Neu-Würfeln- und Verbannen-Marke, Truhe (teurer je Truhe im Besuch und im Lauf), mit dem Schlüssel des Türhüters
+     eine zweite Truhe zum halben Preis, dazu 2 einmalige Sondergaben (Tausch, Modifikator, Munition, Koop)
+   - Blutpreis: einmal je Besuch eine Reliquie gegen Max-LP (sind alle Reliquien da: zwei Truhen-Ziehungen)
+   - Opferaltar: eine Waffe oder einen Booster aufgeben, gibt Silber je Stufe und macht den Platz frei (zweimal klicken)
+   Preise wachsen mit der Station; der Wucherbrief (priceMul) verteuert. G.state bleibt 'shop' (Overlay #shop). */
+let merchWares=[], merchSpecials=[], merchChests=0, altarArm='';
 const merchMul=()=>(1+G.level*0.05)*priceMul();
+const bloodCost=p=>Math.max(10,Math.round(p.maxHP*0.15));
 function merchPrice(o){ const m=merchMul();
   switch(o.kind){ case 'heal': return Math.round(25*m); case 'reroll': return Math.round(20*m); case 'banish': return Math.round(30*m);
-    case 'chest': return Math.round(45*m*Math.pow(1.4,merchChests)*Math.pow(1.1,(G.run&&G.run.chests)||0));   /* teurer je Truhe im Besuch und im ganzen Lauf, sonst wird Gold zur Aufstiegsmaschine */
+    case 'chest': return Math.round(45*m*Math.pow(1.4,merchChests)*Math.pow(1.1,(G.run&&G.run.chests)||0));   /* teurer je Truhe im Besuch und im ganzen Lauf, sonst wird Silber zur Aufstiegsmaschine */
     case 'keychest': return Math.round(45*m*0.5);
+    case 'blood': return 0;
     case 'gift': return Math.round(RARITY_PRICE[rarRank(o.def.rk||'common')]*0.7*m); } return 0; }
 /* Sondergaben: bevorzugt ein fehlendes Teil eines angefangenen Sets */
 function merchRollSpecials(p){ const pool=UPGRADE_DEFS.filter(upAvail), out=[];
@@ -280,41 +285,78 @@ function merchRollSpecials(p){ const pool=UPGRADE_DEFS.filter(upAvail), out=[];
   for(const u of shuffle(pool.slice())) if(out.length<2&&!out.includes(u)) out.push(u);
   return out.map(def=>({kind:'gift',def})); }
 function openMerchant(){
-  G.state='shop'; G.menuAt=performance.now(); $('#hud').classList.remove('show'); merchChests=0;
+  G.state='shop'; G.menuAt=performance.now(); $('#hud').classList.remove('show'); merchChests=0; altarArm='';
   if(hasRelic(player,'dice')&&player.diceAt!==G.level){ player.rerolls=(player.rerolls||0)+1; showToast(relicById('dice').name,t('merch_dice')); }
+  const free=RELICS.filter(r=>!hasRelic(player,r.id));
   merchWares=[{kind:'heal'},{kind:'reroll'},{kind:'banish'},{kind:'chest'}]; if(hasRelic(player,'key')) merchWares.push({kind:'keychest'});
+  merchWares.push({kind:'blood',relic:free.length?pick(free).id:null});
   merchSpecials=merchRollSpecials(player); Audio2.lvl(); renderMerchant(); $('#shop').classList.add('show'); }
 /* Truhe: Verschmelzung, sonst +1 Stufe auf eine eigene Waffe/einen Booster, sonst ein neues Teil (respektiert Plätze und Verbannungen) */
 function merchChest(){ const ev=availableWeaponEvos(), c=ev.length?{kind:'evo',evo:pick(ev)}:progRoll(player,1,true)[0]; if(c.kind==='gold')return false;
   progApply(c); const lv=c.kind==='wup'?' '+t('lvl_short')+weaponLevel(c.id):c.kind==='bup'?' '+t('lvl_short')+boosterLevel(player,c.id):c.kind[1]==='n'?' · '+t('up_new'):'';
   showToast(t('merch_chest'),'<b style="color:var(--gold2)">'+progLabel(c)+'</b>'+lv); return true; }
 function merchUseful(o){ const p=player;
-  if(o.kind==='heal') return p.hp<p.maxHP-0.5; if(o.kind==='chest'||o.kind==='keychest') return !o.sold&&progCanGrow(p); if(o.kind==='gift') return !o.sold&&upAvail(o.def); return true; }
-function merchBuy(o){ const price=merchPrice(o), p=player; if(o.sold||G.coins<price||!merchUseful(o))return;
+  if(o.kind==='heal') return p.hp<p.maxHP-0.5; if(o.kind==='chest'||o.kind==='keychest') return !o.sold&&progCanGrow(p); if(o.kind==='gift') return !o.sold&&upAvail(o.def);
+  if(o.kind==='blood') return !o.sold&&p.maxHP-bloodCost(p)>=30&&(o.relic?!hasRelic(p,o.relic):progCanGrow(p));
+  return true; }
+/* Blutpreis: Max-LP für eine Reliquie (oder zwei Truhen-Ziehungen, wenn alle Reliquien da sind) */
+function merchBlood(o){ const p=player, cost=bloodCost(p);
+  p.maxHP-=cost; p.hp=Math.min(p.hp,p.maxHP); G.run.blood=(G.run.blood||0)+1;
+  for(let i=0;i<18;i++) spawnParticle(p.x,p.y,C.blood2,rand(1.5,3),rand(60,160));
+  if(o.relic){ giveRelic(p,o.relic); showToast(t('merch_n_blood'),'<b style="color:var(--gold2)">'+relicById(o.relic).name+'</b> · −'+cost+' '+t('maxhp_short')); }
+  else { merchChest(); merchChest(); }
+  o.sold=true; updateHP(); }
+function merchBuy(o){ const price=merchPrice(o), p=player; if(o.sold||G.coins<price||!merchUseful(o))return; altarArm='';
   if(o.kind==='chest'||o.kind==='keychest'){ if(!merchChest())return; if(o.kind==='chest'){ merchChests++; G.run.chests=(G.run.chests||0)+1; } else o.sold=true; }
   else if(o.kind==='heal') healPlayer(p,p.maxHP*0.4);
   else if(o.kind==='reroll') p.rerolls=(p.rerolls||0)+1;
   else if(o.kind==='banish') p.banishes=(p.banishes||0)+1;
+  else if(o.kind==='blood') merchBlood(o);
   else if(o.kind==='gift'){ giveUpgradeDef(o.def); o.sold=true; }
   G.coins-=price; $('#coinTag').textContent=G.coins; Audio2.buy(); renderMerchant(); }
 function merchCardHtml(o){ const p=player;
   if(o.kind==='gift'){ const d=o.def, tr=d.trade;
     return '<div class="ic">'+svgIcon(d.ic,tr?'#d8a0a0':rarColor(d.rk),28)+'</div><div class="rk '+(tr?'trade':d.rk)+'">'+(tr?'⇄ '+t('trade_label'):d.mod?t('merch_mod'):d.coop?t('merch_coop'):t('merch_ammo'))+'</div>'+
       '<div class="rn">'+d.name+'</div><div class="rd">'+(tr?'<span class="up">'+d.up+'</span><br><span class="down">'+d.down+'</span>':'<span class="up">'+d.desc(rarRank(d.rk))+'</span>')+'</div>'+setTagHtml('gift',d.id); }
+  if(o.kind==='blood'){ const r=o.relic&&relicById(o.relic);
+    return '<div class="ic">'+svgIcon(r?r.ic:'leech',C.blood2,28)+'</div><div class="rk" style="color:var(--blood2)">'+t('merch_k_blood')+'</div><div class="rn">'+(r?r.name:t('merch_n_blood2'))+'</div>'+
+      '<div class="rd">'+(r?r.desc:t('merch_d_blood2'))+(r?setTagHtml('relic',r.id):'')+'</div>'; }
   const M={heal:['heart',C.blood2],reroll:['star',C.gold2],banish:['scythe','#e0405f'],chest:['chest',C.gold2],keychest:['eye',C.gold2]}[o.kind];
   const sub=o.kind==='reroll'?t('merch_have',{n:p.rerolls||0}):o.kind==='banish'?t('merch_have',{n:p.banishes||0}):o.kind==='chest'&&merchChests?t('merch_chest_n',{n:merchChests}):'';
   return '<div class="ic">'+svgIcon(M[0],M[1],28)+'</div><div class="rk" style="color:var(--gold2)">'+t('merch_k_'+o.kind)+'</div><div class="rn">'+t('merch_n_'+o.kind)+'</div>'+
     '<div class="rd">'+t('merch_d_'+o.kind)+(sub?'<br><span class="prog-slot">'+sub+'</span>':'')+'</div>'; }
+/* ---------- OPFERALTAR: Waffe oder Booster aufgeben ---------- */
+const altarRefund=(kind,lvl)=>Math.round(merchMul()*(kind==='w'?12:10)*lvl);
+/* Gründe gegen ein Opfer: letzte Waffe; Booster, der zu einem vollendeten Set gehört (Sets werden nicht zurückgenommen) */
+function altarLock(p,kind,id){ if(kind==='w') return p.weapons.length<=1?t('altar_last'):'';
+  return SETS.some(s=>hasSet(p,s.id)&&s.parts.some(pt=>pt.k==='booster'&&pt.id===id))?t('altar_set'):''; }
+function altarList(p){ return p.weapons.map(id=>({kind:'w',id,lvl:weaponLevel(id)})).concat(Object.keys(p.boosters||{}).map(id=>({kind:'b',id,lvl:boosterLevel(p,id)}))); }
+function altarSacrifice(kind,id){ const p=player, lvl=kind==='w'?weaponLevel(id):boosterLevel(p,id), refund=altarRefund(kind,lvl);
+  if(kind==='w'){ const i=p.weapons.indexOf(id); if(i<0||p.weapons.length<=1)return;
+    p.weapons.splice(i,1); p.wCd.splice(i,1); if(p.wCdMax)p.wCdMax.splice(i,1); delete p.wLevel[id]; recalcClasses(p); updateWeaponBar(); }
+  else { const b=boosterById(id), L=boosterLevel(p,id); if(!b||!L)return; progBApply(p,b,L,0); delete p.boosters[id]; updateItemPills(); updateHP(); }
+  G.coins+=refund; $('#coinTag').textContent=G.coins; G.run.opfer=(G.run.opfer||0)+1; G.run.opferSilver=(G.run.opferSilver||0)+refund;
+  showToast(t('altar_done'),'<b>'+(kind==='w'?weaponById(id).name:boosterName(boosterById(id)))+'</b> · +'+refund+' '+t('hud_gold')); Audio2.buy(); }
+function renderAltar(){ const p=player, wrap=$('#shopAltar'); wrap.innerHTML='';
+  for(const it of altarList(p)){ const k=it.kind+':'+it.id, lock=altarLock(p,it.kind,it.id), armed=altarArm===k, el=document.createElement('button');
+    const nm=it.kind==='w'?weaponById(it.id).name:boosterName(boosterById(it.id)), ic=it.kind==='w'?weaponById(it.id).ic:boosterById(it.id).ic, col=it.kind==='w'?weaponById(it.id).color:C.gold2;
+    el.className='altar-chip'+(armed?' armed':'')+(lock?' locked':''); el.disabled=!!lock; el.dataset.k=k;
+    el.innerHTML='<span class="ai">'+svgIcon(ic,col,16)+'</span><span class="an">'+nm+' <i>'+t('lvl_short')+it.lvl+'</i></span><span class="ap">'+
+      (lock?lock:armed?t('altar_confirm'):'+'+altarRefund(it.kind,it.lvl)+' '+t('hud_gold'))+'</span>';
+    if(!lock) el.onclick=()=>{ if(altarArm===k){ altarArm=''; altarSacrifice(it.kind,it.id); } else altarArm=k; renderMerchant(); };
+    wrap.appendChild(el); } }
 function renderMerchant(){
   $('#shopGold').textContent=G.coins; $('#shopSub').textContent=playerTag()+t('merch_sub');
   let key=0; const fill=(wrap,list)=>{ wrap.innerHTML='';
     for(const o of list){ const price=merchPrice(o), use=merchUseful(o), can=use&&!o.sold&&G.coins>=price, el=document.createElement('div');
-      el.className='rcard item'+(o.kind==='gift'&&o.def.trade?' trade':'')+(can?'':' locked')+(o.sold?' sold':''); el.dataset.key=++key;
+      el.className='rcard item'+(o.kind==='gift'&&o.def.trade?' trade':'')+(o.kind==='blood'?' blood':'')+(can?'':' locked')+(o.sold?' sold':''); el.dataset.key=++key;
       if(o.kind==='gift'&&!o.def.trade) el.style.borderColor=rarColor(o.def.rk);
-      el.innerHTML=merchCardHtml(o)+(o.sold?'<div class="owned">'+t('shop_sold')+'</div>':!use?'<div class="owned">'+t('merch_useless')+'</div>':'<div class="price'+(can?'':' cant')+'">'+price+' '+t('hud_gold')+'</div>');
+      const tag=o.kind==='blood'?'<div class="price blood">−'+bloodCost(player)+' '+t('maxhp_short')+'</div>':'<div class="price'+(can?'':' cant')+'">'+price+' '+t('hud_gold')+'</div>';
+      el.innerHTML=merchCardHtml(o)+(o.sold?'<div class="owned">'+t('shop_sold')+'</div>':!use?'<div class="owned">'+t('merch_useless')+'</div>':tag);
       if(can) el.onclick=()=>merchBuy(o); wrap.appendChild(el); } };
   fill($('#shopCards'),merchWares); fill($('#shopItems'),merchSpecials);
   $('#shopItemsTitle').style.display=merchSpecials.length?'':'none';
+  renderAltar();
   $('#shopHint').textContent=t('hint_merch',{n:key}); }
 $('#shopSkip').onclick=()=>{ if(G.state==='shop') advancePost(); };
 
@@ -425,10 +467,11 @@ function renderGameOver(){
 Object.assign(I18N.de,{
   up_new:'Neu', booster_label:'Booster', up_wslot:'Waffenplatz {n}/{m}', up_bslot:'Booster-Platz {n}/{m}',
   up_full:'Alles ausgebaut', up_full_d:'Alle Plätze voll und ausgebaut.', up_heal:'Heilung', up_heal_d:'Heilt 30% deiner Max-LP.',
-  up_reroll:'Neu würfeln ({n})', up_banish:'Verbannen ({n})', up_banish_cancel:'Verbannen abbrechen', up_skip:'Überspringen (+{g} Gold)', up_banished:'Verbannt — kommt in diesem Lauf nicht wieder',
+  up_reroll:'Neu würfeln ({n})', up_banish:'Verbannen ({n})', up_banish_cancel:'Verbannen abbrechen', up_skip:'Überspringen (+{g} Silber)', up_banished:'Verbannt — kommt in diesem Lauf nicht wieder',
   hint_up:'1–{n} wählen · R neu würfeln · B verbannen · Enter überspringen', hint_banish:'1–{n}: Karte verbannen · B abbrechen',
-  merch_sub:'Der Boss ist gefallen. Ein Händler wartet — Gold gegen Heilung, Marken, Truhen und Sondergaben.', hint_merch:'1–{n} kaufen · Enter weiter',
-  merch_k_heal:'Dienst', merch_k_reroll:'Marke', merch_k_banish:'Marke', merch_k_chest:'Truhe', merch_k_keychest:'Schlüssel',
+  merch_sub:'Der Boss ist gefallen. Der Ablasshändler wartet: Silber, Blut oder ein Opfer gegen Heilung, Truhen und Reliquien.', hint_merch:'1–{n} kaufen · Enter weiter',
+  merch_k_heal:'Dienst', merch_k_reroll:'Marke', merch_k_banish:'Marke', merch_k_chest:'Truhe', merch_k_keychest:'Schlüssel', merch_k_blood:'Blutpreis', merch_n_blood:'Blutpreis', merch_n_blood2:'Blutsegen', merch_d_blood2:'Zwei Truhen-Ziehungen auf einmal.', maxhp_short:'Max-LP',
+  altar_title:'Opferaltar — gib etwas auf, nimm Silber', altar_last:'letzte Waffe', altar_set:'Teil eines Sets', altar_confirm:'Nochmal: opfern', altar_done:'Geopfert',
   merch_n_heal:'Heiltrank', merch_n_reroll:'Würfelmarke', merch_n_banish:'Bannsiegel', merch_n_chest:'Truhe', merch_n_keychest:'Truhe des Türhüters',
   merch_d_heal:'Heilt 40% deiner Max-LP.', merch_d_reroll:'+1 Neu-Würfeln im Stufenaufstieg.', merch_d_banish:'+1 Verbannen: entfernt eine Karte für den ganzen Lauf.',
   merch_d_chest:'Verschmelzung, sonst +1 Stufe auf Eigenes, sonst ein neues Teil. Jede weitere Truhe kostet mehr.', merch_d_keychest:'Wie eine Truhe, zum halben Preis (einmal je Besuch).',
@@ -438,10 +481,11 @@ Object.assign(I18N.de,{
 Object.assign(I18N.en,{
   up_new:'New', booster_label:'Booster', up_wslot:'Weapon slot {n}/{m}', up_bslot:'Booster slot {n}/{m}',
   up_full:'Fully upgraded', up_full_d:'Every slot is full and maxed.', up_heal:'Healing', up_heal_d:'Heals 30% of your max HP.',
-  up_reroll:'Reroll ({n})', up_banish:'Banish ({n})', up_banish_cancel:'Cancel banish', up_skip:'Skip (+{g} gold)', up_banished:'Banished — will not return this run',
+  up_reroll:'Reroll ({n})', up_banish:'Banish ({n})', up_banish_cancel:'Cancel banish', up_skip:'Skip (+{g} silver)', up_banished:'Banished — will not return this run',
   hint_up:'1–{n} choose · R reroll · B banish · Enter skip', hint_banish:'1–{n}: banish a card · B cancel',
-  merch_sub:'The boss has fallen. A merchant waits — gold for healing, tokens, chests and special wares.', hint_merch:'1–{n} buy · Enter continue',
-  merch_k_heal:'Service', merch_k_reroll:'Token', merch_k_banish:'Token', merch_k_chest:'Chest', merch_k_keychest:'Key',
+  merch_sub:'The boss has fallen. The indulgence seller waits: silver, blood or a sacrifice for healing, chests and relics.', hint_merch:'1–{n} buy · Enter continue',
+  merch_k_heal:'Service', merch_k_reroll:'Token', merch_k_banish:'Token', merch_k_chest:'Chest', merch_k_keychest:'Key', merch_k_blood:'Blood price', merch_n_blood:'Blood price', merch_n_blood2:'Blood blessing', merch_d_blood2:'Two chest draws at once.', maxhp_short:'max HP',
+  altar_title:'Altar of sacrifice — give something up, take silver', altar_last:'last weapon', altar_set:'part of a set', altar_confirm:'Again: sacrifice', altar_done:'Sacrificed',
   merch_n_heal:'Healing draught', merch_n_reroll:'Dice token', merch_n_banish:'Banishing seal', merch_n_chest:'Chest', merch_n_keychest:'Gatekeeper\'s chest',
   merch_d_heal:'Heals 40% of your max HP.', merch_d_reroll:'+1 reroll on level-up.', merch_d_banish:'+1 banish: removes a card for the whole run.',
   merch_d_chest:'A fusion, else +1 level on something you own, else a new part. Each further chest costs more.', merch_d_keychest:'Like a chest, at half price (once per visit).',

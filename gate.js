@@ -4,10 +4,10 @@
    den Spielcode (sprites.js, js/*.js) noch die API aus. Deshalb lädt erst diese Datei das Spiel nach.
    Als Datei geöffnet (file://) gibt es keinen Server und keine Pforte: Der Code liegt dann ohnehin lokal vor. */
 (function(){
-  const GAME=['sprites.js?v=22','js/px-core.js?v=22','js/px-heroes.js?v=22','js/px-enemies.js?v=22','js/px-bosses.js?v=22','js/px-tiles.js?v=22','js/core.js?v=22','js/data.js?v=22','js/io.js?v=22','js/player.js?v=22','js/enemies.js?v=22',
-    'js/combat.js?v=22','js/flow.js?v=23','js/render.js?v=22',
-    'js/music.js?v=22','js/settings.js?v=22','js/gamepad.js?v=22','js/runsave.js?v=22','js/summary.js?v=22','js/map.js?v=22','js/regions.js?v=22','js/codex.js?v=22','js/synergy.js?v=22','js/melee.js?v=22',
-    'js/main.js?v=22'];
+  const GAME=['sprites.js?v=24','js/px-core.js?v=24','js/px-heroes.js?v=24','js/px-enemies.js?v=24','js/px-bosses.js?v=24','js/px-tiles.js?v=24','js/core.js?v=24','js/data.js?v=24','js/io.js?v=24','js/player.js?v=24','js/enemies.js?v=24',
+    'js/combat.js?v=24','js/flow.js?v=24','js/render.js?v=24',
+    'js/music.js?v=24','js/settings.js?v=24','js/gamepad.js?v=24','js/runsave.js?v=24','js/summary.js?v=24','js/map.js?v=24','js/regions.js?v=24','js/codex.js?v=24','js/synergy.js?v=24','js/melee.js?v=24',
+    'js/main.js?v=24'];
   const TXT={de:{subtitle:'Kreuzzug der Verdammten',gate_sub:'Diese Pforte ist verschlossen. Nenne die Losung, um einzutreten.',gate_ph:'Zugangswort',gate_btn:'Eintreten',err:'Falsche Losung',net:'Server nicht erreichbar'},
     en:{subtitle:'Crusade of the Damned',gate_sub:'This gate is locked. Speak the watchword to enter.',gate_ph:'Watchword',gate_btn:'Enter',err:'Wrong watchword',net:'Server unreachable'}};
   const $=s=>document.querySelector(s);

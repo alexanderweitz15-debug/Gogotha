@@ -95,7 +95,7 @@ function relicRecipeHint(id){ const rc=WEAPON_EVOS.find(x=>x.relic===id); return
 /* ---------- SCHREINE: auf Nicht-Boss-Stationen mit 35%; 1,5 s darin stehen aktiviert ihn (keine neue Taste) ---------- */
 const SHRINES={
   blood:{name:'Blutschrein', color:'#c01f24', ic:'leech', desc:'−10 Max-LP → sofort eine Reliquie'},
-  greed:{name:'Schrein der Gier', color:'#e0b25a', ic:'crown', desc:'Alle Gegner +50% Leben · Gold dieser Welle ×2'},
+  greed:{name:'Schrein der Gier', color:'#e0b25a', ic:'crown', desc:'Alle Gegner +50% Leben · Silber dieser Welle ×2'},
 };
 function maybeShrine(){ if(Math.random()>=0.35)return;
   const kinds=['greed']; if(players.some(pl=>RELICS.some(r=>!hasRelic(pl,r.id)))) kinds.push('blood');
