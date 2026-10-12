@@ -119,7 +119,7 @@ const SETS=[
    apply:p=>{ p._execRaw=p.execPct; p.execPct=Math.min(0.6,p.execPct+0.1); p._execShow=p.execPct; }},
  {id:'doctor',name:'Der Pestdoktor',name_en:'The Plague Doctor',ic:'plague',color:'#9bbf3a',mark:'beak',
    parts:[{k:'booster',id:'k_seuche'},{k:'relic',id:'urn'},{k:'booster',id:'magnet'}],
-   desc:'Vergiftete Gegner lassen doppelt Gold fallen und hinterlassen beim Tod eine Giftwolke · Schnabelmaske', desc_en:'Poisoned enemies drop double gold and leave a toxic cloud on death · beak mask'},
+   desc:'Vergiftete Gegner lassen doppelt Silber fallen und hinterlassen beim Tod eine Giftwolke · Schnabelmaske', desc_en:'Poisoned enemies drop double silver and leave a toxic cloud on death · beak mask'},
  {id:'pilgrim',name:'Der Pilger',name_en:'The Pilgrim',ic:'wing',color:'#e0b25a',mark:'halo',
    parts:[{k:'gift',id:'t_staff'},{k:'booster',id:'swift'},{k:'booster',id:'regen'}],
    desc:'+10% Tempo, in Bewegung +0,8 LP/s, Ausweichen lädt 40% schneller · Heiligenschein', desc_en:'+10% speed, +0.8 HP/s while moving, dodge recharges 40% faster · halo',

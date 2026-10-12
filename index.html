@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Cinzel:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=22">
+<link rel="stylesheet" href="style.css?v=24">
 </head>
 <body>
 <div id="wrap">
@@ -22,7 +22,7 @@
           <div class="hp-bar"><div class="hp-fill" id="hpFill"></div><div class="shield-fill" id="shieldFill"></div><div class="hp-text" id="hpText">100 / 100</div></div>
           <div class="hud-tags">
             <span><span data-i18n="hud_level">Stufe</span> <b id="lvlTag">1</b></span>
-            <span><span data-i18n="hud_gold">Gold</span> <b id="coinTag">0</b></span>
+            <span><span data-i18n="hud_gold">Silber</span> <b id="coinTag">0</b></span>
             <span><span data-i18n="hud_kills">Tötungen</span> <b id="killTag">0</b></span>
             <span><span data-i18n="hud_diff">Grad</span> <b id="diffTag">Mittel</b></span>
             <span><span data-i18n="hud_dodge">Ausweichen</span> <span class="dash-pip ready" id="dashPip"><i id="dashFill"></i></span></span>
@@ -125,9 +125,9 @@
       <b>WASD / Pfeile</b> — Bewegen<br>
       <b>Leertaste</b> — Ausweichschritt (kurz unverwundbar, langer Cooldown)<br>
       <b>Esc</b> — Pause &nbsp;·&nbsp; <b>Kopf-Symbol</b> (oben links) — aktuelle Werte<br><br>
-      Deine Waffen zielen und feuern <b>automatisch</b> auf den nächsten Gegner. Feinde lassen <b>Gold</b> und <b>XP-Splitter</b> fallen.
-      Nach jeder überstandenen Welle fliegen alle XP-Orbs zu dir und ein <b>kleines Menü</b> öffnet sich: kaufe <b>Waffen mit Gold</b>,
-      verbessere deinen <b>Charakter mit Stufen</b>, und bei Stufe 10/20/30/40/50 erwachen <b>Fähigkeiten</b>.
+      Deine Waffen zielen und feuern <b>automatisch</b> auf den nächsten Gegner. Feinde lassen <b>Silber</b> und <b>XP-Splitter</b> fallen.
+      Jeder Stufenaufstieg bietet eine <b>neue Waffe, einen Booster oder eine Stufe höher</b> (höchstens 5 Waffen und 6 Booster).
+      Nach jedem Boss wartet der <b>Ablasshändler</b>: Silber, Blut oder ein Opfer gegen Heilung, Truhen und Reliquien. Bei Stufe 10/20/30/40/50 erwachen <b>Fähigkeiten</b>.
       Die <b>Minimap</b> oben rechts zeigt die Welt. Alle 5 Stationen wartet ein Gekreuzigter — jeder mit eigenem Muster.
     </div>
     <div class="menu-btns"><button class="mbtn" id="howBack" data-i18n="how_back">Zurück</button></div>
@@ -173,15 +173,17 @@
     <div class="key-hint" data-i18n="hint_curse">1 annehmen · 2 ablehnen</div>
   </div>
 
-  <!-- HÄNDLER (nach jeder Boss-Station, Gold) -->
+  <!-- ABLASSHÄNDLER (nach jeder Boss-Station): Silber, Blutpreis, Opferaltar -->
   <div class="overlay" id="shop">
     <div class="scrim"></div>
-    <div class="sect-title" data-i18n="shop_title">Händler</div>
+    <div class="sect-title" data-i18n="shop_title">Ablasshändler</div>
     <div class="sect-sub" id="shopSub"></div>
-    <div class="shop-bar"><span data-i18n="shop_gold">Gold:</span> <b id="shopGold">0</b></div>
+    <div class="shop-bar"><span data-i18n="shop_gold">Silber:</span> <b id="shopGold">0</b></div>
     <div class="reward-cards merch" id="shopCards"></div>
     <div class="shop-items-title" id="shopItemsTitle" data-i18n="shop_items">Sondergaben — einmalig</div>
     <div class="reward-cards items" id="shopItems"></div>
+    <div class="shop-items-title" id="altarTitle" data-i18n="altar_title">Opferaltar</div>
+    <div class="altar" id="shopAltar"></div>
     <div class="post-btns">
       <button class="mbtn ghost" id="shopSkip" data-i18n="shop_skip">Weiter</button>
     </div>
@@ -330,14 +332,14 @@
         <h3>Start-Einstellungen</h3>
         <div class="arow"><label>Start-Station <span id="cStartVal">1</span></label></div>
         <input type="range" id="cStart" min="1" max="50" value="1">
-        <div class="arow"><label>Start-Gold</label><input type="number" id="cCoins" value="0" min="0"></div>
+        <div class="arow"><label>Start-Silber</label><input type="number" id="cCoins" value="0" min="0"></div>
       </section>
       <section class="asec">
         <h3>Spieler (im Lauf)</h3>
         <div class="arow">
           <button class="amini" id="aHeal">Voll heilen</button>
           <button class="amini" id="aHP">+50 Max-HP</button>
-          <button class="amini" id="aMoney">+1000 Gold</button>
+          <button class="amini" id="aMoney">+1000 Silber</button>
           <button class="amini" id="aXP">+5 Stufen</button>
           <button class="amini" id="aCure">Status heilen</button>
         </div>
@@ -376,6 +378,6 @@
 </div>
 
 <!-- Spielcode lädt gate.js nach bestandener Pforte (Reihenfolge dort; frühere Dateien dürfen beim Laden nichts aus späteren aufrufen) -->
-<script src="gate.js?v=23"></script>
+<script src="gate.js?v=24"></script>
 </body>
 </html>

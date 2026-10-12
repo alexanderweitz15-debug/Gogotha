@@ -33,7 +33,7 @@ const [,, DIR, SEED, CHAR, OUT, DIFF, ABL] = process.argv;   // DIFF = Index in 
     if (ABL === 'nomap') { buildMap = () => buildObstacles(); }
     G.level = 0; nextLevel();   // Station 1 mit frischem Zufall neu aufbauen
     renderGame = () => {}; if (typeof renderMinimap === 'function') renderMinimap = () => {};
-    const st = { cp: [], hpLoss: 0, stations: [], dmgTaken: 0, dashes: 0, buys: { chest: 0, heal: 0, gift: 0 }, picks: {} }; let cur = null;
+    const st = { cp: [], hpLoss: 0, stations: [], dmgTaken: 0, dashes: 0, buys: { chest: 0, heal: 0, gift: 0, blood: 0, opfer: 0 }, picks: {} }; let cur = null;
     const hp0 = hurtPlayer; hurtPlayer = function (d, who) { const p = who || player, h = p.hp; const r = hp0.apply(this, arguments); st.dmgTaken += Math.max(0, h - p.hp); if (cur) cur.dmg += Math.max(0, h - p.hp); return r; };
     const click = sel => { const c = [...document.querySelectorAll(sel)].filter(x => !x.classList.contains('locked')); if (c.length) { c[0].click(); return true; } return false; };
     let t = performance.now(), lastLevel = -1;
@@ -89,6 +89,11 @@ const [,, DIR, SEED, CHAR, OUT, DIFF, ABL] = process.argv;   // DIFF = Index in 
       for (const o of merchWares) if (o.kind === 'keychest' && buy(o)) st.buys.chest++;
       for (let k = 0; k < 20; k++) { const o = merchWares.find(x => x.kind === 'chest'); if (!buy(o)) break; st.buys.chest++; }
       for (const o of merchSpecials) if (buy(o)) st.buys.gift++;
+      const bl = merchWares.find(x => x.kind === 'blood'); if (bl && player.maxHP - bloodCost(player) >= 100) { const c = card(bl); if (c && !c.classList.contains('locked')) { c.click(); if (bl.sold) st.buys.blood++; } }   // Blutpreis (kostet kein Silber) nur mit reichlich Leben
+      /* Opferaltar: bei vollen Plätzen das schwächste Teil der Stufe 1–2 aufgeben (macht Platz für Besseres) */
+      const full = player.weapons.length >= capOf(player), lowW = full && player.weapons.filter(id => weaponLevel(id) <= 2 && player.weapons.length > 1).sort((a, b) => weaponLevel(a) - weaponLevel(b))[0];
+      const bfull = boosterCount(player) >= progBCap(player), lowB = bfull && Object.keys(player.boosters).filter(id => boosterLevel(player, id) <= 1 && !altarLock(player, 'b', id))[0];
+      for (const k of [lowW && 'w:' + lowW, lowB && 'b:' + lowB].filter(Boolean)) for (let n = 0; n < 2; n++) { const el = document.querySelector('#shopAltar .altar-chip[data-k="' + k + '"]'); if (el && !el.disabled) el.click(); if (n === 1 && el) st.buys.opfer = (st.buys.opfer || 0) + 1; }
       $('#shopSkip').click();
     }
     for (let f = 0; f < 30 * 60 * 75; f++) {      // höchstens 75 Spielminuten
