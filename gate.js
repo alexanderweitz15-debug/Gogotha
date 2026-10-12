@@ -5,7 +5,7 @@
    Als Datei geöffnet (file://) gibt es keinen Server und keine Pforte: Der Code liegt dann ohnehin lokal vor. */
 (function(){
   const GAME=['sprites.js?v=22','js/px-core.js?v=22','js/px-heroes.js?v=22','js/px-enemies.js?v=22','js/px-bosses.js?v=22','js/px-tiles.js?v=22','js/core.js?v=22','js/data.js?v=22','js/io.js?v=22','js/player.js?v=22','js/enemies.js?v=22',
-    'js/combat.js?v=22','js/flow.js?v=22','js/render.js?v=22',
+    'js/combat.js?v=22','js/flow.js?v=23','js/render.js?v=22',
     'js/music.js?v=22','js/settings.js?v=22','js/gamepad.js?v=22','js/runsave.js?v=22','js/summary.js?v=22','js/map.js?v=22','js/regions.js?v=22','js/codex.js?v=22','js/synergy.js?v=22','js/melee.js?v=22',
     'js/main.js?v=22'];
   const TXT={de:{subtitle:'Kreuzzug der Verdammten',gate_sub:'Diese Pforte ist verschlossen. Nenne die Losung, um einzutreten.',gate_ph:'Zugangswort',gate_btn:'Eintreten',err:'Falsche Losung',net:'Server nicht erreichbar'},
